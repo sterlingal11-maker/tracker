@@ -11864,11 +11864,11 @@ function LoginScreen({ onLogin }) {
         <div style={{ textAlign: "center", marginBottom: 32 }}>
           <img
             src={LOGO_SRC}
-            alt="Cookie's Bites"
+            alt="Delightful Meals & Drinks"
             style={{ width: 160, height: 160, objectFit: "contain", margin: "0 auto 8px", display: "block" }}
           />
           <div style={{ fontSize: 11, color: T.textMuted, marginTop: 3 }}>
-            Business Tracker · delightfulmeals.app
+            Business Tracker · delightfulmeals.us
           </div>
         </div>
 
@@ -12426,7 +12426,7 @@ export default function App() {
           >
             <img
               src={logo?.src || LOGO_SRC}
-              alt="Cookie's Bites"
+              alt="Delightful Meals & Drinks"
               style={{ height: 36, maxWidth: 120, objectFit: "contain" }}
             />
           </div>
