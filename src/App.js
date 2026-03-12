@@ -1826,60 +1826,50 @@ function buildOrderInvoiceHTML(sale, biz, logo) {
 }
 function buildCatalogHTML(items, categories, biz, logo) {
   const catMap = {};
-  categories.forEach((c) => {
-    catMap[c.id] = c.name;
-  });
+  categories.forEach(c => { catMap[c.id] = c.name; });
   const byCat = {};
-  items.forEach((i) => {
-    if (!byCat[i.catId]) byCat[i.catId] = [];
-    byCat[i.catId].push(i);
-  });
+  items.forEach(i => { if (!byCat[i.catId]) byCat[i.catId] = []; byCat[i.catId].push(i); });
   const brandImg = logo?.src
-    ? `<img src="${logo.src}" alt="logo" style="height:160px;max-width:400px;object-fit:contain;display:block;margin-bottom:8px"/>`
-    : `<div style="font-size:24px;font-weight:900;margin-bottom:4px">${biz.name}</div>`;
-  const sections = Object.entries(byCat)
-    .map(([catId, its]) => {
-      const cards = its
-        .map(
-          (i) =>
-            `<div class="cat-item">${
-              i.photo
-                ? `<img src="${i.photo}" alt="${i.name}" class="cat-item-photo"/>`
-                : `<div class="cat-item-photo-placeholder">📷</div>`
-            }<div class="cat-item-body"><div class="cat-item-name">${
-              i.name
-            }</div>${
-              i.description
-                ? `<div class="cat-item-desc">${i.description}</div>`
-                : ""
-            }<div class="cat-item-footer"><div class="cat-item-price">${fmt(
-              i.price
-            )}</div><div class="cat-item-unit">${i.unitType}</div></div>${
-              i.tags && i.tags.length
-                ? `<div>${i.tags
-                    .map((t) => `<span class="cat-tag">${t}</span>`)
-                    .join("")}</div>`
-                : ""
-            }</div></div>`
-        )
-        .join("");
-      return `<div class="cat-section"><div class="cat-heading">${
-        catMap[catId] || "Other"
-      }</div><div class="cat-grid">${cards}</div></div>`;
-    })
-    .join("");
-  return `<div class="catalog-intro">${brandImg}<h2>Services Catalog</h2><p>${[
-    biz.tagline,
-    biz.city,
-    biz.phone,
-    biz.email,
-  ]
-    .filter(Boolean)
-    .join(" · ")}<br>${
-    items.length
-  } items · Valid as of ${TODAY_LABEL}</p></div><p style="font-size:11px;color:#777;margin-bottom:24px;line-height:1.7">Prices subject to confirmation based on guest count, location and event specifics. Contact us for custom packages.</p>${sections}${footerHTML(
-    biz
-  )}`;
+    ? `<img src="${logo.src}" alt="logo" style="height:150px;max-width:300px;object-fit:contain;display:block;margin-bottom:0;margin-left:-12px"/>`
+    : `<div style="font-size:28px;font-weight:900;margin-bottom:4px">${biz.name}</div>`;
+  const sections = Object.entries(byCat).map(([catId, its]) => {
+    const cards = its.map(i => `
+      <div class="cat-item">
+        ${i.photo ? `<img src="${i.photo}" alt="${i.name}" class="cat-item-photo"/>` : `<div class="cat-item-photo-placeholder">🍽️</div>`}
+        <div class="cat-item-body">
+          <div class="cat-item-name">${i.name}</div>
+          ${i.description ? `<div class="cat-item-desc">${i.description}</div>` : ""}
+          ${i.notes ? `<div class="cat-item-notes">📝 ${i.notes}</div>` : ""}
+          <div class="cat-item-footer">
+            <div class="cat-item-price">${fmt(i.price)}</div>
+            <div class="cat-item-unit">XAF / ${i.unitType}</div>
+          </div>
+          ${i.tags && i.tags.length ? `<div class="cat-tags">${i.tags.map(t => `<span class="cat-tag">${t}</span>`).join("")}</div>` : ""}
+        </div>
+      </div>`).join("");
+    return `<div class="cat-section"><div class="cat-heading">${catMap[catId] || "Other"}</div><div class="cat-grid">${cards}</div></div>`;
+  }).join("");
+  const extraCSS = `<style>
+    .cat-item-notes{font-size:10px;color:#a05000;font-style:italic;margin:3px 0 5px;line-height:1.4}
+    .cat-tags{margin-top:5px;display:flex;flex-wrap:wrap;gap:3px}
+    .cat-item-photo{width:100%;height:130px;object-fit:cover;border-radius:0;display:block}
+    .cat-item-photo-placeholder{height:80px;display:flex;align-items:center;justify-content:center;font-size:28px;background:#f5f5f5}
+    .cat-item{background:#fff;border:1px solid #e8e8e8;border-radius:8px;overflow:hidden;break-inside:avoid}
+    .cat-item-body{padding:9px 10px 10px}
+    .cat-item-name{font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:3px}
+    .cat-item-desc{font-size:10px;color:#666;margin-bottom:4px;line-height:1.5}
+    .cat-item-footer{display:flex;align-items:baseline;gap:5px;margin-top:6px}
+    .cat-item-price{font-size:14px;font-weight:800;color:#B8860B}
+    .cat-item-unit{font-size:9px;color:#999}
+    .cat-tag{font-size:9px;background:#f0f0f0;color:#555;padding:1px 5px;border-radius:10px}
+    .cat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
+    .cat-section{margin-bottom:32px}
+    .cat-heading{font-size:16px;font-weight:800;color:#1a1a1a;padding:8px 0 6px;border-bottom:2px solid #1a1a1a;margin-bottom:4px}
+    .catalog-intro{margin-bottom:28px;padding-bottom:20px;border-bottom:3px solid #1a1a1a;background:#fff}
+    .catalog-intro h2{font-size:22px;font-weight:800;margin:10px 0 4px;color:#1a1a1a}
+    .catalog-intro p{font-size:11px;color:#666;margin:0;line-height:1.7}
+  </style>`;
+  return `${extraCSS}<div class="catalog-intro">${brandImg}<h2>Services Catalog</h2><p>${[biz.tagline,biz.city,biz.phone,biz.email].filter(Boolean).join(" · ")}<br>${items.length} items · Valid as of ${TODAY_LABEL}</p></div><p style="font-size:11px;color:#777;margin-bottom:24px;line-height:1.7">Prices subject to confirmation based on guest count, location and event specifics. Contact us for custom packages.</p>${sections}${footerHTML(biz)}`;
 }
 function printDoc(title, html) {
   const w = window.open("", "_blank", "width=860,height=940");
@@ -4237,525 +4227,300 @@ function CateringPage({ events, setEvents, proposals, setProposals, inventory, l
     </div>
   );
 }
-function CatalogPage({ categories, items, setItems, logo, biz }) {
-  const [selCat, setSelCat] = useState(null);
-  const [search, setSearch] = useState("");
+function CatalogPage({ categories, setCategories, items, setItems, meals, logo, biz }) {
+  const [selCat, setSelCat] = useState(null); // null = tile overview, number = category id
   const [adding, setAdding] = useState(false);
   const [editId, setEditId] = useState(null);
-  const [ni, setNi] = useState({
-    catId: 1,
-    name: "",
-    unitType: "Per head",
-    price: "",
-    costPerUnit: "",
-    tags: "",
-    description: "",
-    photo: null,
-  });
+  const [addingCat, setAddingCat] = useState(false);
+  const [newCatName, setNewCatName] = useState("");
+  const [search, setSearch] = useState("");
+  const EMPTY_NI = { catId: categories[0]?.id || 1, name: "", unitType: "Per head", price: "", costPerUnit: "", tags: "", description: "", notes: "", photo: null };
+  const [ni, setNi] = useState(EMPTY_NI);
   const [doc, setDoc] = useState(null);
   const photoRef = useRef();
-  const filtered = items.filter(
-    (i) =>
-      (!selCat || i.catId === selCat) &&
-      (!search || i.name.toLowerCase().includes(search.toLowerCase()))
-  );
+
+  const filtered = selCat
+    ? items.filter(i => i.catId === selCat && (!search || i.name.toLowerCase().includes(search.toLowerCase())))
+    : items.filter(i => !search || i.name.toLowerCase().includes(search.toLowerCase()));
+
   const handlePhoto = (e, forItem = null) => {
-    const f = e.target.files[0];
-    if (!f) return;
+    const f = e.target.files[0]; if (!f) return;
     const r = new FileReader();
     r.onload = (ev) => {
-      if (forItem != null) {
-        setItems((prev) =>
-          prev.map((it) =>
-            it.id === forItem ? { ...it, photo: ev.target.result } : it
-          )
-        );
-      } else {
-        setNi((n) => ({ ...n, photo: ev.target.result }));
-      }
+      if (forItem != null) setItems(prev => prev.map(it => it.id === forItem ? { ...it, photo: ev.target.result } : it));
+      else setNi(n => ({ ...n, photo: ev.target.result }));
     };
     r.readAsDataURL(f);
   };
+
+  const pullFromMeal = (mealId) => {
+    if (!mealId) return;
+    const m = meals.find(ml => String(ml.id) === String(mealId));
+    if (!m) return;
+    setNi(prev => ({
+      ...prev,
+      name: m.name || prev.name,
+      price: m.price ? String(m.price) : prev.price,
+      description: m.description || prev.description,
+      photo: m.photo || prev.photo,
+      unitType: "Per head",
+    }));
+  };
+
   const save = () => {
     if (!ni.name || !ni.price) return;
     const item = {
       ...ni,
       price: Number(ni.price),
       costPerUnit: Number(ni.costPerUnit) || 0,
-      tags:
-        typeof ni.tags === "string"
-          ? ni.tags
-              .split(",")
-              .map((t) => t.trim())
-              .filter(Boolean)
-          : ni.tags,
+      tags: typeof ni.tags === "string" ? ni.tags.split(",").map(t => t.trim()).filter(Boolean) : ni.tags,
     };
     if (editId != null) {
-      setItems((prev) =>
-        prev.map((it) => (it.id === editId ? { ...item, id: editId } : it))
-      );
+      setItems(prev => prev.map(it => it.id === editId ? { ...item, id: editId } : it));
       setEditId(null);
     } else {
-      setItems((prev) => [...prev, { ...item, id: Date.now() }]);
+      setItems(prev => [...prev, { ...item, id: Date.now() }]);
     }
     setAdding(false);
-    setNi({
-      catId: 1,
-      name: "",
-      unitType: "Per head",
-      price: "",
-      costPerUnit: "",
-      tags: "",
-      description: "",
-      photo: null,
-    });
+    setNi({ ...EMPTY_NI, catId: selCat || (categories[0]?.id || 1) });
   };
+
   const startEdit = (item) => {
-    setNi({
-      ...item,
-      price: String(item.price),
-      costPerUnit: String(item.costPerUnit || ""),
-      tags: Array.isArray(item.tags) ? item.tags.join(", ") : item.tags,
-    });
-    setEditId(item.id);
-    setAdding(true);
+    setNi({ ...item, price: String(item.price), costPerUnit: String(item.costPerUnit || ""), tags: Array.isArray(item.tags) ? item.tags.join(", ") : item.tags });
+    setEditId(item.id); setAdding(true);
   };
-  const openDoc = (title, html) =>
-    setDoc({ title, html, onPrint: () => printDoc(title, html) });
+
+  const addCategory = () => {
+    const name = newCatName.trim(); if (!name) return;
+    const newId = Math.max(0, ...categories.map(c => c.id)) + 1;
+    setCategories(prev => [...prev, { id: newId, name }]);
+    setNewCatName(""); setAddingCat(false);
+  };
+
+  const deleteCategory = (id) => {
+    if (items.some(i => i.catId === id)) { alert("Remove all items in this category first."); return; }
+    setCategories(prev => prev.filter(c => c.id !== id));
+    if (selCat === id) setSelCat(null);
+  };
+
+  const openDoc = (title, html) => setDoc({ title, html, onPrint: () => printDoc(title, html) });
+  const selCatObj = categories.find(c => c.id === selCat);
 
   return (
     <div>
       <DocModal doc={doc} onClose={() => setDoc(null)} />
-      <div style={S.pageTitle}>📦 Catering Catalog</div>
-      <div style={S.subtitle}>
-        {items.length} items · Click any item photo to replace it
-      </div>
-      <div style={{ ...S.row, marginBottom: 12 }}>
-        <button
-          style={S.btn("primary")}
-          onClick={() =>
-            openDoc(
-              "Services Catalog",
-              buildCatalogHTML(items, categories, biz, logo)
-            )
-          }
-        >
+      <div style={{ ...S.row, marginBottom: 4 }}>
+        <div>
+          <div style={S.pageTitle}>📦 Catering Catalog</div>
+          <div style={S.subtitle}>{items.length} items across {categories.length} categories</div>
+        </div>
+        <button style={S.btn("primary")} onClick={() => openDoc("Services Catalog", buildCatalogHTML(items, categories, biz, logo))}>
           🖨️ Print Catalog
         </button>
       </div>
-      <div
-        style={{ display: "grid", gridTemplateColumns: "175px 1fr", gap: 10 }}
-      >
-        <div style={{ ...S.card, padding: 10, alignSelf: "start" }}>
-          <div style={S.cardTitle}>Categories</div>
-          <div
-            onClick={() => setSelCat(null)}
-            style={{
-              padding: "4px 6px",
-              borderRadius: 4,
-              cursor: "pointer",
-              fontSize: 11,
-              background: !selCat ? T.accentSoft : "transparent",
-              color: !selCat ? T.accent : T.text,
-              marginBottom: 2,
-            }}
-          >
-            All ({items.length})
-          </div>
-          {categories.map((cat) => (
-            <div
-              key={cat.id}
-              onClick={() => setSelCat(cat.id === selCat ? null : cat.id)}
-              style={{
-                padding: "4px 6px",
-                borderRadius: 4,
-                cursor: "pointer",
-                fontSize: 11,
-                background: selCat === cat.id ? T.accentSoft : "transparent",
-                color: selCat === cat.id ? T.accent : T.textMuted,
-                marginBottom: 1,
-              }}
-            >
-              {cat.name} ({items.filter((i) => i.catId === cat.id).length})
-            </div>
-          ))}
-        </div>
+
+      {/* ── CATEGORY TILES VIEW ── */}
+      {!selCat && (
         <div>
-          <div style={{ ...S.row, marginBottom: 10 }}>
-            <input
-              style={{ ...S.input, flex: 1 }}
-              placeholder="Search…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            <button
-              style={S.btn("primary")}
-              onClick={() => {
-                setAdding(!adding);
-                setEditId(null);
-                setNi({
-                  catId: 1,
-                  name: "",
-                  unitType: "Per head",
-                  price: "",
-                  costPerUnit: "",
-                  tags: "",
-                  description: "",
-                  photo: null,
-                });
-              }}
-            >
-              {adding && editId == null ? "Cancel" : "+ Add Item"}
+          <div style={{ ...S.row, marginBottom: 14, gap: 8, flexWrap: "wrap" }}>
+            <input style={{ ...S.input, flex: 1, minWidth: 160 }} placeholder="Search all items…" value={search} onChange={e => setSearch(e.target.value)} />
+            {!addingCat
+              ? <button style={{ ...S.btn("ghost"), fontSize: 12 }} onClick={() => setAddingCat(true)}>＋ New Category</button>
+              : <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                  <input style={{ ...S.input, width: 180, marginBottom: 0 }} placeholder="e.g. 🧆 Mezze" value={newCatName} onChange={e => setNewCatName(e.target.value)} onKeyDown={e => e.key === "Enter" && addCategory()} autoFocus />
+                  <button style={S.btn("primary")} onClick={addCategory}>Add</button>
+                  <button style={S.btn("ghost")} onClick={() => { setAddingCat(false); setNewCatName(""); }}>✕</button>
+                </div>
+            }
+          </div>
+
+          {search ? (
+            // Search results across all categories
+            <div>
+              <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 10 }}>{filtered.length} results for "{search}"</div>
+              <div style={S.grid(3)}>
+                {filtered.map(item => <CatalogItemCard key={item.id} item={item} categories={categories} setItems={setItems} startEdit={startEdit} handlePhoto={handlePhoto} />)}
+              </div>
+            </div>
+          ) : (
+            // Category tiles
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 10 }}>
+              {categories.map(cat => {
+                const catItems = items.filter(i => i.catId === cat.id);
+                const thumb = catItems.find(i => i.photo)?.photo;
+                return (
+                  <div key={cat.id} style={{ ...S.card, padding: 0, overflow: "hidden", cursor: "pointer", border: `1px solid ${T.border}`, transition: "box-shadow 0.15s" }}
+                    onMouseEnter={e => e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.18)"}
+                    onMouseLeave={e => e.currentTarget.style.boxShadow = ""}
+                    onClick={() => { setSelCat(cat.id); setAdding(false); }}>
+                    {/* Tile image */}
+                    <div style={{ height: 90, background: T.surface, overflow: "hidden", position: "relative" }}>
+                      {thumb
+                        ? <img src={thumb} alt={cat.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        : <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, opacity: 0.5 }}>{cat.name.match(/\p{Emoji}/u)?.[0] || "🍽️"}</div>
+                      }
+                      {catItems.length > 0 && (
+                        <div style={{ position: "absolute", top: 5, right: 5, background: T.accent, color: "#fff", fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 10 }}>
+                          {catItems.length}
+                        </div>
+                      )}
+                    </div>
+                    {/* Tile label */}
+                    <div style={{ padding: "8px 10px 6px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: T.text, lineHeight: 1.3 }}>{cat.name}</div>
+                      <button style={{ background: "none", border: "none", color: T.textDim, cursor: "pointer", fontSize: 13, padding: 2, lineHeight: 1 }}
+                        onClick={e => { e.stopPropagation(); deleteCategory(cat.id); }}>🗑</button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── CATEGORY DETAIL VIEW ── */}
+      {selCat && (
+        <div>
+          {/* Breadcrumb */}
+          <div style={{ ...S.row, marginBottom: 12, gap: 8 }}>
+            <button style={{ ...S.btn("ghost"), fontSize: 12 }} onClick={() => { setSelCat(null); setAdding(false); setEditId(null); }}>
+              ← All Categories
+            </button>
+            <div style={{ fontSize: 14, fontWeight: 700, color: T.text }}>{selCatObj?.name}</div>
+            <div style={{ fontSize: 12, color: T.textMuted }}>({items.filter(i => i.catId === selCat).length} items)</div>
+            <div style={{ flex: 1 }} />
+            <button style={S.btn("primary")} onClick={() => { setAdding(!adding); setEditId(null); setNi({ ...EMPTY_NI, catId: selCat }); }}>
+              {adding && editId == null ? "✕ Cancel" : "+ Add Item"}
             </button>
           </div>
+
+          {/* Add / Edit form */}
           {adding && (
-            <div style={{ ...S.card, marginBottom: 12, borderColor: T.accent }}>
-              <div style={S.sectionTitle}>
-                {editId != null ? "Edit Item" : "New Item"}
-              </div>
+            <div style={{ ...S.card, marginBottom: 14, borderColor: T.accent }}>
+              <div style={S.sectionTitle}>{editId != null ? "✏️ Edit Item" : "➕ New Item"}</div>
+
+              {/* Pull from meals */}
+              {!editId && meals && meals.length > 0 && (
+                <div style={{ background: T.accentSoft, borderRadius: 8, padding: "8px 12px", marginBottom: 12, display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ fontSize: 11, color: T.accent, fontWeight: 700, whiteSpace: "nowrap" }}>⚡ Pull from Meals:</span>
+                  <select style={{ ...S.select, flex: 1, marginBottom: 0 }} onChange={e => pullFromMeal(e.target.value)} defaultValue="">
+                    <option value="">— Select a meal to pre-fill —</option>
+                    {meals.map(m => <option key={m.id} value={m.id}>{m.name}{m.price ? ` · ${fmt(m.price)} XAF` : ""}</option>)}
+                  </select>
+                </div>
+              )}
+
               <div style={S.grid(3)}>
                 <div>
-                  <label style={S.label}>Item Name</label>
-                  <input
-                    style={S.input}
-                    value={ni.name}
-                    onChange={(e) => setNi({ ...ni, name: e.target.value })}
-                  />
+                  <label style={S.label}>Item Name *</label>
+                  <input style={S.input} value={ni.name} onChange={e => setNi({ ...ni, name: e.target.value })} placeholder="e.g. Jollof Rice" />
                 </div>
                 <div>
                   <label style={S.label}>Category</label>
-                  <select
-                    style={S.select}
-                    value={ni.catId}
-                    onChange={(e) =>
-                      setNi({ ...ni, catId: Number(e.target.value) })
-                    }
-                  >
-                    {categories.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
+                  <select style={S.select} value={ni.catId} onChange={e => setNi({ ...ni, catId: Number(e.target.value) })}>
+                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
                 </div>
                 <div>
                   <label style={S.label}>Unit Type</label>
-                  <select
-                    style={S.select}
-                    value={ni.unitType}
-                    onChange={(e) => setNi({ ...ni, unitType: e.target.value })}
-                  >
-                    {[
-                      "Per head",
-                      "Per tray",
-                      "Per platter",
-                      "Per item",
-                      "Per hour",
-                      "Per day",
-                      "Flat fee",
-                    ].map((u) => (
-                      <option key={u}>{u}</option>
-                    ))}
+                  <select style={S.select} value={ni.unitType} onChange={e => setNi({ ...ni, unitType: e.target.value })}>
+                    {["Per head","Per tray","Per platter","Per item","Per hour","Per day","Flat fee"].map(u => <option key={u}>{u}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label style={S.label}>Sale Price (XAF)</label>
-                  <input
-                    style={S.input}
-                    type="number"
-                    value={ni.price}
-                    onChange={(e) => setNi({ ...ni, price: e.target.value })}
-                  />
+                  <label style={S.label}>Sale Price (XAF) *</label>
+                  <input style={S.input} type="number" value={ni.price} onChange={e => setNi({ ...ni, price: e.target.value })} />
                 </div>
                 <div>
                   <label style={S.label}>Cost / Unit (XAF)</label>
-                  <input
-                    style={S.input}
-                    type="number"
-                    value={ni.costPerUnit}
-                    onChange={(e) =>
-                      setNi({ ...ni, costPerUnit: e.target.value })
-                    }
-                  />
+                  <input style={S.input} type="number" value={ni.costPerUnit} onChange={e => setNi({ ...ni, costPerUnit: e.target.value })} />
                 </div>
                 <div>
                   <label style={S.label}>Photo</label>
-                  <div
-                    style={{ display: "flex", gap: 6, alignItems: "center" }}
-                  >
-                    {ni.photo && (
-                      <img
-                        src={ni.photo}
-                        alt="p"
-                        style={{
-                          width: 32,
-                          height: 32,
-                          objectFit: "cover",
-                          borderRadius: 4,
-                          border: `1px solid ${T.border}`,
-                        }}
-                      />
-                    )}
-                    <button
-                      style={{
-                        ...S.btn("ghost"),
-                        fontSize: 11,
-                        padding: "4px 8px",
-                      }}
-                      onClick={() => photoRef.current.click()}
-                    >
-                      {ni.photo ? "Change" : "Upload"}
-                    </button>
-                    {ni.photo && (
-                      <button
-                        style={{
-                          background: "none",
-                          border: "none",
-                          color: T.danger,
-                          cursor: "pointer",
-                          fontSize: 11,
-                        }}
-                        onClick={() => setNi({ ...ni, photo: null })}
-                      >
-                        ✕
-                      </button>
-                    )}
-                    <input
-                      ref={photoRef}
-                      type="file"
-                      accept="image/*"
-                      style={{ display: "none" }}
-                      onChange={(e) => handlePhoto(e)}
-                    />
+                  <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                    {ni.photo && <img src={ni.photo} alt="p" style={{ width: 36, height: 36, objectFit: "cover", borderRadius: 4, border: `1px solid ${T.border}` }} />}
+                    <button style={{ ...S.btn("ghost"), fontSize: 11, padding: "4px 8px" }} onClick={() => photoRef.current.click()}>{ni.photo ? "Change" : "Upload"}</button>
+                    {ni.photo && <button style={{ background: "none", border: "none", color: T.danger, cursor: "pointer", fontSize: 11 }} onClick={() => setNi({ ...ni, photo: null })}>✕</button>}
+                    <input ref={photoRef} type="file" accept="image/*" style={{ display: "none" }} onChange={e => handlePhoto(e)} />
                   </div>
                 </div>
                 <div style={{ gridColumn: "span 3" }}>
                   <label style={S.label}>Description</label>
-                  <input
-                    style={S.input}
-                    value={ni.description}
-                    onChange={(e) =>
-                      setNi({ ...ni, description: e.target.value })
-                    }
-                  />
+                  <input style={S.input} value={ni.description} onChange={e => setNi({ ...ni, description: e.target.value })} placeholder="Short description for catalog" />
+                </div>
+                <div style={{ gridColumn: "span 3" }}>
+                  <label style={S.label}>Notes (printed on catalog)</label>
+                  <input style={S.input} value={ni.notes || ""} onChange={e => setNi({ ...ni, notes: e.target.value })} placeholder="e.g. Contains nuts · Halal · Minimum 20 portions" />
                 </div>
                 <div style={{ gridColumn: "span 3" }}>
                   <label style={S.label}>Tags (comma-separated)</label>
-                  <input
-                    style={S.input}
-                    value={ni.tags}
-                    onChange={(e) => setNi({ ...ni, tags: e.target.value })}
-                  />
+                  <input style={S.input} value={ni.tags} onChange={e => setNi({ ...ni, tags: e.target.value })} placeholder="e.g. Buffet, Birthday, Halal" />
                 </div>
               </div>
-              <div
-                style={{ ...S.row, marginTop: 10, justifyContent: "flex-end" }}
-              >
-                <button
-                  style={S.btn("ghost")}
-                  onClick={() => {
-                    setAdding(false);
-                    setEditId(null);
-                  }}
-                >
-                  Cancel
-                </button>
-                <button style={S.btn("primary")} onClick={save}>
-                  {editId != null ? "Update" : "Save"}
-                </button>
+              <div style={{ ...S.row, marginTop: 10, justifyContent: "flex-end" }}>
+                <button style={S.btn("ghost")} onClick={() => { setAdding(false); setEditId(null); }}>Cancel</button>
+                <button style={S.btn("primary")} onClick={save}>{editId != null ? "Update" : "Save Item"}</button>
               </div>
             </div>
           )}
+
+          {/* Items grid */}
           <div style={S.grid(3)}>
-            {filtered.map((item) => {
-              const cat = categories.find((c) => c.id === item.catId);
-              const margin =
-                item.costPerUnit && item.price
-                  ? (
-                      ((item.price - item.costPerUnit) / item.price) *
-                      100
-                    ).toFixed(0)
-                  : null;
-              return (
-                <div
-                  key={item.id}
-                  style={{ ...S.card, padding: 0, overflow: "hidden" }}
-                >
-                  <div
-                    style={{
-                      height: 110,
-                      background: T.surface,
-                      position: "relative",
-                      cursor: "pointer",
-                    }}
-                    onClick={() => {
-                      const inp = document.createElement("input");
-                      inp.type = "file";
-                      inp.accept = "image/*";
-                      inp.onchange = (e) => handlePhoto(e, item.id);
-                      inp.click();
-                    }}
-                  >
-                    {item.photo ? (
-                      <img
-                        src={item.photo}
-                        alt={item.name}
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                        }}
-                      />
-                    ) : (
-                      <div
-                        style={{
-                          height: "100%",
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          color: T.textDim,
-                          gap: 3,
-                        }}
-                      >
-                        <div style={{ fontSize: 24 }}>📷</div>
-                        <div style={{ fontSize: 9 }}>Click to upload</div>
-                      </div>
-                    )}
-                    <div
-                      style={{
-                        position: "absolute",
-                        bottom: 4,
-                        right: 4,
-                        background: "rgba(0,0,0,0.55)",
-                        color: "#fff",
-                        fontSize: 8,
-                        padding: "2px 5px",
-                        borderRadius: 3,
-                      }}
-                    >
-                      📷
-                    </div>
-                  </div>
-                  <div style={{ padding: 9 }}>
-                    <div
-                      style={{ fontSize: 11, fontWeight: 700, marginBottom: 1 }}
-                    >
-                      {item.name}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 10,
-                        color: T.textMuted,
-                        marginBottom: 4,
-                      }}
-                    >
-                      {cat?.name}
-                    </div>
-                    {item.description && (
-                      <div
-                        style={{
-                          fontSize: 9,
-                          color: T.textDim,
-                          marginBottom: 5,
-                          lineHeight: 1.4,
-                        }}
-                      >
-                        {item.description}
-                      </div>
-                    )}
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 4,
-                        marginBottom: 3,
-                      }}
-                    >
-                      <input
-                        type="number"
-                        value={item.price}
-                        onChange={(e) =>
-                          setItems((prev) =>
-                            prev.map((it) =>
-                              it.id === item.id
-                                ? { ...it, price: Number(e.target.value) }
-                                : it
-                            )
-                          )
-                        }
-                        style={{
-                          ...S.input,
-                          width: 90,
-                          padding: "3px 5px",
-                          fontSize: 12,
-                          fontWeight: 800,
-                          color: T.accent,
-                        }}
-                      />
-                      <span style={{ fontSize: 9, color: T.textMuted }}>
-                        XAF / {item.unitType}
-                      </span>
-                    </div>
-                    {item.costPerUnit > 0 && (
-                      <div
-                        style={{
-                          fontSize: 9,
-                          color: T.textMuted,
-                          marginBottom: 4,
-                        }}
-                      >
-                        Cost: {fmt(item.costPerUnit)}{" "}
-                        {margin && (
-                          <span style={{ color: T.success }}>
-                            · Margin: {margin}%
-                          </span>
-                        )}
-                      </div>
-                    )}
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: 3,
-                        alignItems: "center",
-                        flexWrap: "wrap",
-                        marginTop: 4,
-                      }}
-                    >
-                      {(Array.isArray(item.tags) ? item.tags : []).map((t) => (
-                        <span key={t} style={S.tag}>
-                          {t}
-                        </span>
-                      ))}
-                      <button
-                        style={{
-                          ...S.btn("ghost"),
-                          fontSize: 9,
-                          padding: "1px 5px",
-                          marginLeft: "auto",
-                        }}
-                        onClick={() => startEdit(item)}
-                      >
-                        Edit
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+            {filtered.map(item => <CatalogItemCard key={item.id} item={item} categories={categories} setItems={setItems} startEdit={startEdit} handlePhoto={handlePhoto} onDelete={() => setItems(prev => prev.filter(i => i.id !== item.id))} />)}
           </div>
-          {filtered.length === 0 && (
-            <div
-              style={{
-                color: T.textMuted,
-                padding: 20,
-                textAlign: "center",
-                fontSize: 12,
-              }}
-            >
-              No items found
+          {filtered.length === 0 && !adding && (
+            <div style={{ color: T.textMuted, padding: 40, textAlign: "center", fontSize: 13 }}>
+              <div style={{ fontSize: 32, marginBottom: 8 }}>🍽️</div>
+              No items in this category yet.<br />
+              <span style={{ color: T.accent, cursor: "pointer" }} onClick={() => { setAdding(true); setNi({ ...EMPTY_NI, catId: selCat }); }}>+ Add the first item</span>
             </div>
           )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── CATALOG ITEM CARD ────────────────────────────────────────────
+function CatalogItemCard({ item, categories, setItems, startEdit, handlePhoto, onDelete }) {
+  const cat = categories.find(c => c.id === item.catId);
+  const margin = item.costPerUnit && item.price ? (((item.price - item.costPerUnit) / item.price) * 100).toFixed(0) : null;
+  return (
+    <div style={{ ...S.card, padding: 0, overflow: "hidden" }}>
+      <div style={{ height: 120, background: T.surface, position: "relative", cursor: "pointer" }}
+        onClick={() => { const inp = document.createElement("input"); inp.type = "file"; inp.accept = "image/*"; inp.onchange = e => handlePhoto(e, item.id); inp.click(); }}>
+        {item.photo
+          ? <img src={item.photo} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          : <div style={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: T.textDim, gap: 3 }}>
+              <div style={{ fontSize: 24 }}>📷</div>
+              <div style={{ fontSize: 9 }}>Click to add photo</div>
+            </div>
+        }
+        <div style={{ position: "absolute", bottom: 4, right: 4, background: "rgba(0,0,0,0.5)", color: "#fff", fontSize: 8, padding: "2px 5px", borderRadius: 3 }}>📷</div>
+      </div>
+      <div style={{ padding: 9 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, marginBottom: 1 }}>{item.name}</div>
+        <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 3 }}>{cat?.name}</div>
+        {item.description && <div style={{ fontSize: 9, color: T.textDim, marginBottom: 4, lineHeight: 1.4 }}>{item.description}</div>}
+        {item.notes && <div style={{ fontSize: 9, color: T.accent, marginBottom: 4, fontStyle: "italic" }}>📝 {item.notes}</div>}
+        <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 3 }}>
+          <input type="number" value={item.price}
+            onChange={e => setItems(prev => prev.map(it => it.id === item.id ? { ...it, price: Number(e.target.value) } : it))}
+            style={{ ...S.input, width: 90, padding: "3px 5px", fontSize: 12, fontWeight: 800, color: T.accent }} />
+          <span style={{ fontSize: 9, color: T.textMuted }}>XAF / {item.unitType}</span>
+        </div>
+        {item.costPerUnit > 0 && (
+          <div style={{ fontSize: 9, color: T.textMuted, marginBottom: 4 }}>
+            Cost: {fmt(item.costPerUnit)} {margin && <span style={{ color: T.success }}>· Margin: {margin}%</span>}
+          </div>
+        )}
+        <div style={{ display: "flex", gap: 3, alignItems: "center", flexWrap: "wrap", marginTop: 4 }}>
+          {(Array.isArray(item.tags) ? item.tags : []).map(t => <span key={t} style={S.tag}>{t}</span>)}
+          <div style={{ marginLeft: "auto", display: "flex", gap: 4 }}>
+            <button style={{ ...S.btn("ghost"), fontSize: 9, padding: "1px 6px" }} onClick={() => startEdit(item)}>Edit</button>
+            {onDelete && <button style={{ ...S.btn("ghost"), fontSize: 9, padding: "1px 6px", color: T.danger, borderColor: T.danger + "40" }} onClick={onDelete}>✕</button>}
+          </div>
         </div>
       </div>
     </div>
@@ -12463,7 +12228,7 @@ export default function App() {
   const [invoices, setInvoices] = useState(() => ls_get("cb_invoices", INIT_INVOICES));
   const [proposals, setProposals] = useState(() => ls_get("cb_proposals", INIT_PROPOSALS));
   const [catalogItems, setCatalogItems] = useState(() => ls_get("cb_catalog", CAT_ITEMS));
-  const [catalogCategories] = useState(CAT_CATS);
+  const [catalogCategories, setCatalogCategories] = useState(() => ls_get("cb_catalog_cats", CAT_CATS));
   const [inventory, setInventory] = useState(() => ls_get("cb_inventory", INIT_INVENTORY));
   const [meals, setMeals] = useState(() => ls_get("cb_meals", INIT_MEALS));
   const [batches, setBatches] = useState(() => ls_get("cb_batches", []));
@@ -12481,6 +12246,7 @@ export default function App() {
   useEffect(() => { ls_set("cb_invoices", invoices); }, [invoices]);
   useEffect(() => { ls_set("cb_proposals", proposals); }, [proposals]);
   useEffect(() => { ls_set("cb_catalog", catalogItems); }, [catalogItems]);
+  useEffect(() => { ls_set("cb_catalog_cats", catalogCategories); }, [catalogCategories]);
   useEffect(() => { ls_set("cb_inventory", inventory); }, [inventory]);
   useEffect(() => { ls_set("cb_meals", meals); }, [meals]);
   useEffect(() => { ls_set("cb_batches", batches); }, [batches]);
@@ -12735,8 +12501,10 @@ export default function App() {
         {tab === "catalog" && (
           <CatalogPage
             categories={catalogCategories}
+            setCategories={setCatalogCategories}
             items={catalogItems}
             setItems={setCatalogItems}
+            meals={meals}
             logo={logo}
             biz={biz}
           />
