@@ -3387,8 +3387,9 @@ function EventCostLedger({ evt, inventory, onUpdate }) {
   );
 }
 
-function CateringPage({ events, setEvents, proposals, setProposals, inventory, logo, biz, customers, setCustomers, catalogItems, catalogCategories, proposalPrefillLines, clearProposalPrefill }) {
+function CateringPage({ events, setEvents, proposals, setProposals, inventory, logo, biz, customers, setCustomers, catalogItems, catalogCategories, proposalPrefillLines, clearProposalPrefill, setCatalogItems, setCatalogCategories, meals }) {
   const [cateringSubTab, setCateringSubTab] = useState("events");
+  const [catalogPrefill, setCatalogPrefill] = useState(null);
   const [sel, setSel] = useState(null);
   const [filter, setFilter] = useState("All");
   const [doc, setDoc] = useState(null);
@@ -3592,7 +3593,24 @@ function CateringPage({ events, setEvents, proposals, setProposals, inventory, l
       <div style={{ ...S.row, gap: 6, marginBottom: 14, flexWrap: "wrap" }}>
         <button style={{ ...S.btn(cateringSubTab === "events" ? "primary" : "ghost"), fontSize: 13 }} onClick={() => setCateringSubTab("events")}>🎉 Events</button>
         <button style={{ ...S.btn(cateringSubTab === "proposals" ? "primary" : "ghost"), fontSize: 13 }} onClick={() => setCateringSubTab("proposals")}>📋 Proposals</button>
+        <button style={{ ...S.btn(cateringSubTab === "catalog" ? "primary" : "ghost"), fontSize: 13 }} onClick={() => setCateringSubTab("catalog")}>📦 Catalog</button>
       </div>
+
+      {cateringSubTab === "catalog" && (
+        <CatalogPage
+          categories={catalogCategories}
+          setCategories={setCatalogCategories}
+          items={catalogItems}
+          setItems={setCatalogItems}
+          meals={meals}
+          logo={logo}
+          biz={biz}
+          onCreateProposalFromCatalog={(lines) => {
+            setCatalogPrefill(lines);
+            setCateringSubTab("proposals");
+          }}
+        />
+      )}
 
       {cateringSubTab === "proposals" && (
         <ProposalsPage
@@ -3605,8 +3623,8 @@ function CateringPage({ events, setEvents, proposals, setProposals, inventory, l
           inventory={inventory}
           logo={logo}
           biz={biz}
-          proposalPrefillLines={proposalPrefillLines}
-          clearProposalPrefill={clearProposalPrefill}
+          proposalPrefillLines={catalogPrefill || proposalPrefillLines}
+          clearProposalPrefill={() => { setCatalogPrefill(null); if (clearProposalPrefill) clearProposalPrefill(); }}
         />
       )}
 
@@ -12303,7 +12321,6 @@ function ImportModal({ onClose, onImport }) {
 const TABS = [
   { id: "dashboard", label: "📊 Dashboard" },
   { id: "catering", label: "🎉 Catering" },
-  { id: "catalog", label: "📦 Catalog" },
   { id: "restaurant", label: "🍽️ Restaurant & Delivery" },
   { id: "customers", label: "👥 Customers" },
   { id: "vendors", label: "🏪 Vendors" },
@@ -12606,23 +12623,11 @@ export default function App() {
             setCustomers={setCustomers}
             catalogItems={catalogItems}
             catalogCategories={catalogCategories}
+            setCatalogItems={setCatalogItems}
+            setCatalogCategories={setCatalogCategories}
+            meals={meals}
             proposalPrefillLines={proposalPrefillLines}
             clearProposalPrefill={() => setProposalPrefillLines(null)}
-          />
-        )}
-        {tab === "catalog" && (
-          <CatalogPage
-            categories={catalogCategories}
-            setCategories={setCatalogCategories}
-            items={catalogItems}
-            setItems={setCatalogItems}
-            meals={meals}
-            logo={logo}
-            biz={biz}
-            onCreateProposalFromCatalog={(lines) => {
-              setProposalPrefillLines(lines);
-              setTab("catering");
-            }}
           />
         )}
         {tab === "restaurant" && (
