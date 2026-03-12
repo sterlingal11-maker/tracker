@@ -1765,7 +1765,7 @@ function buildOrderReceiptHTML(sale, biz, logo) {
   const clientName = sale.clientName || (sale.clientName || "Home Order Customer");
   const clientDetail = [
     sale.clientPhone,
-    sale.type === "Delivery" && sale.deliveryAddress ? `📍 ${sale.deliveryAddress}` : null,
+    sale.type === "Shipment" && sale.deliveryAddress ? `📍 ${sale.deliveryAddress}` : null,
     sale.type,
   ].filter(Boolean).join("<br/>");
   const statusLabel = isPartial ? "Partial Payment" : "Payment Received";
@@ -1783,7 +1783,7 @@ function buildOrderReceiptHTML(sale, biz, logo) {
     sale.plates * sale.pricePerPlate
   )}</td></tr>${
     sale.deliveryFee > 0
-      ? `<tr><td>Delivery Fee</td><td class="tc">—</td><td class="tr">${fmt(sale.deliveryFee)}</td><td class="tr">${fmt(sale.deliveryFee)}</td></tr>`
+      ? `<tr><td>Shipping Fee</td><td class="tc">—</td><td class="tr">${fmt(sale.deliveryFee)}</td><td class="tr">${fmt(sale.deliveryFee)}</td></tr>`
       : ""
   }</tbody></table></div><div class="totals-block"><div class="totals-inner"><div class="total-row"><span class="label">Order Total</span><span class="value">${fmt(total)}</span></div><div class="total-row highlight"><span class="label">${amountLabel}</span><span class="value">${fmt(paid)}</span></div>${isPartial ? `<div class="total-row" style="color:#e53e3e;font-weight:700"><span class="label">Balance Due</span><span class="value">${fmt(balance)}</span></div>` : `<div class="total-row grand"><span class="label">TOTAL PAID</span><span class="value">${fmt(paid)}</span></div>`}</div></div>${sale.notes ? `<div class="notes-box"><strong>Order Notes:</strong> ${sale.notes}</div>` : ""}<div class="notes-box"><strong>${isPartial ? "Partial payment received. Please settle the remaining balance." : "Thank you!"}</strong>${isPartial ? "" : " We appreciate your order. Come back soon!"}</div>${footerHTML(biz)}`;
 }
@@ -1798,13 +1798,13 @@ function buildOrderInvoiceHTML(sale, biz, logo) {
   const clientName = sale.clientName || (sale.clientName || "Home Order Customer");
   const clientDetail = [
     sale.clientPhone,
-    sale.type === "Delivery" && sale.deliveryAddress ? `📍 ${sale.deliveryAddress}` : null,
+    sale.type === "Shipment" && sale.deliveryAddress ? `📍 ${sale.deliveryAddress}` : null,
     sale.type + " Order",
   ].filter(Boolean).join("<br/>");
   const rows = [
     `<tr><td class="bold">${sale.meal}</td><td class="tc">${sale.plates} plate${sale.plates > 1 ? "s" : ""}</td><td class="tr">${fmt(sale.pricePerPlate)}</td><td class="tr">${fmt(sale.plates * sale.pricePerPlate)}</td></tr>`,
     sale.deliveryFee > 0
-      ? `<tr><td>Delivery Fee</td><td class="tc">—</td><td class="tr">${fmt(sale.deliveryFee)}</td><td class="tr">${fmt(sale.deliveryFee)}</td></tr>`
+      ? `<tr><td>Shipping Fee</td><td class="tc">—</td><td class="tr">${fmt(sale.deliveryFee)}</td><td class="tr">${fmt(sale.deliveryFee)}</td></tr>`
       : "",
   ].join("");
 
@@ -1822,7 +1822,7 @@ function buildOrderInvoiceHTML(sale, biz, logo) {
     `<div class="party-name">${biz.name}</div><div class="party-detail">${[biz.address, biz.city, biz.phone, biz.email].filter(Boolean).join("<br/>")}</div>`,
     "Bill To",
     `<div class="party-name">${clientName}</div><div class="party-detail">${clientDetail}</div>`
-  )}${statusBanner}<div class="items-section"><div class="section-heading">Order Line Items</div><table><thead><tr><th>Description</th><th class="tc">Qty</th><th class="tr">Unit Price</th><th class="tr">Total (USD)</th></tr></thead><tbody>${rows}</tbody></table></div><div class="totals-block"><div class="totals-inner"><div class="total-row"><span class="label">Subtotal</span><span class="value">${fmt(sale.plates * sale.pricePerPlate)}</span></div>${sale.deliveryFee > 0 ? `<div class="total-row"><span class="label">Delivery Fee</span><span class="value">${fmt(sale.deliveryFee)}</span></div>` : ""}<div class="total-row grand"><span class="label">ORDER TOTAL</span><span class="value">${fmt(total)}</span></div><div class="total-row highlight"><span class="label">Amount Paid</span><span class="value">${fmt(paid)}</span></div><div class="total-row ${balance > 0 ? "highlight" : ""}" style="${balance > 0 ? "color:#e53e3e;font-weight:800" : ""}"><span class="label">Balance Due</span><span class="value">${fmt(balance)}</span></div></div></div><div class="payment-box"><h4>Payment Information</h4><div class="payment-row"><span>Method:</span><strong>${sale.method}</strong></div><div class="payment-row"><span>Date:</span><strong>${sale.date}</strong></div><div class="payment-row"><span>Order type:</span><strong>${sale.type}</strong></div>${sale.notes ? `<div class="payment-row"><span>Notes:</span><strong>${sale.notes}</strong></div>` : ""}</div><div class="terms-box"><p>${balance > 0 ? `A balance of <strong>${fmt(balance)}</strong> remains outstanding. Please settle at your earliest convenience.` : "This invoice confirms a completed and paid order. Please retain for your records."}</p></div>${footerHTML(biz)}`;
+  )}${statusBanner}<div class="items-section"><div class="section-heading">Order Line Items</div><table><thead><tr><th>Description</th><th class="tc">Qty</th><th class="tr">Unit Price</th><th class="tr">Total (USD)</th></tr></thead><tbody>${rows}</tbody></table></div><div class="totals-block"><div class="totals-inner"><div class="total-row"><span class="label">Subtotal</span><span class="value">${fmt(sale.plates * sale.pricePerPlate)}</span></div>${sale.deliveryFee > 0 ? `<div class="total-row"><span class="label">Shipping Fee</span><span class="value">${fmt(sale.deliveryFee)}</span></div>` : ""}<div class="total-row grand"><span class="label">ORDER TOTAL</span><span class="value">${fmt(total)}</span></div><div class="total-row highlight"><span class="label">Amount Paid</span><span class="value">${fmt(paid)}</span></div><div class="total-row ${balance > 0 ? "highlight" : ""}" style="${balance > 0 ? "color:#e53e3e;font-weight:800" : ""}"><span class="label">Balance Due</span><span class="value">${fmt(balance)}</span></div></div></div><div class="payment-box"><h4>Payment Information</h4><div class="payment-row"><span>Method:</span><strong>${sale.method}</strong></div><div class="payment-row"><span>Date:</span><strong>${sale.date}</strong></div><div class="payment-row"><span>Order type:</span><strong>${sale.type}</strong></div>${sale.notes ? `<div class="payment-row"><span>Notes:</span><strong>${sale.notes}</strong></div>` : ""}</div><div class="terms-box"><p>${balance > 0 ? `A balance of <strong>${fmt(balance)}</strong> remains outstanding. Please settle at your earliest convenience.` : "This invoice confirms a completed and paid order. Please retain for your records."}</p></div>${footerHTML(biz)}`;
 }
 function buildCatalogHTML(items, categories, biz, logo) {
   const catMap = {};
@@ -2374,7 +2374,7 @@ function Dashboard({
   const cashRcvd = invoices.reduce((s, i) => s + i.paid, 0);
   const arOut = invoices.reduce((s, i) => s + (i.total - i.paid), 0);
   const delFees = pSales
-    .filter((s) => s.type === "Delivery")
+    .filter((s) => s.type === "Shipment")
     .reduce((s, r) => s + (r.deliveryFee || 0), 0);
   const chartData = useMemo(() => {
     const days = Math.ceil((range[1] - range[0]) / 86400000) + 1;
@@ -6017,7 +6017,7 @@ function RestaurantPage({
     plates: "",
     pricePerPlate: "",
     method: "Cash",
-    type: "Delivery",
+    type: "Shipment",
     deliveryFee: 0,
     deliveryAddress: "",
     clientName: "",
@@ -6073,10 +6073,10 @@ function RestaurantPage({
     .reduce((s, r) => s + orderTotal(r), 0);
   const weekRev = sales.reduce((s, r) => s + orderTotal(r), 0);
   const delRev = sales
-    .filter((s) => s.type === "Delivery")
+    .filter((s) => s.type === "Shipment")
     .reduce((s, r) => s + orderTotal(r), 0);
   const delFees = sales
-    .filter((s) => s.type === "Delivery")
+    .filter((s) => s.type === "Shipment")
     .reduce((s, r) => s + (r.deliveryFee || 0), 0);
 
   const byMeal = {};
@@ -6085,7 +6085,7 @@ function RestaurantPage({
   });
   const lowStock = inventory.filter((i) => i.stock <= i.reorderAt);
   const typeColor = {
-    Delivery: T.delivery,
+    Shipment: T.delivery,
   };
   const totalStockValue = inventory.reduce(
     (s, i) => s + i.stock * i.costPerUnit,
@@ -6336,7 +6336,7 @@ function RestaurantPage({
     <div>
       <DocModal doc={doc} onClose={() => setDoc(null)} />
       <div style={S.pageTitle}>🏠 Home Orders</div>
-      <div style={S.subtitle}>Orders · Meals · Inventory · Production</div>
+      <div style={S.subtitle}>Nationwide Shipping · Meals · Inventory · Production</div>
       <div style={{ display: "flex", gap: 3, marginBottom: 14 }}>
         {[
           ["inventory", "📦 Inventory"],
@@ -6357,10 +6357,10 @@ function RestaurantPage({
             <KpiCard label="Today's Revenue" value={fmt(todayRev)} icon="📅" />
             <KpiCard label="Week Total" value={fmt(weekRev)} icon="📆" />
             <KpiCard
-              label="Delivery Fees (Week)"
+              label="Shipping Fees (Week)"
               value={fmt(delFees)}
               color={T.delivery}
-              icon="🛵"
+              icon="📦"
             />
             <KpiCard
               label="Best Seller"
@@ -6649,7 +6649,7 @@ function RestaurantPage({
                   />
                 </div>
                 <div>
-                      <label style={S.label}>Delivery Address</label>
+                      <label style={S.label}>Shipping Address</label>
                       <input
                         style={S.input}
                         value={ns.deliveryAddress}
@@ -6659,7 +6659,7 @@ function RestaurantPage({
                       />
                     </div>
                     <div>
-                      <label style={S.label}>Delivery Fee (USD)</label>
+                      <label style={S.label}>Shipping Fee (USD)</label>
                       <input
                         type="number"
                         style={S.input}
@@ -6737,7 +6737,7 @@ function RestaurantPage({
                     </span>
                     {s.deliveryFee > 0 && (
                       <span style={{ color: T.delivery }}>
-                        +{fmt(s.deliveryFee)} del.
+                        +{fmt(s.deliveryFee)} ship.
                       </span>
                     )}
                   </div>
@@ -6862,9 +6862,9 @@ function RestaurantPage({
                           <span>
                             <strong style={{ color: T.text, display: "block" }}>{s.clientName}</strong>
                             {s.clientPhone && <span style={{ display: "block" }}>{s.clientPhone}</span>}
-                            {s.type === "Delivery" && s.deliveryAddress && <span style={{ display: "block" }}>📍 {s.deliveryAddress}</span>}
+                            {s.type === "Shipment" && s.deliveryAddress && <span style={{ display: "block" }}>📍 {s.deliveryAddress}</span>}
                           </span>
-                        ) : s.type === "Delivery" && s.deliveryAddress ? (
+                        ) : s.type === "Shipment" && s.deliveryAddress ? (
                           <span>📍 {s.deliveryAddress}</span>
                         ) : (
                           "—"
@@ -12057,7 +12057,7 @@ function parseWorkbook(wb) {
     plates: Number(r["Plates /\nUnits *"] || r["Plates / Units *"] || r["Plates"] || 1),
     pricePerPlate: Number(r["Price / Plate\n(USD) *"] || r["Price / Plate (USD)"] || r["Price/Plate"] || 0),
     method: String(r["Payment\nMethod * \u25bc"] || r["Payment Method *"] || r["Payment Method"] || "Cash").trim(),
-    type: String(r["Order Type *\n\u25bc"] || r["Order Type *"] || r["Order Type"] || "Delivery").trim(),
+    type: String(r["Order Type *\n\u25bc"] || r["Order Type *"] || r["Order Type"] || "Shipment").trim(),
     deliveryFee: Number(r["Delivery Fee\n(USD)"] || r["Delivery Fee (USD)"] || r["Delivery Fee"] || 0),
     clientName: String(r["Client Name\n(delivery only)"] || r["Client Name"] || "").trim(),
     deliveryAddress: "",
