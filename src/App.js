@@ -108,7 +108,7 @@ const inRange = (dateStr, from, to) => {
   return d >= from && d <= to;
 };
 const fmtDate = (d) =>
-  d.toLocaleDateString("fr-CM", {
+  d.toLocaleDateString("en-US", {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -12284,8 +12284,15 @@ export default function App() {
   const [meals, setMeals] = useState(() => ls_get("cb_meals", INIT_MEALS));
   const [batches, setBatches] = useState(() => ls_get("cb_batches", []));
   const [overheads, setOverheads] = useState(() => ls_get("cb_overheads", INIT_OVERHEADS));
-  const [logo, setLogo] = useState(() => ls_get("cb_logo", { src: LOGO_SRC }));
-  const [biz, setBiz] = useState(() => ls_get("cb_biz", INIT_BIZ));
+  const [logo, setLogo] = useState(() => ({ src: LOGO_SRC }));
+  const [biz, setBiz] = useState(() => {
+    const saved = ls_get("cb_biz", INIT_BIZ);
+    // Clear legacy Cameroon city if still set
+    if (saved.city && (saved.city.toLowerCase().includes("cameroon") || saved.city.toLowerCase().includes("douala"))) {
+      saved.city = "";
+    }
+    return { ...INIT_BIZ, ...saved };
+  });
   const [customers, setCustomers] = useState(() => ls_get("cb_customers", []));
   const [showSettings, setShowSettings] = useState(false);
   const [showImport, setShowImport] = useState(false);
@@ -12628,7 +12635,7 @@ const STUDIO_TOOLS = [
     platforms: ["Instagram", "Facebook", "WhatsApp Status", "TikTok"],
     color: "#E4405F",
     prompt: (ctx, opts) =>
-      `You are a social media copywriter for ${ctx.biz}, a catering and restaurant business in Douala, Cameroon.
+      `You are a social media copywriter for ${ctx.biz}, a catering and restaurant business in Charlotte, NC.
 Write a ${opts.platform} caption that is engaging, authentic and uses a warm West/Central African tone.
 Tone: ${opts.tone}. Language: ${opts.lang === "fr" ? "French" : "English"}.
 ${opts.topic ? `Topic / context: ${opts.topic}` : ""}
@@ -12645,7 +12652,7 @@ Do NOT use emojis excessively — 2–4 max. Output only the caption text, ready
     desc: "Write mouthwatering descriptions for menu items",
     color: "#FF6B35",
     prompt: (ctx, opts) =>
-      `You are a food copywriter for ${ctx.biz}, a catering and restaurant in Douala, Cameroon.
+      `You are a food copywriter for ${ctx.biz}, a catering and restaurant in Charlotte, NC.
 Write a short, appetizing description (2–3 sentences) for: ${opts.topic || "our signature dish"}.
 Tone: ${opts.tone}. Language: ${opts.lang === "fr" ? "French" : "English"}.
 ${opts.mediaDesc ? `The dish looks like this: ${opts.mediaDesc}` : ""}
@@ -12660,7 +12667,7 @@ Output only the description, no titles or labels.`,
     desc: "Generate text for digital flyers and event promotions",
     color: "#F4C430",
     prompt: (ctx, opts) =>
-      `You are a marketing copywriter for ${ctx.biz}, catering & restaurant, Douala, Cameroon.
+      `You are a marketing copywriter for ${ctx.biz}, catering & restaurant, Charlotte, NC.
 Write promotional flyer text for: ${opts.topic || "a special offer or event"}.
 Tone: ${opts.tone}. Language: ${opts.lang === "fr" ? "French" : "English"}.
 ${ctx.upcomingEvent ? `Event details: ${ctx.upcomingEvent}` : ""}
@@ -12675,7 +12682,7 @@ Keep it punchy and direct. Output only the flyer text, formatted with line break
     desc: "Draft professional emails for catering proposals and follow-ups",
     color: "#4A90D9",
     prompt: (ctx, opts) =>
-      `You are writing on behalf of ${ctx.biz}, a catering and restaurant business in Douala, Cameroon.
+      `You are writing on behalf of ${ctx.biz}, a catering and restaurant business in Charlotte, NC.
 Draft a professional ${opts.emailType || "follow-up"} email to a catering client.
 Tone: ${opts.tone}. Language: ${opts.lang === "fr" ? "French" : "English"}.
 Context: ${opts.topic || "following up after a proposal or event inquiry"}.
@@ -12690,7 +12697,7 @@ Use [CLIENT NAME] as placeholder. Sign off as the ${ctx.biz} team.`,
     desc: "Craft thoughtful responses to customer reviews",
     color: "#3DB86A",
     prompt: (ctx, opts) =>
-      `You manage customer relations for ${ctx.biz}, catering & restaurant, Douala, Cameroon.
+      `You manage customer relations for ${ctx.biz}, catering & restaurant, Charlotte, NC.
 Write a ${opts.sentiment === "negative" ? "gracious, empathetic response to a negative" : "warm response to a positive"} customer review.
 Language: ${opts.lang === "fr" ? "French" : "English"}.
 Review content: "${opts.topic || "sample customer feedback"}"
@@ -12719,7 +12726,7 @@ Output only the brand copy, no commentary.`,
     color: "#E8C547",
     mediaRequired: true,
     prompt: (ctx, opts) =>
-      `You are a food and hospitality marketing expert reviewing content for ${ctx.biz}, Douala, Cameroon.
+      `You are a food and hospitality marketing expert reviewing content for ${ctx.biz}, Charlotte, NC.
 Analyze this image and provide:
 1. A brief description of what you see
 2. What's working well visually (lighting, composition, appeal)
@@ -12734,7 +12741,7 @@ Language: ${opts.lang === "fr" ? "French" : "English"}.`,
     desc: "Generate polite, personalised messages asking customers to leave a Google or social media review",
     color: "#FBBC04",
     prompt: (ctx, opts) =>
-      `You are writing on behalf of ${ctx.biz}, a catering and restaurant business in Douala, Cameroon.
+      `You are writing on behalf of ${ctx.biz}, a catering and restaurant business in Charlotte, NC.
 Write a warm, genuine, and polite message asking a satisfied customer to leave a review.
 Channel: ${opts.reviewChannel}. Language: ${opts.lang === "fr" ? "French" : "English"}.
 Tone: ${opts.tone}.
