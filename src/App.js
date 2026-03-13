@@ -6616,7 +6616,7 @@ function RestaurantPage({
                   </select>
                 </div>
                 <div>
-                  <label style={S.label}>Products</label>
+                  <label style={S.label}>Products (Qty)</label>
                   <input
                     type="number"
                     style={S.input}
@@ -6633,6 +6633,15 @@ function RestaurantPage({
                     onChange={(e) =>
                       setNs({ ...ns, pricePerPlate: e.target.value })
                     }
+                  />
+                </div>
+                <div>
+                  <label style={S.label}>Total (USD)</label>
+                  <input
+                    type="number"
+                    style={{ ...S.input, background: "rgba(232,197,71,0.07)", color: T.accent, fontWeight: 700, cursor: "default" }}
+                    readOnly
+                    value={((Number(ns.plates) || 0) * (Number(ns.pricePerPlate) || 0) + (Number(ns.deliveryFee) || 0)).toFixed(2)}
                   />
                 </div>
                 <div>
