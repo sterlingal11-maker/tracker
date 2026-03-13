@@ -1443,11 +1443,12 @@ const PRINT_CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Inter',Arial,sans-serif;color:#1a1a1a;background:#fff;padding:40px;font-size:13px;line-height:1.5}
-.doc-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:32px;padding-bottom:20px;border-bottom:3px solid #1a1a1a}
-.brand-block{display:flex;flex-direction:column;align-items:flex-start;margin-left:0;gap:0}
-.brand-block img{height:150px;max-width:300px;object-fit:contain;display:block;margin-bottom:-12px;margin-left:-12px}
-.brand-name{font-size:26px;font-weight:900;letter-spacing:-1px;color:#1a1a1a;line-height:1}
-.brand-sub{font-size:11px;color:#666;margin-top:2px;line-height:1.7}
+.doc-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:32px;padding-bottom:24px;border-bottom:3px solid #1a1a1a}
+.brand-block{display:flex;flex-direction:row;align-items:center;gap:16px}
+.brand-block img{height:90px;width:90px;object-fit:contain;border-radius:50%;border:2px solid #e8c547;flex-shrink:0}
+.brand-text{display:flex;flex-direction:column}
+.brand-name{font-size:24px;font-weight:900;letter-spacing:-0.5px;color:#1a1a1a;line-height:1.1}
+.brand-sub{font-size:10.5px;color:#666;margin-top:4px;line-height:1.8}
 .doc-ref-block{text-align:right}
 .doc-type{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#999;margin-bottom:4px}
 .doc-number{font-size:28px;font-weight:900;color:#1a1a1a;letter-spacing:-0.5px}
@@ -1520,9 +1521,6 @@ tbody td.tr{text-align:right;font-weight:600}tbody td.tc{text-align:center}tbody
 `;
 
 function getBizHTML(biz, logo) {
-  const img = logo?.src
-    ? `<img src="${logo.src}" alt="logo"/>`
-    : `<div class="brand-name">${biz.name}</div>`;
   const sub = [
     biz.tagline,
     biz.address,
@@ -1534,11 +1532,15 @@ function getBizHTML(biz, logo) {
   ]
     .filter(Boolean)
     .join("<br/>");
-  return { img, sub };
+  const textBlock = `<div class="brand-text"><div class="brand-name">${biz.name}</div><div class="brand-sub">${sub}</div></div>`;
+  const img = logo?.src
+    ? `<img src="${logo.src}" alt="logo"/>`
+    : "";
+  return { img, sub, textBlock };
 }
 function headerHTML(biz, logo, docType, docNum, dateIssued, dateDue) {
-  const { img, sub } = getBizHTML(biz, logo);
-  return `<div class="doc-header"><div class="brand-block">${img}<div class="brand-sub">${sub}</div></div><div class="doc-ref-block"><div class="doc-type">${docType}</div><div class="doc-number">${docNum}</div><div class="doc-meta">Issued: ${dateIssued}${
+  const { img, sub, textBlock } = getBizHTML(biz, logo);
+  return `<div class="doc-header"><div class="brand-block">${img}${textBlock}</div><div class="doc-ref-block"><div class="doc-type">${docType}</div><div class="doc-number">${docNum}</div><div class="doc-meta">Issued: ${dateIssued}${
     dateDue ? `<br>Due: ${dateDue}` : ""
   }</div></div></div>`;
 }
