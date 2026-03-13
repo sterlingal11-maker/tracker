@@ -108,7 +108,7 @@ const inRange = (dateStr, from, to) => {
   return d >= from && d <= to;
 };
 const fmtDate = (d) =>
-  d.toLocaleDateString("fr-CM", {
+  d.toLocaleDateString("en-US", {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -343,7 +343,7 @@ const ageBucket = (days) => {
   if (days <= 60) return "31–60 days";
   return "61+ days";
 };
-const TODAY_LABEL = APP_TODAY.toLocaleDateString("fr-CM", { day: "2-digit", month: "short", year: "numeric" });
+const TODAY_LABEL = APP_TODAY.toLocaleDateString("en-US", { day: "2-digit", month: "short", year: "numeric" });
 const TODAY_ISO = APP_TODAY.toISOString().slice(0, 10);
 const THIS_YEAR = APP_TODAY.getFullYear();
 
@@ -857,7 +857,7 @@ function PhasedMediaGallery({ media, onAdd, onDelete, onUpdate, currentPhase }) 
           phase: uploadPhase,
           category: uploadCat,
           caption: uploadCaption,
-          uploadedAt: new Date().toLocaleDateString("fr-CM", { day: "2-digit", month: "short", year: "numeric" }),
+          uploadedAt: new Date().toLocaleDateString("en-US", { day: "2-digit", month: "short", year: "numeric" }),
         });
       };
       r.readAsDataURL(f);
@@ -2386,7 +2386,7 @@ function Dashboard({
         const d = new Date(range[0]);
         d.setDate(d.getDate() + i);
         const key = d.toISOString().slice(0, 10);
-        const label = d.toLocaleDateString("fr-CM", {
+        const label = d.toLocaleDateString("en-US", {
           day: "2-digit",
           month: "2-digit",
         });
@@ -2407,7 +2407,7 @@ function Dashboard({
         wk.setDate(d.getDate() + off);
         const key = wk.toISOString().slice(0, 10);
         const label = `W${Math.ceil(wk.getDate() / 7)} ${wk.toLocaleDateString(
-          "fr-CM",
+          "en-US",
           { month: "short" }
         )}`;
         if (!groups[key]) groups[key] = { label, sales: 0, cogs: 0 };
@@ -2422,7 +2422,7 @@ function Dashboard({
         wk.setDate(d.getDate() + off);
         const key = wk.toISOString().slice(0, 10);
         const label = `W${Math.ceil(wk.getDate() / 7)} ${wk.toLocaleDateString(
-          "fr-CM",
+          "en-US",
           { month: "short" }
         )}`;
         if (!groups[key]) groups[key] = { label, sales: 0, cogs: 0 };
@@ -2433,7 +2433,7 @@ function Dashboard({
       pSales.forEach((s) => {
         const key = s.date.slice(0, 7);
         const d = new Date(s.date);
-        const label = d.toLocaleDateString("fr-CM", {
+        const label = d.toLocaleDateString("en-US", {
           month: "short",
           year: "2-digit",
         });
@@ -2444,7 +2444,7 @@ function Dashboard({
       pEvents.forEach((e) => {
         const key = e.eventDate.slice(0, 7);
         const d = new Date(e.eventDate);
-        const label = d.toLocaleDateString("fr-CM", {
+        const label = d.toLocaleDateString("en-US", {
           month: "short",
           year: "2-digit",
         });
@@ -3106,11 +3106,11 @@ function Dashboard({
 const COST_CATEGORIES = [
   { id: "ingredient_inv",  label: "Ingredient (from Inventory)", icon: "📦", group: "Ingredients" },
   { id: "ingredient_buy",  label: "Ingredient (Market Purchase)", icon: "🛒", group: "Ingredients" },
-  { id: "labour",          label: "Labour / Staff",               icon: "👷", group: "Labour" },
+  { id: "labor",          label: "Labor / Staff",               icon: "👷", group: "Labor" },
   { id: "transport",       label: "Transport / Delivery",         icon: "🚐", group: "Transport" },
   { id: "equipment",       label: "Equipment Hire",               icon: "🔧", group: "Equipment" },
   { id: "packaging",       label: "Packaging & Disposables",      icon: "📦", group: "Other" },
-  { id: "gas_fuel",        label: "Gas / Fuel / Charbon",         icon: "🔥", group: "Other" },
+  { id: "gas_fuel",        label: "Gas / Fuel / Propane",         icon: "🔥", group: "Other" },
   { id: "other",           label: "Other",                        icon: "📋", group: "Other" },
 ];
 
@@ -3251,7 +3251,7 @@ function EventCostLedger({ evt, inventory, onUpdate }) {
             <input
               style={S.input}
               placeholder={
-                nl.cat === "labour" ? "e.g. Chef Marie — 1 day" :
+                nl.cat === "labor" ? "e.g. Chef Alex — 1 day" :
                 nl.cat === "transport" ? "e.g. Van hire Bonapriso" :
                 nl.cat === "ingredient_buy" ? "e.g. Poulet frais — market" :
                 "Description"
@@ -3265,7 +3265,7 @@ function EventCostLedger({ evt, inventory, onUpdate }) {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 7, marginBottom: 7 }}>
             <div>
               <label style={S.label}>
-                {nl.cat === "labour" ? "Days / Sessions" :
+                {nl.cat === "labor" ? "Days / Sessions" :
                  nl.cat === "ingredient_inv" || nl.cat === "ingredient_buy" ? "Qty / kg / L" :
                  "Quantity"}
               </label>
@@ -3280,7 +3280,7 @@ function EventCostLedger({ evt, inventory, onUpdate }) {
             </div>
             <div>
               <label style={S.label}>
-                {nl.cat === "labour" ? "Rate / day (USD)" :
+                {nl.cat === "labor" ? "Rate / day (USD)" :
                  nl.cat === "ingredient_inv" || nl.cat === "ingredient_buy" ? "Cost / unit (USD)" :
                  "Unit Cost (USD)"}
               </label>
@@ -3776,7 +3776,7 @@ function CateringPage({ events, setEvents, proposals, setProposals, inventory, l
             </div>
           </div>
           <div style={{ marginTop: 8, background: T.surface, borderRadius: 7, padding: "8px 12px", fontSize: 11, color: T.textMuted }}>
-            💡 Save the event first, then add detailed cost lines (ingredients, labour, transport, etc.) directly in the event panel.
+            💡 Save the event first, then add detailed cost lines (ingredients, labor, transport, etc.) directly in the event panel.
           </div>
           <div style={{ marginTop: 8 }}>
             <label style={S.label}>Notes</label>
@@ -5395,7 +5395,7 @@ function ProposalsPage({
                               <th style={S.th}>Ingredient</th>
                               <th style={S.th}>Unit</th>
                               <th style={S.th}>Cost/Unit</th>
-                              <th style={S.th}>Used/Plate</th>
+                              <th style={S.th}>Used/Unit</th>
                               <th style={S.th}>Est. Total Cost</th>
                             </tr>
                           </thead>
@@ -6156,7 +6156,7 @@ function RestaurantPage({
 
   const deleteSale = (id) => {
     const s = sales.find((sale) => sale.id === id);
-    if (!window.confirm("Delete this order? " + (s?.plates || "") + " plate(s) of " + (s?.meal || ""))) return;
+    if (!window.confirm("Delete this order? " + (s?.plates || "") + " unit(s) of " + (s?.meal || ""))) return;
     // Restore portions to the linked meal
     if (s?.mealId) {
       setMeals((prev) =>
@@ -6544,7 +6544,7 @@ function RestaurantPage({
                                   {portions} portion{portions !== 1 ? "s" : ""} available
                                 </div>
                                 <div style={{ fontSize: 10, color: T.textDim, marginTop: 1 }}>
-                                  {fmt(m.price)} / plate
+                                  {fmt(m.price)} / unit
                                 </div>
                               </button>
                             );
@@ -6557,7 +6557,7 @@ function RestaurantPage({
                           if (platesNum > avail) {
                             return (
                               <div style={{ fontSize: 11, color: T.danger, background: `${T.danger}12`, borderRadius: 6, padding: "5px 10px" }}>
-                                ⚠️ {platesNum} plates requested but only {avail} available in batches.
+                                ⚠️ {platesNum} units requested but only {avail} available in batches.
                               </div>
                             );
                           }
@@ -8967,7 +8967,7 @@ function CustomersPage({ customers, setCustomers, invoices, setInvoices, events,
                 <div><span style={{ color: T.textDim, fontSize: 12 }}>Total Spend</span><br /><strong style={{ color: T.success }}>{fmt(custTotalSpend(selCustomer.name))}</strong></div>
               </div>
               <div style={S.sectionTitle}>Home Orders ({custSales(selCustomer.name).length})</div>
-              {custSales(selCustomer.name).length === 0 ? <div style={{ color: T.textDim, fontSize: 13, marginBottom: 8 }}>No restaurant orders.</div> : (
+              {custSales(selCustomer.name).length === 0 ? <div style={{ color: T.textDim, fontSize: 13, marginBottom: 8 }}>No home orders.</div> : (
                 <table style={{ ...S.table, marginBottom: 10 }}>
                   <thead><tr>{["Date","Meal","Products","Total","Paid","Balance","Notes"].map(h => <th key={h} style={S.th}>{h}</th>)}</tr></thead>
                   <tbody>{custSales(selCustomer.name).map(s => {
@@ -11728,9 +11728,9 @@ function buildReportHTML(title, d, biz) {
     <div style="text-align:right"><div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:1px">${title}</div>
     <div style="font-size:18px;font-weight:900">${d.period.label}</div>
     <div style="font-size:11px;color:#888">${d.from.toLocaleDateString(
-      "fr-CM",
+      "en-US",
       { day: "2-digit", month: "short", year: "numeric" }
-    )} – ${d.to.toLocaleDateString("fr-CM", {
+    )} – ${d.to.toLocaleDateString("en-US", {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -12054,7 +12054,7 @@ function parseWorkbook(wb) {
     price: Number(r["Price\n(USD) *"] || r["Price (USD) *"] || r["Price (USD)"] || r["Price"] || 0),
     category: String(r["Category"] || "Main").trim(),
     active: String(r["Active"] || "Yes").trim().toLowerCase() !== "no",
-    laborCost: Number(r["Labour Cost\n(USD/plate)"] || r["Labour Cost (USD/plate)"] || r["Labour Cost"] || 0),
+    laborCost: Number(r["Labor Cost\n(USD/plate)"] || r["Labor Cost (USD/plate)"] || r["Labor Cost"] || 0),
     availablePortions: Number(r["Available\nPortions"] || r["Available Portions"] || 0),
     ingredientLinks: [],
     otherCosts: [],
