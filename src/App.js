@@ -2219,20 +2219,29 @@ function buildReceiptHTML(inv, biz, logo) {
     biz.name
   }. Please retain for your records.</div>${footerHTML(biz)}`;
 }
-function buildProposalHTML(prop, biz, logo) {
+function buildProposalHTML(prop, biz, logo, catalogItems) {
   const sub = prop.lines.reduce((s, l) => s + l.qty * l.price, 0);
   const total = sub - (prop.discount || 0);
   const deposit = total * 0.5;
+
+  // Build a photo lookup from catalogItems by name
+  const photoMap = {};
+  (catalogItems || []).forEach(item => {
+    if (item.photo) photoMap[item.name.toLowerCase()] = item.photo;
+  });
+
   const rows = prop.lines
-    .map(
-      (l) =>
-        `<tr><td class="bold">${l.name}</td><td class="tc">${
-          l.unitType
-        }</td><td class="tc">${l.qty}</td><td class="tr">${fmt(
-          l.price
-        )}</td><td class="tr">${fmt(l.qty * l.price)}</td></tr>`
-    )
+    .map((l) => {
+      const photo = photoMap[l.name.toLowerCase()];
+      const nameCell = photo
+        ? `<td class="bold" style="display:flex;align-items:center;gap:8px;padding:6px 8px"><img src="${photo}" alt="" style="width:44px;height:44px;object-fit:cover;border-radius:6px;flex-shrink:0"/><span>${l.name}</span></td>`
+        : `<td class="bold">${l.name}</td>`;
+      return `<tr>${nameCell}<td class="tc">${l.unitType}</td><td class="tc">${l.qty}</td><td class="tr">${fmt(l.price)}</td><td class="tr">${fmt(l.qty * l.price)}</td></tr>`;
+    })
     .join("");
+
+  const payTerms = prop.paymentTerms || biz.paymentTerms || "Cash · Credit Card · Zelle · Bank Transfer";
+
   return `${headerHTML(
     biz,
     logo,
@@ -2270,9 +2279,7 @@ function buildProposalHTML(prop, biz, logo) {
     deposit
   )}</strong></div><div class="payment-row"><span>Balance Due (before event):</span><strong>${fmt(
     total - deposit
-  )}</strong></div><div class="payment-row"><span>Payment methods:</span><strong>${
-    biz.paymentTerms || "Cash · Credit Card · Zelle · Bank Transfer"
-  }</strong></div></div>${
+  )}</strong></div><div class="payment-row"><span>Payment Terms:</span><strong>${payTerms}</strong></div></div>${
     prop.notes
       ? `<div class="notes-box"><strong>Notes</strong>${prop.notes}</div>`
       : ""
@@ -5121,7 +5128,7 @@ function ProposalsPage({
   const BLANK_DRAFT = {
     client: "", clientPhone: "", eventType: "", plannedDate: "",
     guests: "", location: "", discount: 0, notes: "", lines: [],
-    inventoryLinks: [], eventId: null,
+    inventoryLinks: [], eventId: null, paymentTerms: "",
   };
 
   const duplicateProposal = (i) => {
@@ -5409,6 +5416,15 @@ function ProposalsPage({
                 style={S.input}
                 value={draft.notes}
                 onChange={(e) => setDraft({ ...draft, notes: e.target.value })}
+              />
+            </div>
+            <div style={{ gridColumn: "span 2" }}>
+              <label style={S.label}>Payment Terms <span style={{ color: T.textDim, fontWeight: 400 }}>(overrides business default on this proposal)</span></label>
+              <textarea
+                style={{ ...S.input, minHeight: 60, resize: "vertical" }}
+                placeholder={biz.paymentTerms || "e.g. 50% deposit required. Balance due before event date."}
+                value={draft.paymentTerms || ""}
+                onChange={(e) => setDraft({ ...draft, paymentTerms: e.target.value })}
               />
             </div>
             <div style={{ gridColumn: "span 2" }}>
@@ -6060,7 +6076,7 @@ function ProposalsPage({
                 <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
                   <button
                     style={{ ...S.btn("primary"), fontSize: 11, padding: "4px 9px" }}
-                    onClick={(e) => { e.stopPropagation(); openDoc(`Proposal – ${p.num}`, buildProposalHTML(p, biz, logo)); }}
+                    onClick={(e) => { e.stopPropagation(); openDoc(`Proposal – ${p.num}`, buildProposalHTML(p, biz, logo, catalogItems)); }}
                   >
                     🖨️ Print Proposal
                   </button>
