@@ -512,6 +512,7 @@ const DEMO_DATA = (() => {
       client:"Marcus & Tanya Williams", clientPhone:"+1(704)555-1001",
       eventType:"Wedding", plannedDate:"2025-12-07", guests:120, location:"Marriott Charlotte City Center",
       discount:200, notes:"Full wedding reception — buffet with live carving station.",
+      paymentTerms:"50% deposit ($4,300) required to confirm booking. Balance due 7 days before event. Cash, Zelle or bank transfer accepted.",
       inventoryLinks:[101,102,103],
       lines:[
         {name:"Jollof Rice",qty:120,price:18,unitType:"Per head"},
@@ -531,6 +532,7 @@ const DEMO_DATA = (() => {
       client:"Carolinas Healthcare Group", clientPhone:"+1(704)555-1002",
       eventType:"Corporate", plannedDate:"2025-12-11", guests:80, location:"Bank of America HQ",
       discount:0, notes:"Monthly corporate lunch arrangement — Box lunch format.",
+      paymentTerms:"Net 15 — invoice issued day of event. Payment by check or bank transfer.",
       inventoryLinks:[101,102],
       lines:[
         {name:"Corporate Box Lunch",qty:80,price:22,unitType:"Per box"},
@@ -544,6 +546,7 @@ const DEMO_DATA = (() => {
       client:"Uptown Events LLC", clientPhone:"+1(704)555-1004",
       eventType:"New Year's Eve", plannedDate:"2025-12-31", guests:200, location:"The Fillmore Charlotte",
       discount:500, notes:"Premium NYE gala — 5-course buffet, dessert station, full bar support.",
+      paymentTerms:"50% deposit ($7,250) due upon signing. Remaining balance due Dec 24. No refunds within 5 days of event.",
       inventoryLinks:[101,102,103,104,105],
       lines:[
         {name:"Jollof Rice",qty:200,price:18,unitType:"Per head"},
@@ -564,6 +567,7 @@ const DEMO_DATA = (() => {
       client:"Self (Pop-Up)", clientPhone:"+1(704)555-0001",
       eventType:"Valentine's", plannedDate:"2026-02-14", guests:40, location:"Romare Bearden Park",
       discount:0, notes:"Self-hosted Valentine's dinner pop-up. Ticket-based revenue.",
+      paymentTerms:"Ticket sales — full payment at time of booking. No refunds within 48 hours of event.",
       inventoryLinks:[101,102,105],
       lines:[
         {name:"Jerk Chicken (plated)",qty:40,price:22,unitType:"Per head"},
@@ -582,6 +586,7 @@ const DEMO_DATA = (() => {
       client:"Latoya Hendricks", clientPhone:"+1(704)555-1008",
       eventType:"Baby Shower", plannedDate:"2026-02-22", guests:45, location:"Park Road Shopping Center Events Room",
       discount:0, notes:"Light, fresh menu. Pastel color scheme. Mocktail bar requested.",
+      paymentTerms:"50% deposit required to confirm. Balance due day of event. Cash or Zelle only.",
       inventoryLinks:[102,106,107],
       lines:[
         {name:"Garden Pasta Salad",qty:45,price:11,unitType:"Per head"},
@@ -598,6 +603,7 @@ const DEMO_DATA = (() => {
       client:"Wells Fargo Charlotte Hub", clientPhone:"+1(704)555-1009",
       eventType:"Corporate", plannedDate:"2026-03-15", guests:100, location:"Wells Fargo Tower",
       discount:0, notes:"Q1 quarterly lunch. Menu TBD — sent two options for client to choose.",
+      paymentTerms:"Net 15 after event. Invoice issued same day. Payment by check or ACH transfer.",
       inventoryLinks:[101,102,103],
       lines:[
         {name:"Corporate Box Lunch",qty:100,price:22,unitType:"Per box"},
@@ -611,6 +617,7 @@ const DEMO_DATA = (() => {
       client:"Sofia Davis", clientPhone:"+1(704)555-1010",
       eventType:"Quinceañera", plannedDate:"2026-03-28", guests:160, location:"Belk Theater Ballroom",
       discount:300, notes:"Large quinceañera — full buffet, dessert table, champagne toast add-on.",
+      paymentTerms:"30% deposit to hold date. 50% due 30 days before event. Balance due on event day. Cash, Zelle or bank transfer.",
       inventoryLinks:[],
       lines:[
         {name:"Jollof Rice",qty:160,price:18,unitType:"Per head"},
@@ -751,7 +758,21 @@ const DEMO_DATA = (() => {
     footer:"Thank you for choosing Delightful Meals and Drinks — we look forward to serving you!",
   };
 
-  return { inv, meals, catalog, catalog_cats, sales, events, proposals, overheads, batches, customers, biz };
+  // ── Invoices (for completed catering events) ───────────────────────
+  const invoices = [
+    { id:801, num:"INV-2025-0601", client:"Marcus & Tanya Williams",    clientPhone:"+1(704)555-1001", issued:"2025-12-07", due:"2025-12-07", total:8400,  paid:8400,  status:"Paid",     eventId:601, notes:"Wedding reception — fully paid day of event." },
+    { id:802, num:"INV-2025-0602", client:"Carolinas Healthcare Group", clientPhone:"+1(704)555-1002", issued:"2025-12-11", due:"2025-12-26", total:3215,  paid:3215,  status:"Paid",     eventId:602, notes:"Corporate lunch — paid via bank transfer." },
+    { id:803, num:"INV-2025-0603", client:"Denise Thompson",            clientPhone:"+1(704)555-1003", issued:"2025-12-20", due:"2025-12-20", total:2450,  paid:2450,  status:"Paid",     eventId:603, notes:"50th birthday — cash payment received." },
+    { id:804, num:"INV-2025-0604", client:"Uptown Events LLC",          clientPhone:"+1(704)555-1004", issued:"2025-12-31", due:"2026-01-07", total:14500, paid:14500, status:"Paid",     eventId:604, notes:"NYE Gala — 50% deposit received Dec 15, balance paid Jan 3." },
+    { id:805, num:"INV-2026-0605", client:"NoDa Community Foundation",  clientPhone:"+1(704)555-1005", issued:"2026-01-19", due:"2026-02-03", total:3900,  paid:3900,  status:"Paid",     eventId:605, notes:"MLK Day community brunch — paid via check." },
+    { id:806, num:"INV-2026-0606", client:"Priya & Raj Patel",          clientPhone:"+1(704)555-1006", issued:"2026-01-25", due:"2026-01-25", total:4235,  paid:4235,  status:"Paid",     eventId:606, notes:"Engagement party — Zelle payment confirmed." },
+    { id:807, num:"INV-2026-0607", client:"Self (Pop-Up Event)",        clientPhone:"+1(704)555-0001", issued:"2026-02-14", due:"2026-02-14", total:4400,  paid:4400,  status:"Paid",     eventId:607, notes:"Valentine's pop-up — ticket revenue collected at door." },
+    { id:808, num:"INV-2026-0608", client:"Latoya Hendricks",           clientPhone:"+1(704)555-1008", issued:"2026-02-22", due:"2026-02-22", total:2300,  paid:1150,  status:"Partial",  eventId:608, notes:"Baby shower — 50% deposit received. Balance due day of event." },
+    { id:809, num:"INV-2026-0609", client:"Wells Fargo Charlotte Hub",  clientPhone:"+1(704)555-1009", issued:"2026-03-15", due:"2026-03-30", total:4700,  paid:0,     status:"Unpaid",   eventId:609, notes:"Corporate Q1 luncheon — Net 15, invoice sent." },
+    { id:810, num:"INV-2026-0610", client:"Sofia Davis",                clientPhone:"+1(704)555-1010", issued:"2026-03-13", due:"2026-03-28", total:14820, paid:4446,  status:"Partial",  eventId:610, notes:"Quinceañera — 30% deposit received. Balance due on event day." },
+  ];
+
+  return { inv, meals, catalog, catalog_cats, sales, events, proposals, overheads, batches, customers, biz, invoices };
 })();
 // ─── END DEMO DATA ────────────────────────────────────────────────
 
@@ -12932,7 +12953,7 @@ export default function App() {
     if (isDemo && !localStorage.getItem("demo_cb_sales")) {
       localStorage.setItem("demo_cb_events",       JSON.stringify(DEMO_DATA.events));
       localStorage.setItem("demo_cb_sales",         JSON.stringify(DEMO_DATA.sales));
-      localStorage.setItem("demo_cb_invoices",      JSON.stringify([]));
+      localStorage.setItem("demo_cb_invoices",      JSON.stringify(DEMO_DATA.invoices));
       localStorage.setItem("demo_cb_proposals",     JSON.stringify(DEMO_DATA.proposals));
       localStorage.setItem("demo_cb_catalog",       JSON.stringify(DEMO_DATA.catalog));
       localStorage.setItem("demo_cb_catalog_cats",  JSON.stringify(DEMO_DATA.catalog_cats));
@@ -12986,7 +13007,7 @@ export default function App() {
         if (isDemo && Object.keys(map).length === 0) {
           setEvents(DEMO_DATA.events);         ls_set("cb_events",      DEMO_DATA.events);
           setSales(DEMO_DATA.sales);           ls_set("cb_sales",       DEMO_DATA.sales);
-          setInvoices([]);                     ls_set("cb_invoices",    []);
+          setInvoices(DEMO_DATA.invoices);     ls_set("cb_invoices",    DEMO_DATA.invoices);
           setProposals(DEMO_DATA.proposals);   ls_set("cb_proposals",   DEMO_DATA.proposals);
           setCatalogItems(DEMO_DATA.catalog);  ls_set("cb_catalog",     DEMO_DATA.catalog);
           setCatalogCategories(DEMO_DATA.catalog_cats); ls_set("cb_catalog_cats", DEMO_DATA.catalog_cats);
