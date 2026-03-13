@@ -2577,7 +2577,7 @@ function Dashboard({
             </div>
           </div>
           <div style={{ ...S.cardMobile, marginBottom: 10 }}>
-            <div style={S.cardTitle}>Top Meals</div>
+            <div style={S.cardTitle}>Top Products</div>
             {topMeals.map(([meal, rev], i) => (
               <div
                 key={meal}
@@ -2894,7 +2894,7 @@ function Dashboard({
             </div>
             <div style={S.card}>
               <div style={S.cardTitle}>
-                Top Meals by Revenue ({PERIOD_LABELS[period]})
+                Top Products by Revenue ({PERIOD_LABELS[period]})
               </div>
               {topMeals.length === 0 && (
                 <div style={{ color: T.textDim, fontSize: 11 }}>
@@ -6325,12 +6325,12 @@ function RestaurantPage({
     <div>
       <DocModal doc={doc} onClose={() => setDoc(null)} />
       <div style={S.pageTitle}>🏠 Home Orders</div>
-      <div style={S.subtitle}>Nationwide Shipping · Meals · Inventory · Production</div>
+      <div style={S.subtitle}>Orders · Products · Supplies · Production</div>
       <div style={{ display: "flex", gap: 3, marginBottom: 14 }}>
         {[
-          ["inventory", "📦 Inventory"],
-          ["meals", "🍲 Meals"],
-          ["batches", "🍳 Batches"],
+          ["inventory", "📦 Supplies"],
+          ["meals", "🛍️ Products"],
+          ["batches", "🍳 Production"],
           ["orders", "📋 Orders"],
         ].map(([t, label]) => (
           <button key={t} style={S.navBtn(tab === t)} onClick={() => setTab(t)}>
@@ -6983,7 +6983,7 @@ function RestaurantPage({
         <>
           <div style={{ ...S.row, marginBottom: 12, flexWrap: "wrap", gap: 6 }}>
             <div style={{ ...S.card, flex: 1, padding: 10, minWidth: 160 }}>
-              <div style={S.cardTitle}>Active Meals</div>
+              <div style={S.cardTitle}>Active Products</div>
               <div style={{ ...S.kpi, fontSize: 18 }}>
                 {meals.filter((m) => m.active).length}
               </div>
@@ -7024,7 +7024,7 @@ function RestaurantPage({
                   setNm(EMPTY_MEAL);
                 }}
               >
-                {addingMeal && !editMealId ? "Cancel" : "+ New Meal"}
+                {addingMeal && !editMealId ? "Cancel" : "+ New Product"}
               </button>
             </div>
           </div>
@@ -7132,7 +7132,7 @@ function RestaurantPage({
           {addingMeal && (
             <div style={{ ...S.card, marginBottom: 12, borderColor: T.accent }}>
               <div style={S.sectionTitle}>
-                {editMealId ? "✏️ Edit Meal" : "➕ New Meal"}
+                {editMealId ? "✏️ Edit Product" : "➕ New Product"}
               </div>
 
               {/* Basic Info */}
@@ -8211,7 +8211,7 @@ function RestaurantPage({
         <>
           <div style={{ ...S.row, marginBottom: 12, flexWrap: "wrap", gap: 6 }}>
             <div style={{ ...S.card, flex: 1, padding: 10, minWidth: 180 }}>
-              <div style={S.cardTitle}>Total Stock Value</div>
+              <div style={S.cardTitle}>Total Supplies Value</div>
               <div style={{ ...S.kpi, fontSize: 18 }}>
                 {fmt(totalStockValue)}
               </div>
@@ -8229,7 +8229,7 @@ function RestaurantPage({
               </div>
             </div>
             <div style={{ ...S.card, flex: 1, padding: 10, minWidth: 180 }}>
-              <div style={S.cardTitle}>Total SKUs</div>
+              <div style={S.cardTitle}>Total Items</div>
               <div style={{ ...S.kpi, fontSize: 18 }}>{inventory.length}</div>
             </div>
             <button
