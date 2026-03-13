@@ -9833,10 +9833,163 @@ function CustomersPage({ customers, setCustomers, invoices, setInvoices, events,
 
 // ─── VENDORS PAGE ─────────────────────────────────────────────────
 function VendorsPage({ overheads, setOverheads }) {
+  const [subTab, setSubTab] = useState("vendors");
+  const [selVendor, setSelVendor] = useState(null);
+  const [searchQ, setSearchQ] = useState("");
+  const isMobile = useIsMobile();
+
+  // Aggregate all overhead entries by vendor name
+  const vendorMap = {};
+  overheads.forEach(o => {
+    const name = (o.vendor || "").trim();
+    if (!name) return;
+    if (!vendorMap[name]) {
+      vendorMap[name] = { name, totalSpend: 0, entries: [], categories: new Set(), lastDate: "" };
+    }
+    vendorMap[name].totalSpend += Number(o.amount) || 0;
+    vendorMap[name].entries.push(o);
+    vendorMap[name].categories.add(o.category);
+    if (!vendorMap[name].lastDate || o.date > vendorMap[name].lastDate) vendorMap[name].lastDate = o.date;
+  });
+
+  const vendors = Object.values(vendorMap)
+    .map(v => ({ ...v, categories: [...v.categories] }))
+    .sort((a, b) => b.totalSpend - a.totalSpend);
+
+  const filtered = vendors.filter(v =>
+    !searchQ || v.name.toLowerCase().includes(searchQ.toLowerCase())
+  );
+
+  const totalVendorSpend = vendors.reduce((s, v) => s + v.totalSpend, 0);
+  const sel = selVendor ? vendors.find(v => v.name === selVendor) : null;
+
   return (
     <div>
       <div style={S.pageTitle}>🏪 Vendors & Expenses</div>
-      <OverheadsPage overheads={overheads} setOverheads={setOverheads} />
+
+      {/* Sub-tabs */}
+      <div style={{ ...S.row, gap: 6, marginBottom: 14, flexWrap: "wrap" }}>
+        <button style={{ ...S.btn(subTab === "vendors" ? "primary" : "ghost"), fontSize: 13 }} onClick={() => { setSubTab("vendors"); setSelVendor(null); }}>🏪 Vendor Directory</button>
+        <button style={{ ...S.btn(subTab === "expenses" ? "primary" : "ghost"), fontSize: 13 }} onClick={() => setSubTab("expenses")}>📋 All Expenses</button>
+      </div>
+
+      {subTab === "expenses" && <OverheadsPage overheads={overheads} setOverheads={setOverheads} />}
+
+      {subTab === "vendors" && (
+        <div>
+          {/* KPIs */}
+          <div style={S.grid(3)}>
+            <KpiCard label="Total Vendors" value={vendors.length} icon="🏪" />
+            <KpiCard label="Total Purchased" value={fmt(totalVendorSpend)} icon="💸" color={T.warning} />
+            <KpiCard label="Avg per Vendor" value={vendors.length ? fmt(totalVendorSpend / vendors.length) : "$0"} icon="📊" color={T.info} />
+          </div>
+
+          {/* Search */}
+          <div style={{ marginTop: 14, marginBottom: 10 }}>
+            <input
+              style={{ ...S.input, maxWidth: 260 }}
+              placeholder="Search vendors…"
+              value={searchQ}
+              onChange={e => { setSearchQ(e.target.value); setSelVendor(null); }}
+            />
+          </div>
+
+          {vendors.length === 0 ? (
+            <div style={{ ...S.card, textAlign: "center", color: T.textMuted, padding: 32 }}>
+              <div style={{ fontSize: 32, marginBottom: 8 }}>🏪</div>
+              <div style={{ fontWeight: 700, marginBottom: 4 }}>No vendors yet</div>
+              <div style={{ fontSize: 12 }}>Add a "Vendor / Payee" name when logging expenses — they'll appear here automatically.</div>
+            </div>
+          ) : sel ? (
+            /* Vendor detail view */
+            <div style={{ ...S.card, borderColor: T.accent }}>
+              <div style={{ ...S.row, marginBottom: 14 }}>
+                <div>
+                  <div style={{ fontSize: 17, fontWeight: 800 }}>{sel.name}</div>
+                  <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>
+                    {sel.categories.join(" · ")} · Last purchase {sel.lastDate}
+                  </div>
+                </div>
+                <button style={{ ...S.btn("ghost"), fontSize: 12 }} onClick={() => setSelVendor(null)}>← Back</button>
+              </div>
+
+              {/* Summary row */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 16 }}>
+                {[
+                  { label: "Total Spent", value: fmt(sel.totalSpend), color: T.danger },
+                  { label: "Purchases", value: sel.entries.length, color: T.info },
+                  { label: "Avg Purchase", value: fmt(sel.totalSpend / sel.entries.length), color: T.textMuted },
+                ].map(({ label, value, color }) => (
+                  <div key={label} style={{ background: T.surface, borderRadius: 8, padding: "10px 14px", border: `1px solid ${T.border}` }}>
+                    <div style={{ fontSize: 10, color: T.textMuted, marginBottom: 3 }}>{label.toUpperCase()}</div>
+                    <div style={{ fontSize: 18, fontWeight: 800, color }}>{value}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Purchase history table */}
+              <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 8, color: T.textDim }}>PURCHASE HISTORY</div>
+              <div className="tbl-wrap">
+                <table style={S.table}>
+                  <thead>
+                    <tr>{["Date", "Category", "Description", "Type", "Amount"].map(h => <th key={h} style={S.th}>{h}</th>)}</tr>
+                  </thead>
+                  <tbody>
+                    {[...sel.entries].sort((a, b) => b.date.localeCompare(a.date)).map((o, i) => (
+                      <tr key={i}>
+                        <td style={{ ...S.td, whiteSpace: "nowrap" }}>{o.date}</td>
+                        <td style={S.td}>{o.category}</td>
+                        <td style={{ ...S.td, fontWeight: 600 }}>{o.description}</td>
+                        <td style={S.td}><span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 4, background: o.entryType === "capex" ? T.catering + "22" : T.info + "22", color: o.entryType === "capex" ? T.catering : T.info, fontWeight: 700 }}>{(o.entryType || "opex").toUpperCase()}</span></td>
+                        <td style={{ ...S.td, fontWeight: 700, color: T.danger, textAlign: "right" }}>{fmt(o.amount)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : (
+            /* Vendor directory list */
+            <div style={{ display: "grid", gap: 8 }}>
+              {filtered.map(v => {
+                const pct = totalVendorSpend > 0 ? (v.totalSpend / totalVendorSpend) * 100 : 0;
+                return (
+                  <div
+                    key={v.name}
+                    style={{ ...S.card, cursor: "pointer", display: "flex", alignItems: "center", gap: 14 }}
+                    onClick={() => setSelVendor(v.name)}
+                  >
+                    {/* Avatar */}
+                    <div style={{ width: 42, height: 42, borderRadius: "50%", background: T.accent + "22", border: `2px solid ${T.accent}40`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>
+                      🏪
+                    </div>
+                    {/* Info */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 2 }}>{v.name}</div>
+                      <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 5 }}>
+                        {v.categories.slice(0, 3).join(" · ")}{v.categories.length > 3 ? ` +${v.categories.length - 3}` : ""} · {v.entries.length} purchase{v.entries.length !== 1 ? "s" : ""} · Last {v.lastDate}
+                      </div>
+                      {/* Spend bar */}
+                      <div style={{ height: 4, borderRadius: 2, background: T.border, overflow: "hidden" }}>
+                        <div style={{ height: "100%", width: `${pct}%`, background: T.accent, borderRadius: 2 }} />
+                      </div>
+                    </div>
+                    {/* Spend */}
+                    <div style={{ textAlign: "right", flexShrink: 0 }}>
+                      <div style={{ fontSize: 15, fontWeight: 800, color: T.danger }}>{fmt(v.totalSpend)}</div>
+                      <div style={{ fontSize: 10, color: T.textMuted }}>{pct.toFixed(1)}% of spend</div>
+                    </div>
+                    <div style={{ fontSize: 16, color: T.textMuted }}>›</div>
+                  </div>
+                );
+              })}
+              {filtered.length === 0 && (
+                <div style={{ color: T.textMuted, fontSize: 13, textAlign: "center", padding: 24 }}>No vendors match "{searchQ}"</div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -13119,24 +13272,34 @@ export default function App() {
   useEffect(() => { supa_set("cb_biz", biz); }, [biz]);
   useEffect(() => { supa_set("cb_customers", customers); }, [customers]);
 
-  // One-time backfill: seed customers from existing sales & events that predate the customers feature
+  // Reconcile customers from all orders + events whenever data loads or changes
   useEffect(() => {
-    const existing = ls_get("cb_customers", null);
-    // Only backfill if customers list is currently empty
-    if (existing && existing.length > 0) return;
-    const seen = new Map();
-    [...sales, ...events].forEach((r) => {
-      const name = (r.clientName || "").trim();
-      if (!name) return;
-      const key = name.toLowerCase();
-      if (!seen.has(key)) {
-        seen.set(key, { id: Date.now() + seen.size, name, phone: (r.clientPhone || "").trim(), email: "", classification: "Regular", notes: "", createdAt: r.date || r.eventDate || TODAY_ISO });
-      } else if (!seen.get(key).phone && r.clientPhone) {
-        seen.get(key).phone = r.clientPhone.trim();
-      }
+    if (!dbLoaded) return;
+    setCustomers(prev => {
+      const updated = [...prev];
+      const nameIndex = new Map(prev.map((c, i) => [c.name.toLowerCase(), i]));
+      let changed = false;
+      [...sales, ...events].forEach(r => {
+        const name = (r.clientName || "").trim();
+        if (!name) return;
+        const key = name.toLowerCase();
+        const phone = (r.clientPhone || "").trim();
+        if (nameIndex.has(key)) {
+          const i = nameIndex.get(key);
+          if (!updated[i].phone && phone) {
+            updated[i] = { ...updated[i], phone };
+            changed = true;
+          }
+        } else {
+          const newC = { id: Date.now() + updated.length + Math.floor(Math.random() * 9999), name, phone, email: "", classification: "Regular", notes: "", createdAt: r.date || r.eventDate || TODAY_ISO };
+          updated.push(newC);
+          nameIndex.set(key, updated.length - 1);
+          changed = true;
+        }
+      });
+      return changed ? updated : prev;
     });
-    if (seen.size > 0) setCustomers([...seen.values()]);
-  }, []);
+  }, [dbLoaded, sales, events]);
 
   const handleLogout = () => {
     clearSession();
