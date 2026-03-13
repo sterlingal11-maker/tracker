@@ -7250,11 +7250,20 @@ function RestaurantPage({
                   </select>
                 </div>
                 <div style={{ gridColumn: "span 1" }}>
-                  <label style={S.label}>Client Name <span style={{ color: T.textDim, fontWeight: 400 }}>(optional — for invoice/receipt)</span></label>
+                  <label style={{ ...S.label, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span>Client Name <span style={{ color: T.textDim, fontWeight: 400 }}>(optional — for invoice/receipt)</span></span>
+                    {!showNewCustomerInline && (
+                      <button
+                        type="button"
+                        style={{ fontSize: 10, fontWeight: 700, color: T.success, background: "none", border: `1px solid ${T.success}50`, borderRadius: 6, padding: "1px 8px", cursor: "pointer" }}
+                        onClick={() => { setShowNewCustomerInline(true); setNewCustExtra({ email: "", classification: "Regular", notes: "" }); }}
+                      >+ New Client</button>
+                    )}
+                  </label>
                   <input
                     style={S.input}
                     list="rest-customer-list"
-                    placeholder="e.g. Sarah Johnson or Order #42"
+                    placeholder={customers.length > 0 ? "Type or select a client…" : "Type a name to add a new client"}
                     value={ns.clientName}
                     onChange={(e) => {
                       const val = e.target.value;
@@ -7267,8 +7276,8 @@ function RestaurantPage({
                   <datalist id="rest-customer-list">
                     {customers.map(c => <option key={c.id} value={c.name}>{c.name}{c.phone ? ` · ${c.phone}` : ""}</option>)}
                   </datalist>
-                  {/* Show "+ New Customer" prompt when name is typed but doesn't match anyone */}
-                  {ns.clientName && ns.clientName.trim().length > 1 && !customers.find(c => c.name.toLowerCase() === ns.clientName.trim().toLowerCase()) && (
+                  {/* Show inline new customer panel: triggered by button or when a new name is typed */}
+                  {(showNewCustomerInline || (ns.clientName && ns.clientName.trim().length > 1 && !customers.find(c => c.name.toLowerCase() === ns.clientName.trim().toLowerCase()))) && (
                     <div style={{ marginTop: 5 }}>
                       {!showNewCustomerInline ? (
                         <button
@@ -7280,7 +7289,7 @@ function RestaurantPage({
                         </button>
                       ) : (
                         <div style={{ background: `${T.success}0D`, border: `1px solid ${T.success}30`, borderRadius: 8, padding: "10px 12px", marginTop: 4, display: "grid", gap: 8 }}>
-                          <div style={{ fontSize: 11, fontWeight: 700, color: T.success, marginBottom: 2 }}>✚ New Customer — {ns.clientName.trim()}</div>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: T.success, marginBottom: 2 }}>✚ New Customer{ns.clientName.trim() ? ` — ${ns.clientName.trim()}` : " — enter name above first"}</div>
                           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                             <div>
                               <label style={{ ...S.label, fontSize: 10 }}>Email</label>
@@ -7300,10 +7309,11 @@ function RestaurantPage({
                           <div style={{ display: "flex", gap: 6 }}>
                             <button
                               type="button"
-                              style={{ ...S.btn("primary"), fontSize: 11, padding: "3px 10px" }}
+                              style={{ ...S.btn("primary"), fontSize: 11, padding: "3px 10px", opacity: ns.clientName.trim() ? 1 : 0.4 }}
                               onClick={() => {
                                 const name = ns.clientName.trim();
-                                const phone = ns.clientPhone.trim();
+                                if (!name) return;
+                                const phone = (ns.clientPhone || "").trim();
                                 setCustomers(prev => [...prev, { id: Date.now(), name, phone, email: newCustExtra.email.trim(), classification: newCustExtra.classification, notes: newCustExtra.notes.trim(), createdAt: new Date().toISOString().slice(0,10) }]);
                                 setShowNewCustomerInline(false);
                               }}
