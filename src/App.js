@@ -6552,6 +6552,8 @@ function RestaurantPage({
   const [filterType, setFilterType] = useState("All");
   const [addSale, setAddSale] = useState(false);
   const [editSaleId, setEditSaleId] = useState(null);
+  const [showNewCustomerInline, setShowNewCustomerInline] = useState(false);
+  const [newCustExtra, setNewCustExtra] = useState({ email: "", classification: "Regular", notes: "" });
   const [doc, setDoc] = useState(null);
   const EMPTY = {
     date: TODAY_ISO,
@@ -6695,6 +6697,8 @@ function RestaurantPage({
     setAddSale(false);
     setEditSaleId(null);
     setNs(EMPTY);
+    setShowNewCustomerInline(false);
+    setNewCustExtra({ email: "", classification: "Regular", notes: "" });
 
     // Auto-upsert customer from order
     if (ns.clientName && ns.clientName.trim()) {
@@ -7211,7 +7215,7 @@ function RestaurantPage({
                     )}
                   </select>
                 </div>
-                <div>
+                <div style={{ gridColumn: "span 1" }}>
                   <label style={S.label}>Client Name <span style={{ color: T.textDim, fontWeight: 400 }}>(optional — for invoice/receipt)</span></label>
                   <input
                     style={S.input}
@@ -7222,11 +7226,60 @@ function RestaurantPage({
                       const val = e.target.value;
                       const match = customers.find(c => c.name === val);
                       setNs({ ...ns, clientName: val, clientPhone: match ? match.phone : ns.clientPhone });
+                      // Hide inline panel if name cleared or matches existing
+                      if (!val || match) setShowNewCustomerInline(false);
                     }}
                   />
                   <datalist id="rest-customer-list">
                     {customers.map(c => <option key={c.id} value={c.name}>{c.name}{c.phone ? ` · ${c.phone}` : ""}</option>)}
                   </datalist>
+                  {/* Show "+ New Customer" prompt when name is typed but doesn't match anyone */}
+                  {ns.clientName && ns.clientName.trim().length > 1 && !customers.find(c => c.name.toLowerCase() === ns.clientName.trim().toLowerCase()) && (
+                    <div style={{ marginTop: 5 }}>
+                      {!showNewCustomerInline ? (
+                        <button
+                          type="button"
+                          style={{ ...S.btn("ghost"), fontSize: 11, padding: "3px 9px", color: T.success, border: `1px solid ${T.success}50` }}
+                          onClick={() => { setShowNewCustomerInline(true); setNewCustExtra({ email: "", classification: "Regular", notes: "" }); }}
+                        >
+                          + Save as new customer
+                        </button>
+                      ) : (
+                        <div style={{ background: `${T.success}0D`, border: `1px solid ${T.success}30`, borderRadius: 8, padding: "10px 12px", marginTop: 4, display: "grid", gap: 8 }}>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: T.success, marginBottom: 2 }}>✚ New Customer — {ns.clientName.trim()}</div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                            <div>
+                              <label style={{ ...S.label, fontSize: 10 }}>Email</label>
+                              <input style={{ ...S.input, fontSize: 12 }} placeholder="email@example.com" value={newCustExtra.email} onChange={e => setNewCustExtra({ ...newCustExtra, email: e.target.value })} />
+                            </div>
+                            <div>
+                              <label style={{ ...S.label, fontSize: 10 }}>Classification</label>
+                              <select style={{ ...S.select, fontSize: 12 }} value={newCustExtra.classification} onChange={e => setNewCustExtra({ ...newCustExtra, classification: e.target.value })}>
+                                {["Regular", "VIP", "Corporate", "Wholesale", "Occasional"].map(c => <option key={c}>{c}</option>)}
+                              </select>
+                            </div>
+                          </div>
+                          <div>
+                            <label style={{ ...S.label, fontSize: 10 }}>Notes</label>
+                            <input style={{ ...S.input, fontSize: 12 }} placeholder="e.g. Allergies, preferences, referral source…" value={newCustExtra.notes} onChange={e => setNewCustExtra({ ...newCustExtra, notes: e.target.value })} />
+                          </div>
+                          <div style={{ display: "flex", gap: 6 }}>
+                            <button
+                              type="button"
+                              style={{ ...S.btn("primary"), fontSize: 11, padding: "3px 10px" }}
+                              onClick={() => {
+                                const name = ns.clientName.trim();
+                                const phone = ns.clientPhone.trim();
+                                setCustomers(prev => [...prev, { id: Date.now(), name, phone, email: newCustExtra.email.trim(), classification: newCustExtra.classification, notes: newCustExtra.notes.trim(), createdAt: new Date().toISOString().slice(0,10) }]);
+                                setShowNewCustomerInline(false);
+                              }}
+                            >✓ Save Customer</button>
+                            <button type="button" style={{ ...S.btn("ghost"), fontSize: 11, padding: "3px 8px" }} onClick={() => setShowNewCustomerInline(false)}>Cancel</button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label style={S.label}>Client Phone <span style={{ color: T.textDim, fontWeight: 400 }}>(optional)</span></label>
@@ -7291,6 +7344,8 @@ function RestaurantPage({
                     setAddSale(false);
                     setEditSaleId(null);
                     setNs(EMPTY);
+                    setShowNewCustomerInline(false);
+                    setNewCustExtra({ email: "", classification: "Regular", notes: "" });
                   }}
                 >
                   Cancel
