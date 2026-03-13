@@ -2054,9 +2054,9 @@ tbody td.tr{text-align:right;font-weight:600}tbody td.tc{text-align:center}tbody
 .totals-inner{width:320px;border-radius:8px;overflow:hidden;border:1px solid #e5e5e5}
 .total-row{display:flex;justify-content:space-between;padding:9px 14px;font-size:12px;border-bottom:1px solid #ebebeb}
 .total-row:last-child{border-bottom:none}
-.total-row.grand{background:#1a1a1a;color:#fff;padding:12px 14px}
-.total-row.grand .label{font-size:13px;font-weight:700}
-.total-row.grand .value{font-size:16px;font-weight:900}
+.total-row.grand{background:#E8C547;color:#1a1a1a;padding:12px 14px}
+.total-row.grand .label{font-size:13px;font-weight:700;color:#1a1a1a}
+.total-row.grand .value{font-size:16px;font-weight:900;color:#1a1a1a}
 .total-row .label{color:#555}.total-row .value{font-weight:700;color:#1a1a1a}
 .total-row.highlight .value{color:#16a34a;font-size:14px}
 .total-row.danger .value{color:#dc2626}
