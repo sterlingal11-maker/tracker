@@ -11798,7 +11798,7 @@ function buildReportHTML(title, d, biz) {
 // Roles: "owner" = full access | "staff" = restaurant + invoices only
 const AUTH_KEY   = "cb_auth_v2";   // { owner: {email,hash}, staff: {email,hash} | null }
 const SESSION_KEY = "cb_session_v2"; // { role: "owner"|"staff", expires }
-const SESSION_DURATION = 8 * 60 * 60 * 1000; // 8 hours
+const SESSION_DURATION = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 const STAFF_TABS = ["restaurant", "customers"]; // tabs staff can access
 
@@ -11989,7 +11989,7 @@ function LoginScreen({ onLogin }) {
         </div>
 
         <div style={{ textAlign: "center", marginTop: 16, fontSize: 10, color: T.textDim }}>
-          Session expires after 8 hours · Owner &amp; Staff accounts supported
+          Session lasts 30 days · Owner &amp; Staff accounts supported
         </div>
       </div>
     </div>
@@ -12320,7 +12320,26 @@ export default function App() {
     } catch { return fallback; }
   }
   function ls_set(key, value) {
-    try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (e) {
+      if (e && (e.name === "QuotaExceededError" || e.code === 22 || e.code === 1014)) {
+        console.warn("localStorage quota exceeded for key:", key);
+        // Try to free space by removing non-critical cached data first
+        try {
+          // Remove any stale session data
+          localStorage.removeItem("cb_session_v2");
+          // Retry the save
+          localStorage.setItem(key, JSON.stringify(value));
+        } catch (e2) {
+          // If still failing, alert the user once
+          if (!window._storageWarnShown) {
+            window._storageWarnShown = true;
+            alert("⚠️ Storage almost full. Please export a backup from Settings to avoid data loss.");
+          }
+        }
+      }
+    }
   }
 
   const [events, setEvents] = useState(() => ls_get("cb_events", INIT_EVENTS));
@@ -12352,7 +12371,14 @@ export default function App() {
   useEffect(() => { ls_set("cb_meals", meals); }, [meals]);
   useEffect(() => { ls_set("cb_batches", batches); }, [batches]);
   useEffect(() => { ls_set("cb_overheads", overheads); }, [overheads]);
-  useEffect(() => { ls_set("cb_logo", logo); }, [logo]);
+  useEffect(() => {
+    // Only persist custom logos — the default is already bundled in LOGO_SRC
+    if (logo?.src && logo.src !== LOGO_SRC) {
+      ls_set("cb_logo", logo);
+    } else if (!logo?.src || logo.src === LOGO_SRC) {
+      try { localStorage.removeItem("cb_logo"); } catch {}
+    }
+  }, [logo]);
   useEffect(() => { ls_set("cb_biz", biz); }, [biz]);
   useEffect(() => { ls_set("cb_customers", customers); }, [customers]);
 
