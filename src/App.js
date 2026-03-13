@@ -239,6 +239,522 @@ const ENTRY_TYPES = [
 
 const INIT_OVERHEADS = [];
 
+// ─── DEMO DATA (used when logged in as demo@delightfulmeals.com) ──
+// Covers Dec 2025 – Feb 2026 with realistic Charlotte NC catering business data
+const DEMO_DATA = (() => {
+  // Inventory photo URLs (free Unsplash food images)
+  const PHOTOS = {
+    chicken:  "https://images.unsplash.com/photo-1587593810167-a84920ea0781?w=400&q=80",
+    rice:     "https://images.unsplash.com/photo-1516714435131-44d6b64dc6a2?w=400&q=80",
+    beef:     "https://images.unsplash.com/photo-1551446591-142875a901a1?w=400&q=80",
+    fish:     "https://images.unsplash.com/photo-1580476262798-bddd9f4b7369?w=400&q=80",
+    greens:   "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&q=80",
+    pasta:    "https://images.unsplash.com/photo-1563379926898-05f4575a45d8?w=400&q=80",
+    cake:     "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=400&q=80",
+    drinks:   "https://images.unsplash.com/photo-1544145945-f90425340c7e?w=400&q=80",
+    shrimp:   "https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?w=400&q=80",
+    jollof:   "https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=400&q=80",
+    mac:      "https://images.unsplash.com/photo-1543339494-b4cd4f7ba686?w=400&q=80",
+    salad:    "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80",
+  };
+
+  const inv = [
+    { id:101, name:"Chicken Thighs",       category:"Ingredient",  unit:"lb",    stock:40,  reorderAt:10, costPerUnit:2.50,  linkedMeals:["Jerk Chicken","Chicken Stew","BBQ Chicken Platter"], photo: PHOTOS.chicken },
+    { id:102, name:"Long Grain White Rice", category:"Ingredient",  unit:"lb",    stock:80,  reorderAt:20, costPerUnit:0.75,  linkedMeals:["Jollof Rice","Coconut Rice","Rice & Peas"], photo: PHOTOS.rice },
+    { id:103, name:"Ground Beef",           category:"Ingredient",  unit:"lb",    stock:25,  reorderAt:8,  costPerUnit:5.50,  linkedMeals:["Beef Stew","Meat Pies","Lasagna"], photo: PHOTOS.beef },
+    { id:104, name:"Tilapia Fillets",       category:"Ingredient",  unit:"lb",    stock:18,  reorderAt:6,  costPerUnit:4.20,  linkedMeals:["Fried Tilapia","Fish Stew"], photo: PHOTOS.fish },
+    { id:105, name:"Jumbo Shrimp",          category:"Ingredient",  unit:"lb",    stock:12,  reorderAt:4,  costPerUnit:9.00,  linkedMeals:["Shrimp Fried Rice","Jerk Shrimp"], photo: PHOTOS.shrimp },
+    { id:106, name:"Collard Greens",        category:"Ingredient",  unit:"lb",    stock:15,  reorderAt:5,  costPerUnit:1.20,  linkedMeals:["Southern Greens","Mixed Greens"], photo: PHOTOS.greens },
+    { id:107, name:"Pasta (Penne)",         category:"Ingredient",  unit:"lb",    stock:30,  reorderAt:10, costPerUnit:1.10,  linkedMeals:["Baked Pasta","Pasta Salad"], photo: PHOTOS.pasta },
+    { id:108, name:"Heavy Cream",           category:"Ingredient",  unit:"qt",    stock:8,   reorderAt:3,  costPerUnit:3.50,  linkedMeals:["Cream Sauce","Alfredo Pasta"], photo: null },
+    { id:109, name:"Cooking Oil",           category:"Ingredient",  unit:"gal",   stock:6,   reorderAt:2,  costPerUnit:8.00,  linkedMeals:[], photo: null },
+    { id:110, name:"Yellow Onions",         category:"Ingredient",  unit:"lb",    stock:20,  reorderAt:5,  costPerUnit:0.60,  linkedMeals:[], photo: null },
+    { id:111, name:"Fresh Garlic",          category:"Ingredient",  unit:"lb",    stock:5,   reorderAt:2,  costPerUnit:3.00,  linkedMeals:[], photo: null },
+    { id:112, name:"Scotch Bonnet Peppers", category:"Ingredient",  unit:"lb",    stock:3,   reorderAt:1,  costPerUnit:4.50,  linkedMeals:[], photo: null },
+    { id:113, name:"Tomato Paste",          category:"Ingredient",  unit:"can",   stock:24,  reorderAt:6,  costPerUnit:1.25,  linkedMeals:[], photo: null },
+    { id:114, name:"Coconut Milk",          category:"Ingredient",  unit:"can",   stock:18,  reorderAt:6,  costPerUnit:1.80,  linkedMeals:["Coconut Rice","Caribbean Chicken"], photo: null },
+    { id:115, name:"Flour",                 category:"Ingredient",  unit:"lb",    stock:25,  reorderAt:10, costPerUnit:0.65,  linkedMeals:["Meat Pies","Fried Dough"], photo: null },
+    { id:116, name:"Cane Sugar",            category:"Ingredient",  unit:"lb",    stock:15,  reorderAt:5,  costPerUnit:0.80,  linkedMeals:[], photo: null },
+    { id:117, name:"Styrofoam Containers",  category:"Packaging",   unit:"pack",  stock:10,  reorderAt:3,  costPerUnit:12.00, linkedMeals:[], photo: null },
+    { id:118, name:"Aluminum Trays (full)", category:"Packaging",   unit:"pack",  stock:6,   reorderAt:2,  costPerUnit:18.00, linkedMeals:[], photo: null },
+    { id:119, name:"Plastic Cutlery Sets",  category:"Packaging",   unit:"pack",  stock:8,   reorderAt:2,  costPerUnit:7.50,  linkedMeals:[], photo: null },
+    { id:120, name:"Propane Tank (20 lb)",  category:"Fuel",        unit:"tank",  stock:4,   reorderAt:1,  costPerUnit:24.00, linkedMeals:[], photo: null },
+    { id:121, name:"Lemonade (gallon)",     category:"Beverage",    unit:"gal",   stock:10,  reorderAt:3,  costPerUnit:4.50,  linkedMeals:["Homemade Lemonade"], photo: PHOTOS.drinks },
+    { id:122, name:"Fruit Punch Mix",       category:"Beverage",    unit:"jug",   stock:8,   reorderAt:2,  costPerUnit:6.00,  linkedMeals:["Fruit Punch"], photo: PHOTOS.drinks },
+    { id:123, name:"Disposable Gloves",     category:"Cleaning",    unit:"box",   stock:5,   reorderAt:2,  costPerUnit:9.00,  linkedMeals:[], photo: null },
+    { id:124, name:"Dish Soap & Sanitizer", category:"Cleaning",    unit:"bottle",stock:6,   reorderAt:2,  costPerUnit:4.00,  linkedMeals:[], photo: null },
+  ];
+
+  const meals = [
+    { id:201, name:"Jollof Rice",            description:"Classic West African tomato-based rice cooked to perfection with a smoky finish.", price:18, category:"Main", photo:PHOTOS.jollof,   active:true, ingredientLinks:[{invId:102,qty:0.5},{invId:113,qty:0.2},{invId:109,qty:0.1},{invId:110,qty:0.15}], laborCost:2, otherCosts:[], availablePortions:30 },
+    { id:202, name:"Jerk Chicken",           description:"Marinated in authentic jerk seasoning, slow-grilled and served with festival.",      price:22, category:"Main", photo:PHOTOS.chicken, active:true, ingredientLinks:[{invId:101,qty:0.6},{invId:112,qty:0.05},{invId:110,qty:0.1},{invId:109,qty:0.05}], laborCost:3, otherCosts:[], availablePortions:25 },
+    { id:203, name:"Coconut Rice & Peas",    description:"Fluffy rice steamed in coconut milk with kidney beans and thyme.",                  price:12, category:"Side", photo:PHOTOS.rice,    active:true, ingredientLinks:[{invId:102,qty:0.4},{invId:114,qty:0.3}], laborCost:1, otherCosts:[], availablePortions:40 },
+    { id:204, name:"Beef Stew",             description:"Tender slow-braised beef in a rich tomato and onion gravy.",                        price:24, category:"Main", photo:PHOTOS.beef,    active:true, ingredientLinks:[{invId:103,qty:0.5},{invId:113,qty:0.25},{invId:110,qty:0.2},{invId:109,qty:0.05}], laborCost:3.5, otherCosts:[], availablePortions:20 },
+    { id:205, name:"Fried Tilapia",         description:"Whole tilapia marinated and fried golden-crisp, served with spicy sauce.",          price:20, category:"Main", photo:PHOTOS.fish,    active:true, ingredientLinks:[{invId:104,qty:0.5},{invId:109,qty:0.15},{invId:115,qty:0.1}], laborCost:2.5, otherCosts:[], availablePortions:15 },
+    { id:206, name:"Shrimp Fried Rice",     description:"Wok-tossed jasmine rice with seasoned jumbo shrimp, eggs and mixed veg.",           price:26, category:"Main", photo:PHOTOS.shrimp,  active:true, ingredientLinks:[{invId:105,qty:0.35},{invId:102,qty:0.4},{invId:109,qty:0.08}], laborCost:3, otherCosts:[], availablePortions:18 },
+    { id:207, name:"Southern Collard Greens",description:"Slow-cooked collard greens with smoked turkey, garlic and apple cider vinegar.",   price:10, category:"Side", photo:PHOTOS.greens,  active:true, ingredientLinks:[{invId:106,qty:0.6},{invId:111,qty:0.1},{invId:110,qty:0.1}], laborCost:1, otherCosts:[], availablePortions:35 },
+    { id:208, name:"Baked Mac & Cheese",    description:"Extra creamy four-cheese mac baked to golden bubbly perfection.",                   price:14, category:"Side", photo:PHOTOS.mac,     active:true, ingredientLinks:[{invId:107,qty:0.4},{invId:108,qty:0.25},{invId:116,qty:0.05}], laborCost:2, otherCosts:[], availablePortions:28 },
+    { id:209, name:"Garden Pasta Salad",    description:"Penne tossed with fresh vegetables in a light herb vinaigrette.",                   price:11, category:"Starter", photo:PHOTOS.pasta, active:true, ingredientLinks:[{invId:107,qty:0.35},{invId:110,qty:0.1}], laborCost:1, otherCosts:[], availablePortions:22 },
+    { id:210, name:"Rum Cake",              description:"Moist Caribbean-style rum cake drizzled with butter glaze.",                        price:8,  category:"Dessert", photo:PHOTOS.cake,  active:true, ingredientLinks:[{invId:115,qty:0.3},{invId:116,qty:0.2},{invId:108,qty:0.15}], laborCost:1.5, otherCosts:[], availablePortions:20 },
+    { id:211, name:"Homemade Lemonade",     description:"Fresh-squeezed lemonade with a hint of mint, served by the gallon.",               price:15, category:"Drink",   photo:PHOTOS.drinks, active:true, ingredientLinks:[{invId:121,qty:1}], laborCost:0.5, otherCosts:[], availablePortions:12 },
+    { id:212, name:"Fruit Punch Bowl",      description:"Tropical punch with fruit garnish — perfect for buffet service.",                  price:12, category:"Drink",   photo:PHOTOS.drinks, active:true, ingredientLinks:[{invId:122,qty:1}], laborCost:0.5, otherCosts:[], availablePortions:10 },
+    { id:213, name:"Meat Pies (6-pack)",    description:"Flaky golden pies stuffed with seasoned ground beef — great starter or snack.",    price:16, category:"Starter", photo:PHOTOS.beef,  active:true, ingredientLinks:[{invId:103,qty:0.3},{invId:115,qty:0.4},{invId:113,qty:0.1}], laborCost:2.5, otherCosts:[], availablePortions:16 },
+    { id:214, name:"Caribbean Chicken Soup",description:"Hearty chicken soup with root vegetables and scotch bonnet — warming and bold.",   price:14, category:"Starter", photo:PHOTOS.chicken,active:true, ingredientLinks:[{invId:101,qty:0.4},{invId:114,qty:0.2},{invId:112,qty:0.03}], laborCost:2, otherCosts:[], availablePortions:18 },
+  ];
+
+  const catalog_cats = [
+    { id:1,  name:"🍚 Rice Dishes"    },
+    { id:2,  name:"🍗 Chicken"        },
+    { id:3,  name:"🥩 Beef & Goat"    },
+    { id:4,  name:"🐟 Fish & Seafood" },
+    { id:5,  name:"🫙 Stews & Sauces" },
+    { id:6,  name:"🌿 Vegetarian"     },
+    { id:7,  name:"🍟 Sides"          },
+    { id:8,  name:"🍰 Desserts"       },
+    { id:9,  name:"🍹 Drinks"         },
+    { id:10, name:"🎉 Add-ons"        },
+    { id:11, name:"🚗 Logistics"      },
+    { id:12, name:"👨‍🍳 Staffing"      },
+    { id:13, name:"🏢 Corporate"      },
+    { id:14, name:"🎊 Seasonal"       },
+    { id:15, name:"🍽️ Starters"       },
+    { id:16, name:"🥂 Service Styles" },
+    { id:17, name:"🏕️ Equipment"      },
+  ];
+
+  const catalog = [
+    { id:301, catId:1,  name:"Jollof Rice",              unitType:"Per head", price:18,  costPerUnit:6,  tags:"rice,west african,signature", description:"Smoky tomato-base rice — our most requested dish.", photo:PHOTOS.jollof,   notes:"" },
+    { id:302, catId:2,  name:"Jerk Chicken",             unitType:"Per head", price:22,  costPerUnit:8,  tags:"chicken,grilled,spicy",       description:"Authentic marinated jerk chicken, grilled on-site.",  photo:PHOTOS.chicken,  notes:"" },
+    { id:303, catId:3,  name:"Braised Beef Stew",        unitType:"Per head", price:24,  costPerUnit:9,  tags:"beef,stew,hearty",            description:"Slow-braised beef in rich tomato & onion gravy.",    photo:PHOTOS.beef,     notes:"" },
+    { id:304, catId:4,  name:"Fried Tilapia",            unitType:"Per head", price:20,  costPerUnit:7,  tags:"fish,fried,crispy",           description:"Golden crispy tilapia with spicy dipping sauce.",    photo:PHOTOS.fish,     notes:"" },
+    { id:305, catId:4,  name:"Jerk Shrimp",              unitType:"Per head", price:28,  costPerUnit:11, tags:"shrimp,seafood,spicy",        description:"Jumbo shrimp in jerk marinade, grilled or sautéed.", photo:PHOTOS.shrimp,   notes:"" },
+    { id:306, catId:7,  name:"Coconut Rice & Peas",      unitType:"Per head", price:12,  costPerUnit:4,  tags:"rice,coconut,side",           description:"Classic coconut-steamed rice with kidney beans.",    photo:PHOTOS.rice,     notes:"" },
+    { id:307, catId:7,  name:"Southern Collard Greens",  unitType:"Per head", price:10,  costPerUnit:3,  tags:"greens,southern,side",        description:"Slow-cooked with smoked turkey and apple cider.",    photo:PHOTOS.greens,   notes:"" },
+    { id:308, catId:7,  name:"Baked Mac & Cheese",       unitType:"Per head", price:14,  costPerUnit:5,  tags:"mac,cheese,comfort",          description:"Four-cheese baked mac — always the crowd favourite.", photo:PHOTOS.mac,      notes:"" },
+    { id:309, catId:8,  name:"Rum Cake (slice)",         unitType:"Per head", price:8,   costPerUnit:2.5,tags:"cake,dessert,caribbean",      description:"Moist Caribbean rum cake with butter glaze.",        photo:PHOTOS.cake,     notes:"" },
+    { id:310, catId:9,  name:"Homemade Lemonade",        unitType:"Per gallon",price:35, costPerUnit:10, tags:"drinks,lemonade,fresh",        description:"Fresh-squeezed lemonade with mint.",                 photo:PHOTOS.drinks,   notes:"Serves ~10 guests per gallon" },
+    { id:311, catId:9,  name:"Fruit Punch Bowl",         unitType:"Per gallon",price:28, costPerUnit:9,  tags:"drinks,punch,tropical",        description:"Tropical punch with fresh fruit garnish.",           photo:PHOTOS.drinks,   notes:"Serves ~10 guests per gallon" },
+    { id:312, catId:15, name:"Meat Pies (6-pack)",       unitType:"Per pack", price:16,  costPerUnit:5,  tags:"starter,pastry,beef",         description:"Flaky golden pies stuffed with seasoned beef.",      photo:PHOTOS.beef,     notes:"" },
+    { id:313, catId:15, name:"Caribbean Chicken Soup",   unitType:"Per head", price:14,  costPerUnit:5,  tags:"starter,soup,chicken",        description:"Hearty chicken soup with root veg & scotch bonnet.", photo:PHOTOS.chicken,  notes:"" },
+    { id:314, catId:15, name:"Garden Pasta Salad",       unitType:"Per head", price:11,  costPerUnit:3.5,tags:"starter,pasta,vegetarian",    description:"Penne with fresh veg in herb vinaigrette.",          photo:PHOTOS.pasta,    notes:"" },
+    { id:315, catId:12, name:"Chef / Lead Cook (hourly)",unitType:"Per hour", price:45,  costPerUnit:0,  tags:"staff,chef,hourly",           description:"Experienced lead chef for on-site cooking.",        photo:null,            notes:"Minimum 4-hour booking" },
+    { id:316, catId:12, name:"Server / Food Attendant",  unitType:"Per head", price:25,  costPerUnit:0,  tags:"staff,server,hourly",         description:"Dedicated server — 1 per 25 guests recommended.",   photo:null,            notes:"" },
+    { id:317, catId:11, name:"Delivery & Setup Fee",     unitType:"Flat",     price:75,  costPerUnit:0,  tags:"logistics,delivery,setup",    description:"Delivery, setup and breakdown within 20 miles.",    photo:null,            notes:"Extra mileage billed at $1.50/mi" },
+    { id:318, catId:16, name:"Buffet Service Style",     unitType:"Flat",     price:150, costPerUnit:0,  tags:"service,buffet,setup",        description:"Full buffet setup with chafing dishes and linens.",  photo:null,            notes:"" },
+    { id:319, catId:16, name:"Plated Service Style",     unitType:"Per head", price:8,   costPerUnit:0,  tags:"service,plated,formal",       description:"Individual plated service — formal events.",         photo:null,            notes:"Requires additional servers" },
+    { id:320, catId:10, name:"Floral Table Centerpiece", unitType:"Per table",price:65,  costPerUnit:30, tags:"addon,flowers,decor",         description:"Fresh floral centerpiece per table.",                photo:null,            notes:"Order 1 week in advance" },
+    { id:321, catId:10, name:"Chafing Dish Rental",      unitType:"Per unit", price:20,  costPerUnit:0,  tags:"addon,equipment,rental",      description:"Full-size chafing dish with fuel, per unit.",        photo:null,            notes:"" },
+    { id:322, catId:1,  name:"Fried Rice",               unitType:"Per head", price:15,  costPerUnit:5,  tags:"rice,fried,asian-fusion",     description:"Egg fried rice with vegetables and soy glaze.",     photo:PHOTOS.rice,     notes:"" },
+    { id:323, catId:6,  name:"Roasted Vegetable Medley", unitType:"Per head", price:12,  costPerUnit:4,  tags:"vegetarian,roasted,vegan",    description:"Seasonal vegetables roasted with herbs & olive oil.", photo:PHOTOS.greens,   notes:"Vegan-friendly" },
+    { id:324, catId:13, name:"Corporate Box Lunch",      unitType:"Per box",  price:22,  costPerUnit:8,  tags:"corporate,boxed,lunch",       description:"Individually boxed lunch with main, side & drink.", photo:null,            notes:"Minimum 20 boxes" },
+    { id:325, catId:14, name:"Holiday Feast Package",    unitType:"Per head", price:55,  costPerUnit:18, tags:"holiday,seasonal,premium",    description:"Premium holiday menu — turkey, sides, dessert.",    photo:null,            notes:"Thanksgiving & Christmas pricing" },
+  ];
+
+  // ── Sales (Dec 2025 – Feb 2026 daily orders) ─────────────────────
+  const mkSale = (id, date, meal, mealId, plates, price, method, type, client, phone, notes, deliveryFee, partial) => ({
+    id, date, meal, mealId, plates, pricePerPlate: price,
+    method, type, deliveryFee: deliveryFee||0,
+    deliveryAddress: type==="Delivery" ? "Charlotte, NC" : "",
+    clientName: client, clientPhone: phone, notes: notes||"",
+    partialPaid: partial||"",
+  });
+
+  const sales = [
+    // December 2025
+    mkSale(501,"2025-12-01","Jollof Rice",201,8,18,"Cash","Delivery","Marcus Thompson","+1(704)555-0201","Extra spicy please",8),
+    mkSale(502,"2025-12-02","Jerk Chicken",202,12,22,"Zelle","Delivery","Priya Sharma","+1(704)555-0202","No cilantro",10),
+    mkSale(503,"2025-12-03","Beef Stew",204,6,24,"Credit Card","Delivery","James Wilson","+1(704)555-0203","",8),
+    mkSale(504,"2025-12-04","Shrimp Fried Rice",206,4,26,"Cash","Delivery","Lisa Carter","+1(704)555-0204","Mild heat",6),
+    mkSale(505,"2025-12-05","Jollof Rice",201,10,18,"Zelle","Delivery","David Kim","+1(704)555-0205","",10),
+    mkSale(506,"2025-12-06","Baked Mac & Cheese",208,8,14,"Cash","Delivery","Aisha Jackson","+1(704)555-0206","Add extra cheese",8),
+    mkSale(507,"2025-12-08","Jerk Chicken",202,6,22,"Credit Card","Delivery","Robert Brown","+1(704)555-0207","",8),
+    mkSale(508,"2025-12-09","Fried Tilapia",205,5,20,"Zelle","Delivery","Sandra Lee","+1(704)555-0208","Sauce on the side",6),
+    mkSale(509,"2025-12-10","Jollof Rice",201,14,18,"Cash","Delivery","Tony Okafor","+1(704)555-0209","Family order",10),
+    mkSale(510,"2025-12-11","Southern Collard Greens",207,6,10,"Cash","Delivery","Michelle Davis","+1(704)555-0210","",6),
+    mkSale(511,"2025-12-12","Shrimp Fried Rice",206,8,26,"Zelle","Delivery","Kevin Patel","+1(704)555-0211","Extra shrimp",10),
+    mkSale(512,"2025-12-13","Beef Stew",204,10,24,"Credit Card","Delivery","Angela Moore","+1(704)555-0212","",10),
+    mkSale(513,"2025-12-15","Meat Pies (6-pack)",213,4,16,"Cash","Delivery","Chris Johnson","+1(704)555-0213","2 orders of 2 packs",6),
+    mkSale(514,"2025-12-16","Jollof Rice",201,20,18,"Zelle","Delivery","Office Party","+1(704)555-0214","Office lunch — 3rd floor lobby",12),
+    mkSale(515,"2025-12-17","Jerk Chicken",202,15,22,"Credit Card","Delivery","Jennifer Adams","+1(704)555-0215","Birthday dinner",10),
+    mkSale(516,"2025-12-18","Coconut Rice & Peas",203,8,12,"Cash","Delivery","Samuel Green","+1(704)555-0216","",8),
+    mkSale(517,"2025-12-19","Baked Mac & Cheese",208,12,14,"Zelle","Delivery","Patricia White","+1(704)555-0217","Double portion sides",10),
+    mkSale(518,"2025-12-20","Shrimp Fried Rice",206,6,26,"Cash","Delivery","Daniel Harris","+1(704)555-0218","",8),
+    mkSale(519,"2025-12-22","Jollof Rice",201,18,18,"Credit Card","Delivery","Christmas Party Co.","+1(704)555-0219","Pre-Christmas order",12),
+    mkSale(520,"2025-12-23","Jerk Chicken",202,20,22,"Zelle","Delivery","Holiday Corp","+1(704)555-0220","",15),
+    mkSale(521,"2025-12-24","Beef Stew",204,12,24,"Cash","Delivery","Evans Family","+1(704)555-0221","Christmas Eve dinner",10),
+    mkSale(522,"2025-12-26","Rum Cake",210,10,8,"Cash","Delivery","Thomas Clark","+1(704)555-0222","Post-Christmas treat",8),
+    mkSale(523,"2025-12-27","Jollof Rice",201,8,18,"Zelle","Delivery","Keisha Nwosu","+1(704)555-0223","",8),
+    mkSale(524,"2025-12-28","Fried Tilapia",205,6,20,"Credit Card","Delivery","Yolanda Scott","+1(704)555-0224","Extra crispy",8),
+    mkSale(525,"2025-12-30","Shrimp Fried Rice",206,10,26,"Zelle","Delivery","NYE Prep","+1(704)555-0225","New Year Eve pre-order",10),
+    mkSale(526,"2025-12-31","Jerk Chicken",202,25,22,"Credit Card","Delivery","NYE Party","+1(704)555-0226","New Year's Eve — deliver by 7pm",15),
+    // January 2026
+    mkSale(527,"2026-01-02","Jollof Rice",201,10,18,"Cash","Delivery","Marcus Thompson","+1(704)555-0201","New Year fam meal",8),
+    mkSale(528,"2026-01-03","Beef Stew",204,8,24,"Zelle","Delivery","Amara Diallo","+1(704)555-0227","",8),
+    mkSale(529,"2026-01-04","Baked Mac & Cheese",208,6,14,"Cash","Delivery","Priya Sharma","+1(704)555-0202","",6),
+    mkSale(530,"2026-01-06","Jerk Chicken",202,12,22,"Credit Card","Delivery","James Wilson","+1(704)555-0203","",10),
+    mkSale(531,"2026-01-07","Shrimp Fried Rice",206,5,26,"Zelle","Delivery","Lisa Carter","+1(704)555-0204","No peas",6),
+    mkSale(532,"2026-01-08","Caribbean Chicken Soup",214,8,14,"Cash","Delivery","New Year Wellness","+1(704)555-0228","Comfort food season",8),
+    mkSale(533,"2026-01-09","Garden Pasta Salad",209,10,11,"Credit Card","Delivery","Office Lunch","+1(704)555-0229","Weekly order — every Thursday",8),
+    mkSale(534,"2026-01-10","Jollof Rice",201,14,18,"Zelle","Delivery","Tony Okafor","+1(704)555-0209","",10),
+    mkSale(535,"2026-01-11","Southern Collard Greens",207,8,10,"Cash","Delivery","Kevin Patel","+1(704)555-0211","",6),
+    mkSale(536,"2026-01-13","Jerk Chicken",202,10,22,"Credit Card","Delivery","Angela Moore","+1(704)555-0212","",10),
+    mkSale(537,"2026-01-14","Meat Pies (6-pack)",213,6,16,"Cash","Delivery","Chris Johnson","+1(704)555-0213","",6),
+    mkSale(538,"2026-01-15","Fried Tilapia",205,8,20,"Zelle","Delivery","Sandra Lee","+1(704)555-0208","",8),
+    mkSale(539,"2026-01-16","Beef Stew",204,6,24,"Cash","Delivery","Patricia White","+1(704)555-0217","Serve with rice",8),
+    mkSale(540,"2026-01-17","Coconut Rice & Peas",203,10,12,"Credit Card","Delivery","Daniel Harris","+1(704)555-0218","",8),
+    mkSale(541,"2026-01-20","Jollof Rice",201,20,18,"Zelle","Delivery","MLK Day Order","+1(704)555-0230","Holiday bulk order",12),
+    mkSale(542,"2026-01-21","Shrimp Fried Rice",206,6,26,"Cash","Delivery","Yolanda Scott","+1(704)555-0224","",8),
+    mkSale(543,"2026-01-22","Jerk Chicken",202,8,22,"Credit Card","Delivery","David Kim","+1(704)555-0205","",8),
+    mkSale(544,"2026-01-23","Caribbean Chicken Soup",214,10,14,"Zelle","Delivery","Jennifer Adams","+1(704)555-0215","",10),
+    mkSale(545,"2026-01-24","Garden Pasta Salad",209,10,11,"Cash","Delivery","Office Lunch","+1(704)555-0229","Thursday recurring",8),
+    mkSale(546,"2026-01-25","Baked Mac & Cheese",208,14,14,"Credit Card","Delivery","Robert Brown","+1(704)555-0207","",10),
+    mkSale(547,"2026-01-27","Jollof Rice",201,8,18,"Cash","Delivery","Aisha Jackson","+1(704)555-0206","",8),
+    mkSale(548,"2026-01-28","Beef Stew",204,10,24,"Zelle","Delivery","Samuel Green","+1(704)555-0216","",10),
+    mkSale(549,"2026-01-29","Fried Tilapia",205,6,20,"Cash","Delivery","Michelle Davis","+1(704)555-0210","",6),
+    mkSale(550,"2026-01-30","Jerk Chicken",202,12,22,"Credit Card","Delivery","Keisha Nwosu","+1(704)555-0223","",10),
+    mkSale(551,"2026-01-31","Shrimp Fried Rice",206,8,26,"Zelle","Delivery","Marcus Thompson","+1(704)555-0201","Month-end treat",10),
+    // February 2026
+    mkSale(552,"2026-02-01","Jollof Rice",201,10,18,"Cash","Delivery","Tony Okafor","+1(704)555-0209","",8),
+    mkSale(553,"2026-02-03","Jerk Chicken",202,15,22,"Credit Card","Delivery","Super Bowl Party","+1(704)555-0231","Super Bowl Sunday order — deliver 5pm",12),
+    mkSale(554,"2026-02-04","Baked Mac & Cheese",208,8,14,"Cash","Delivery","Priya Sharma","+1(704)555-0202","",8),
+    mkSale(555,"2026-02-05","Caribbean Chicken Soup",214,6,14,"Zelle","Delivery","Amara Diallo","+1(704)555-0227","Cold week comfort",6),
+    mkSale(556,"2026-02-06","Garden Pasta Salad",209,10,11,"Credit Card","Delivery","Office Lunch","+1(704)555-0229","Thursday recurring",8),
+    mkSale(557,"2026-02-07","Beef Stew",204,8,24,"Cash","Delivery","James Wilson","+1(704)555-0203","",8),
+    mkSale(558,"2026-02-08","Shrimp Fried Rice",206,6,26,"Zelle","Delivery","Lisa Carter","+1(704)555-0204","",8),
+    mkSale(559,"2026-02-10","Jollof Rice",201,12,18,"Cash","Delivery","Aisha Jackson","+1(704)555-0206","",8),
+    mkSale(560,"2026-02-11","Jerk Chicken",202,10,22,"Credit Card","Delivery","Angela Moore","+1(704)555-0212","",10),
+    mkSale(561,"2026-02-12","Rum Cake",210,8,8,"Zelle","Delivery","Valentine Early Order","+1(704)555-0232","Pre-Valentine dessert",6),
+    mkSale(562,"2026-02-13","Garden Pasta Salad",209,10,11,"Cash","Delivery","Office Lunch","+1(704)555-0229","Thursday recurring",8),
+    mkSale(563,"2026-02-14","Jerk Chicken",202,20,22,"Credit Card","Delivery","Valentine's Dinners","+1(704)555-0233","Valentine's Day — 10 couples",12,300),
+    mkSale(564,"2026-02-15","Shrimp Fried Rice",206,8,26,"Cash","Delivery","Daniel Harris","+1(704)555-0218","",8),
+    mkSale(565,"2026-02-17","Jollof Rice",201,10,18,"Zelle","Delivery","Patricia White","+1(704)555-0217","Presidents Day order",8),
+    mkSale(566,"2026-02-18","Beef Stew",204,6,24,"Cash","Delivery","Robert Brown","+1(704)555-0207","",8),
+    mkSale(567,"2026-02-19","Caribbean Chicken Soup",214,8,14,"Credit Card","Delivery","Kevin Patel","+1(704)555-0211","",8),
+    mkSale(568,"2026-02-20","Garden Pasta Salad",209,10,11,"Zelle","Delivery","Office Lunch","+1(704)555-0229","Thursday recurring",8),
+    mkSale(569,"2026-02-21","Baked Mac & Cheese",208,10,14,"Cash","Delivery","Samuel Green","+1(704)555-0216","",8),
+    mkSale(570,"2026-02-22","Jerk Chicken",202,14,22,"Credit Card","Delivery","Marcus Thompson","+1(704)555-0201","",10),
+    mkSale(571,"2026-02-23","Jollof Rice",201,16,18,"Zelle","Delivery","David Kim","+1(704)555-0205","",10),
+    mkSale(572,"2026-02-24","Meat Pies (6-pack)",213,8,16,"Cash","Delivery","Yolanda Scott","+1(704)555-0224","",8),
+    mkSale(573,"2026-02-25","Fried Tilapia",205,6,20,"Credit Card","Delivery","Sandra Lee","+1(704)555-0208","",6),
+    mkSale(574,"2026-02-26","Shrimp Fried Rice",206,10,26,"Zelle","Delivery","Keisha Nwosu","+1(704)555-0223","",10),
+    mkSale(575,"2026-02-27","Beef Stew",204,8,24,"Cash","Delivery","Jennifer Adams","+1(704)555-0215","",8),
+    mkSale(576,"2026-02-28","Jollof Rice",201,12,18,"Credit Card","Delivery","Tony Okafor","+1(704)555-0209","Month-end family order",10),
+  ];
+
+  // ── Catering Events ───────────────────────────────────────────────
+  const mkEvt = (id, name, client, phone, date, loc, type, style, guests, pph, addOns, disc, phase, notes, costLines) => ({
+    id, name, clientName:client, clientPhone:phone, eventDate:date,
+    location:loc, eventType:type, serviceStyle:style,
+    guests, pricePerHead:pph, addOns:addOns||0, discount:disc||0,
+    revenue: guests*pph + (addOns||0) - (disc||0),
+    phase, notes:notes||"", media:[], costs:{inventory:0,labor:0,transport:0,overhead:0},
+    costLines: costLines||[],
+  });
+
+  const events = [
+    mkEvt(601,"Williams Wedding Reception","Marcus & Tanya Williams","+1(704)555-1001","2025-12-07","Marriott Charlotte City Center, Charlotte NC","Wedding","Buffet",120,65,800,200,"Event Completed","Beautiful wedding — client very happy with jollof rice station.",[
+      {id:6011,group:"Food & Beverage",item:"Jollof Rice",qty:120,unit:"head",unitCost:6,total:720},
+      {id:6012,group:"Food & Beverage",item:"Jerk Chicken",qty:120,unit:"head",unitCost:8,total:960},
+      {id:6013,group:"Food & Beverage",item:"Sides (3 options)",qty:120,unit:"head",unitCost:5,total:600},
+      {id:6014,group:"Staffing",item:"Chef (8 hrs)",qty:8,unit:"hr",unitCost:45,total:360},
+      {id:6015,group:"Staffing",item:"Servers (3 x 6 hrs)",qty:18,unit:"hr",unitCost:20,total:360},
+      {id:6016,group:"Logistics",item:"Transport & Setup",qty:1,unit:"flat",unitCost:120,total:120},
+    ]),
+    mkEvt(602,"Johnson Corporate Lunch","Carolinas Healthcare Group","+1(704)555-1002","2025-12-11","Bank of America HQ, 100 N Tryon St, Charlotte NC","Corporate","Plated",80,38,300,0,"Event Completed","Monthly corporate account — wants to repeat in Jan.",[
+      {id:6021,group:"Food & Beverage",item:"Box Lunches",qty:80,unit:"box",unitCost:8,total:640},
+      {id:6022,group:"Staffing",item:"Chef (4 hrs)",qty:4,unit:"hr",unitCost:45,total:180},
+      {id:6023,group:"Staffing",item:"Server (4 hrs)",qty:4,unit:"hr",unitCost:20,total:80},
+      {id:6024,group:"Logistics",item:"Delivery Fee",qty:1,unit:"flat",unitCost:75,total:75},
+    ]),
+    mkEvt(603,"Thompson Birthday Bash","Denise Thompson","+1(704)555-1003","2025-12-20","Private Residence — 4521 Randolph Rd, Charlotte NC","Birthday","Buffet",50,45,200,0,"Event Completed","50th birthday. Client requested rum cake station and mocktail bar.",[
+      {id:6031,group:"Food & Beverage",item:"Jerk Chicken & Jollof",qty:50,unit:"head",unitCost:14,total:700},
+      {id:6032,group:"Food & Beverage",item:"Rum Cake Station",qty:50,unit:"head",unitCost:8,total:400},
+      {id:6033,group:"Staffing",item:"Chef (6 hrs)",qty:6,unit:"hr",unitCost:45,total:270},
+      {id:6034,group:"Logistics",item:"Transport",qty:1,unit:"flat",unitCost:75,total:75},
+    ]),
+    mkEvt(604,"New Year's Eve Gala","Uptown Events LLC","+1(704)555-1004","2025-12-31","The Fillmore Charlotte, 820 Hamilton St","New Year's Eve","Buffet",200,75,1500,500,"Event Completed","Largest event of the year. Extra staff required. Excellent reviews.",[
+      {id:6041,group:"Food & Beverage",item:"Full Buffet (5 mains)",qty:200,unit:"head",unitCost:18,total:3600},
+      {id:6042,group:"Food & Beverage",item:"Dessert Station",qty:200,unit:"head",unitCost:8,total:1600},
+      {id:6043,group:"Food & Beverage",item:"Drinks Package",qty:200,unit:"head",unitCost:10,total:2000},
+      {id:6044,group:"Staffing",item:"Chef (10 hrs)",qty:10,unit:"hr",unitCost:45,total:450},
+      {id:6045,group:"Staffing",item:"Servers (5 x 8 hrs)",qty:40,unit:"hr",unitCost:20,total:800},
+      {id:6046,group:"Logistics",item:"Transport & Setup (2 vans)",qty:1,unit:"flat",unitCost:200,total:200},
+    ]),
+    mkEvt(605,"MLK Day Community Brunch","NoDa Community Foundation","+1(704)555-1005","2026-01-19","Grady Cole Community Center, Charlotte NC","Community","Buffet",150,28,0,200,"Event Completed","Community service event — discounted pricing by agreement.",[
+      {id:6051,group:"Food & Beverage",item:"Brunch Buffet",qty:150,unit:"head",unitCost:10,total:1500},
+      {id:6052,group:"Staffing",item:"Chef (6 hrs)",qty:6,unit:"hr",unitCost:45,total:270},
+      {id:6053,group:"Staffing",item:"Servers (2 x 5 hrs)",qty:10,unit:"hr",unitCost:20,total:200},
+      {id:6054,group:"Logistics",item:"Delivery",qty:1,unit:"flat",unitCost:75,total:75},
+    ]),
+    mkEvt(606,"Patel Engagement Party","Priya & Raj Patel","+1(704)555-1006","2026-01-25","Pine Room, 1401 Central Ave, Charlotte NC","Engagement","Buffet",70,55,400,0,"Event Completed","Fusion menu — Caribbean + South Asian flavors. Client loved it.",[
+      {id:6061,group:"Food & Beverage",item:"Jerk Chicken",qty:70,unit:"head",unitCost:8,total:560},
+      {id:6062,group:"Food & Beverage",item:"Coconut Rice & Veg Curry",qty:70,unit:"head",unitCost:8,total:560},
+      {id:6063,group:"Food & Beverage",item:"Dessert Platter",qty:70,unit:"head",unitCost:10,total:700},
+      {id:6064,group:"Staffing",item:"Chef (7 hrs)",qty:7,unit:"hr",unitCost:45,total:315},
+      {id:6065,group:"Logistics",item:"Setup & Breakdown",qty:1,unit:"flat",unitCost:100,total:100},
+    ]),
+    mkEvt(607,"Valentine's Dinner Pop-Up","Self (Pop-Up Event)","+1(704)555-0001","2026-02-14","Romare Bearden Park Pavilion, Charlotte NC","Valentine's","Plated",40,95,600,0,"Event Completed","First pop-up dinner event. Sold out in 48 hours. Repeat planned.",[
+      {id:6071,group:"Food & Beverage",item:"3-Course Plated Dinner",qty:40,unit:"head",unitCost:22,total:880},
+      {id:6072,group:"Food & Beverage",item:"Dessert & Drinks",qty:40,unit:"head",unitCost:15,total:600},
+      {id:6073,group:"Staffing",item:"Chef (8 hrs)",qty:8,unit:"hr",unitCost:45,total:360},
+      {id:6074,group:"Staffing",item:"Servers (2 x 6 hrs)",qty:12,unit:"hr",unitCost:20,total:240},
+      {id:6075,group:"Logistics",item:"Venue Prep & Decor",qty:1,unit:"flat",unitCost:250,total:250},
+    ]),
+    mkEvt(608,"Hendricks Baby Shower","Latoya Hendricks","+1(704)555-1008","2026-02-22","Park Road Shopping Center Events Room, Charlotte NC","Baby Shower","Buffet",45,48,200,0,"Confirmed","Client requested pastel color scheme, light menu. Deposit paid.",[]),
+    mkEvt(609,"Spring Corporate Luncheon","Wells Fargo Charlotte Hub","+1(704)555-1009","2026-03-15","Wells Fargo Tower, 301 S College St, Charlotte NC","Corporate","Plated",100,42,500,0,"Confirmed","Recurring quarterly contract. Menu to be confirmed 2 weeks out.",[]),
+    mkEvt(610,"Davis Quinceañera","Sofia Davis","+1(704)555-1010","2026-03-28","Belk Theater Ballroom, Charlotte NC","Quinceañera","Buffet",160,60,1200,300,"Lead / Inquiry","Initial call done. Awaiting signed proposal and deposit.",[]),
+  ];
+
+  // ── Proposals ─────────────────────────────────────────────────────
+  const proposals = [
+    {
+      id:701, num:"PROP-2025-0001", status:"Converted to Event", eventId:601,
+      client:"Marcus & Tanya Williams", clientPhone:"+1(704)555-1001",
+      eventType:"Wedding", plannedDate:"2025-12-07", guests:120, location:"Marriott Charlotte City Center",
+      discount:200, notes:"Full wedding reception — buffet with live carving station.",
+      inventoryLinks:[101,102,103],
+      lines:[
+        {name:"Jollof Rice",qty:120,price:18,unitType:"Per head"},
+        {name:"Jerk Chicken",qty:120,price:22,unitType:"Per head"},
+        {name:"Coconut Rice & Peas",qty:120,price:12,unitType:"Per head"},
+        {name:"Baked Mac & Cheese",qty:120,price:14,unitType:"Per head"},
+        {name:"Rum Cake",qty:120,price:8,unitType:"Per head"},
+        {name:"Homemade Lemonade",qty:12,price:35,unitType:"Per gallon"},
+        {name:"Buffet Service Style",qty:1,price:150,unitType:"Flat"},
+        {name:"Chef / Lead Cook",qty:8,price:45,unitType:"Per hour"},
+        {name:"Server / Food Attendant (3)",qty:18,price:20,unitType:"Per hour"},
+        {name:"Delivery & Setup Fee",qty:1,price:75,unitType:"Flat"},
+      ],
+    },
+    {
+      id:702, num:"PROP-2025-0002", status:"Converted to Event", eventId:602,
+      client:"Carolinas Healthcare Group", clientPhone:"+1(704)555-1002",
+      eventType:"Corporate", plannedDate:"2025-12-11", guests:80, location:"Bank of America HQ",
+      discount:0, notes:"Monthly corporate lunch arrangement — Box lunch format.",
+      inventoryLinks:[101,102],
+      lines:[
+        {name:"Corporate Box Lunch",qty:80,price:22,unitType:"Per box"},
+        {name:"Fruit Punch Bowl",qty:4,price:28,unitType:"Per gallon"},
+        {name:"Server / Food Attendant",qty:4,price:20,unitType:"Per hour"},
+        {name:"Delivery & Setup Fee",qty:1,price:75,unitType:"Flat"},
+      ],
+    },
+    {
+      id:703, num:"PROP-2025-0003", status:"Converted to Event", eventId:604,
+      client:"Uptown Events LLC", clientPhone:"+1(704)555-1004",
+      eventType:"New Year's Eve", plannedDate:"2025-12-31", guests:200, location:"The Fillmore Charlotte",
+      discount:500, notes:"Premium NYE gala — 5-course buffet, dessert station, full bar support.",
+      inventoryLinks:[101,102,103,104,105],
+      lines:[
+        {name:"Jollof Rice",qty:200,price:18,unitType:"Per head"},
+        {name:"Jerk Chicken",qty:200,price:22,unitType:"Per head"},
+        {name:"Beef Stew",qty:200,price:24,unitType:"Per head"},
+        {name:"Shrimp Fried Rice",qty:200,price:26,unitType:"Per head"},
+        {name:"Fried Tilapia",qty:200,price:20,unitType:"Per head"},
+        {name:"Rum Cake",qty:200,price:8,unitType:"Per head"},
+        {name:"Homemade Lemonade",qty:20,price:35,unitType:"Per gallon"},
+        {name:"Buffet Service Style",qty:1,price:150,unitType:"Flat"},
+        {name:"Chef / Lead Cook",qty:10,price:45,unitType:"Per hour"},
+        {name:"Server / Food Attendant (5)",qty:40,price:20,unitType:"Per hour"},
+        {name:"Delivery & Setup Fee",qty:1,price:75,unitType:"Flat"},
+      ],
+    },
+    {
+      id:704, num:"PROP-2026-0001", status:"Converted to Event", eventId:607,
+      client:"Self (Pop-Up)", clientPhone:"+1(704)555-0001",
+      eventType:"Valentine's", plannedDate:"2026-02-14", guests:40, location:"Romare Bearden Park",
+      discount:0, notes:"Self-hosted Valentine's dinner pop-up. Ticket-based revenue.",
+      inventoryLinks:[101,102,105],
+      lines:[
+        {name:"Jerk Chicken (plated)",qty:40,price:22,unitType:"Per head"},
+        {name:"Shrimp Fried Rice (plated)",qty:40,price:26,unitType:"Per head"},
+        {name:"Garden Pasta Salad (starter)",qty:40,price:11,unitType:"Per head"},
+        {name:"Rum Cake",qty:40,price:8,unitType:"Per head"},
+        {name:"Fruit Punch Bowl",qty:4,price:28,unitType:"Per gallon"},
+        {name:"Plated Service Style",qty:40,price:8,unitType:"Per head"},
+        {name:"Chef / Lead Cook",qty:8,price:45,unitType:"Per hour"},
+        {name:"Server / Food Attendant (2)",qty:12,price:20,unitType:"Per hour"},
+        {name:"Floral Table Centerpiece",qty:5,price:65,unitType:"Per table"},
+      ],
+    },
+    {
+      id:705, num:"PROP-2026-0002", status:"Approved",
+      client:"Latoya Hendricks", clientPhone:"+1(704)555-1008",
+      eventType:"Baby Shower", plannedDate:"2026-02-22", guests:45, location:"Park Road Shopping Center Events Room",
+      discount:0, notes:"Light, fresh menu. Pastel color scheme. Mocktail bar requested.",
+      inventoryLinks:[102,106,107],
+      lines:[
+        {name:"Garden Pasta Salad",qty:45,price:11,unitType:"Per head"},
+        {name:"Coconut Rice & Peas",qty:45,price:12,unitType:"Per head"},
+        {name:"Caribbean Chicken Soup",qty:45,price:14,unitType:"Per head"},
+        {name:"Rum Cake",qty:45,price:8,unitType:"Per head"},
+        {name:"Homemade Lemonade",qty:5,price:35,unitType:"Per gallon"},
+        {name:"Server / Food Attendant",qty:5,price:20,unitType:"Per hour"},
+        {name:"Delivery & Setup Fee",qty:1,price:75,unitType:"Flat"},
+      ],
+    },
+    {
+      id:706, num:"PROP-2026-0003", status:"Sent",
+      client:"Wells Fargo Charlotte Hub", clientPhone:"+1(704)555-1009",
+      eventType:"Corporate", plannedDate:"2026-03-15", guests:100, location:"Wells Fargo Tower",
+      discount:0, notes:"Q1 quarterly lunch. Menu TBD — sent two options for client to choose.",
+      inventoryLinks:[101,102,103],
+      lines:[
+        {name:"Corporate Box Lunch",qty:100,price:22,unitType:"Per box"},
+        {name:"Fruit Punch Bowl",qty:5,price:28,unitType:"Per gallon"},
+        {name:"Server / Food Attendant (2)",qty:8,price:20,unitType:"Per hour"},
+        {name:"Delivery & Setup Fee",qty:1,price:75,unitType:"Flat"},
+      ],
+    },
+    {
+      id:707, num:"PROP-2026-0004", status:"Draft",
+      client:"Sofia Davis", clientPhone:"+1(704)555-1010",
+      eventType:"Quinceañera", plannedDate:"2026-03-28", guests:160, location:"Belk Theater Ballroom",
+      discount:300, notes:"Large quinceañera — full buffet, dessert table, champagne toast add-on.",
+      inventoryLinks:[],
+      lines:[
+        {name:"Jollof Rice",qty:160,price:18,unitType:"Per head"},
+        {name:"Jerk Chicken",qty:160,price:22,unitType:"Per head"},
+        {name:"Beef Stew",qty:160,price:24,unitType:"Per head"},
+        {name:"Baked Mac & Cheese",qty:160,price:14,unitType:"Per head"},
+        {name:"Southern Collard Greens",qty:160,price:10,unitType:"Per head"},
+        {name:"Rum Cake",qty:160,price:8,unitType:"Per head"},
+        {name:"Homemade Lemonade",qty:16,price:35,unitType:"Per gallon"},
+        {name:"Buffet Service Style",qty:1,price:150,unitType:"Flat"},
+        {name:"Floral Table Centerpiece",qty:12,price:65,unitType:"Per table"},
+        {name:"Chef / Lead Cook",qty:10,price:45,unitType:"Per hour"},
+        {name:"Server / Food Attendant (4)",qty:32,price:20,unitType:"Per hour"},
+        {name:"Delivery & Setup Fee",qty:1,price:75,unitType:"Flat"},
+      ],
+    },
+  ];
+
+  // ── Overheads / Expenses / Assets ────────────────────────────────
+  const mkOH = (id, date, cat, desc, amt, freq, vendor, type, status, asset) => ({
+    id, date, category:cat, description:desc, amount:amt,
+    frequency:freq, vendor:vendor||"", entryType:type||"opex",
+    paymentStatus:status||"paid", assetName:asset||"",
+  });
+
+  const overheads = [
+    // December 2025
+    mkOH(801,"2025-12-01","Rent & Premises","Commercial Kitchen Rental — December",850,"Monthly","Cooks Studio Charlotte","opex","paid"),
+    mkOH(802,"2025-12-01","Utilities","Electricity & Water — December",120,"Monthly","Duke Energy","opex","paid"),
+    mkOH(803,"2025-12-01","Personnel","Part-time Cook — December wages",1200,"Monthly","Internal","opex","paid"),
+    mkOH(804,"2025-12-04","Transportation","Fuel — delivery runs week of Dec 1",68,"One-time","Shell Charlotte","opex","paid"),
+    mkOH(805,"2025-12-05","Equipment","Chafing Dish Set (6 units)",360,"One-time","Restaurant Depot","capex","paid","Chafing Dish Set x6"),
+    mkOH(806,"2025-12-08","Marketing","Instagram Ads — December",150,"Monthly","Meta Ads","opex","paid"),
+    mkOH(807,"2025-12-10","Subscriptions","Square POS Monthly Fee",60,"Monthly","Square Inc","opex","paid"),
+    mkOH(808,"2025-12-11","Transportation","Fuel — event delivery (Johnson Corporate)",45,"One-time","BP Charlotte","opex","paid"),
+    mkOH(809,"2025-12-12","Equipment","Commercial Blender (Vitamix Pro)",520,"One-time","Williams Sonoma","capex","paid","Commercial Blender"),
+    mkOH(810,"2025-12-15","Professional Fees","Accountant — Q4 bookkeeping",250,"Quarterly","Johnson CPA Services","opex","paid"),
+    mkOH(811,"2025-12-17","Marketing","Business Cards & Flyers reprint",85,"One-time","FedEx Office","opex","paid"),
+    mkOH(812,"2025-12-20","Transportation","Fuel — Thompson birthday event",55,"One-time","Shell Charlotte","opex","paid"),
+    mkOH(813,"2025-12-22","Subscriptions","Google Workspace",18,"Monthly","Google","opex","paid"),
+    mkOH(814,"2025-12-28","Transportation","Fuel — NYE event prep",80,"One-time","BP Charlotte","opex","paid"),
+    mkOH(815,"2025-12-31","Insurance","General Liability Insurance — Q1 2026",380,"Quarterly","State Farm Business","opex","paid"),
+    // January 2026
+    mkOH(816,"2026-01-01","Rent & Premises","Commercial Kitchen Rental — January",850,"Monthly","Cooks Studio Charlotte","opex","paid"),
+    mkOH(817,"2026-01-01","Utilities","Electricity & Water — January",105,"Monthly","Duke Energy","opex","paid"),
+    mkOH(818,"2026-01-01","Personnel","Part-time Cook — January wages",1200,"Monthly","Internal","opex","paid"),
+    mkOH(819,"2026-01-05","Transportation","Fuel — delivery runs week of Jan 5",62,"One-time","Shell Charlotte","opex","paid"),
+    mkOH(820,"2026-01-06","Marketing","Instagram Ads — January",150,"Monthly","Meta Ads","opex","paid"),
+    mkOH(821,"2026-01-07","Subscriptions","Square POS Monthly Fee",60,"Monthly","Square Inc","opex","paid"),
+    mkOH(822,"2026-01-08","Equipment","Insulated Food Carrier Bags (4)",160,"One-time","WebstaurantStore","capex","paid","Food Carrier Bags x4"),
+    mkOH(823,"2026-01-12","Transportation","Fuel — delivery runs week of Jan 12",55,"One-time","BP Charlotte","opex","paid"),
+    mkOH(824,"2026-01-13","Subscriptions","Google Workspace",18,"Monthly","Google","opex","paid"),
+    mkOH(825,"2026-01-15","Maintenance","Kitchen deep clean & equipment service",200,"One-time","CleanPro Services","opex","paid"),
+    mkOH(826,"2026-01-19","Transportation","Fuel — MLK Day event",70,"One-time","Shell Charlotte","opex","paid"),
+    mkOH(827,"2026-01-20","Marketing","Print flyers — February Valentine promotion",95,"One-time","FedEx Office","opex","paid"),
+    mkOH(828,"2026-01-25","Transportation","Fuel — Patel engagement event",58,"One-time","BP Charlotte","opex","paid"),
+    mkOH(829,"2026-01-28","Professional Fees","Logo refresh design work",300,"One-time","Freelance Designer","opex","paid"),
+    mkOH(830,"2026-01-31","Other","Miscellaneous supplies",75,"One-time","Walmart","opex","paid"),
+    // February 2026
+    mkOH(831,"2026-02-01","Rent & Premises","Commercial Kitchen Rental — February",850,"Monthly","Cooks Studio Charlotte","opex","paid"),
+    mkOH(832,"2026-02-01","Utilities","Electricity & Water — February",110,"Monthly","Duke Energy","opex","paid"),
+    mkOH(833,"2026-02-01","Personnel","Part-time Cook — February wages",1400,"Monthly","Internal","opex","paid"),
+    mkOH(834,"2026-02-03","Transportation","Fuel — Super Bowl delivery runs",72,"One-time","Shell Charlotte","opex","paid"),
+    mkOH(835,"2026-02-05","Marketing","Instagram Ads — February (Valentine boost)",200,"Monthly","Meta Ads","opex","paid"),
+    mkOH(836,"2026-02-06","Subscriptions","Square POS Monthly Fee",60,"Monthly","Square Inc","opex","paid"),
+    mkOH(837,"2026-02-07","Subscriptions","Google Workspace",18,"Monthly","Google","opex","paid"),
+    mkOH(838,"2026-02-10","Equipment","Folding Banquet Tables x4",280,"One-time","Costco Business","capex","paid","Folding Banquet Tables x4"),
+    mkOH(839,"2026-02-12","Transportation","Fuel — Valentine's pop-up setup",65,"One-time","BP Charlotte","opex","paid"),
+    mkOH(840,"2026-02-14","Marketing","Valentine's social media boost",75,"One-time","Meta Ads","opex","paid"),
+    mkOH(841,"2026-02-19","Maintenance","Vehicle oil change & inspection",95,"One-time","Jiffy Lube","opex","paid"),
+    mkOH(842,"2026-02-22","Transportation","Fuel — Hendricks baby shower delivery",50,"One-time","Shell Charlotte","opex","paid"),
+    mkOH(843,"2026-02-24","Professional Fees","Website update & menu page redesign",400,"One-time","Web Dev Freelancer","opex","paid"),
+    mkOH(844,"2026-02-25","Marketing","Google Ads trial campaign",120,"One-time","Google Ads","opex","paid"),
+    mkOH(845,"2026-02-28","Other","Office supplies & admin",45,"One-time","Staples","opex","paid"),
+  ];
+
+  // ── Batches ────────────────────────────────────────────────────────
+  const batches = [
+    { id:901, date:"2025-12-06", mealId:201, mealName:"Jollof Rice",         portions:50, notes:"Prep for Dec 7 Williams wedding + weekly orders", ingredientUsage:[{invId:102,qty:25},{invId:113,qty:10},{invId:109,qty:5}] },
+    { id:902, date:"2025-12-06", mealId:202, mealName:"Jerk Chicken",        portions:40, notes:"Williams wedding batch", ingredientUsage:[{invId:101,qty:24},{invId:112,qty:2}] },
+    { id:903, date:"2025-12-19", mealId:201, mealName:"Jollof Rice",         portions:60, notes:"Pre-Christmas bulk prep", ingredientUsage:[{invId:102,qty:24},{invId:113,qty:12},{invId:109,qty:6}] },
+    { id:904, date:"2025-12-30", mealId:202, mealName:"Jerk Chicken",        portions:80, notes:"NYE Gala — large batch with 2 assistants", ingredientUsage:[{invId:101,qty:48},{invId:112,qty:4},{invId:109,qty:4}] },
+    { id:905, date:"2025-12-30", mealId:210, mealName:"Rum Cake",            portions:40, notes:"NYE dessert station batch", ingredientUsage:[{invId:115,qty:12},{invId:116,qty:8},{invId:108,qty:6}] },
+    { id:906, date:"2026-01-04", mealId:208, mealName:"Baked Mac & Cheese",  portions:40, notes:"Weekly order prep + catering buffer", ingredientUsage:[{invId:107,qty:16},{invId:108,qty:10}] },
+    { id:907, date:"2026-01-18", mealId:201, mealName:"Jollof Rice",         portions:55, notes:"MLK Day community brunch prep", ingredientUsage:[{invId:102,qty:22},{invId:113,qty:11},{invId:109,qty:5}] },
+    { id:908, date:"2026-01-24", mealId:203, mealName:"Coconut Rice & Peas", portions:35, notes:"Patel engagement + weekly orders", ingredientUsage:[{invId:102,qty:14},{invId:114,qty:10}] },
+    { id:909, date:"2026-02-02", mealId:202, mealName:"Jerk Chicken",        portions:50, notes:"Super Bowl + Valentine's pre-production", ingredientUsage:[{invId:101,qty:30},{invId:112,qty:3},{invId:109,qty:3}] },
+    { id:910, date:"2026-02-13", mealId:206, mealName:"Shrimp Fried Rice",   portions:30, notes:"Valentine's pop-up dinner batch", ingredientUsage:[{invId:105,qty:10},{invId:102,qty:12},{invId:109,qty:3}] },
+    { id:911, date:"2026-02-13", mealId:210, mealName:"Rum Cake",            portions:25, notes:"Valentine's dessert batch", ingredientUsage:[{invId:115,qty:8},{invId:116,qty:5},{invId:108,qty:4}] },
+    { id:912, date:"2026-02-21", mealId:201, mealName:"Jollof Rice",         portions:50, notes:"Late Feb weekly order buffer", ingredientUsage:[{invId:102,qty:20},{invId:113,qty:10},{invId:109,qty:5}] },
+  ];
+
+  // ── Customers ─────────────────────────────────────────────────────
+  const customers = [
+    { id:1001, name:"Marcus Thompson",          phone:"+1(704)555-0201", email:"marcus.t@email.com",     classification:"VIP",     notes:"Loyal weekly customer. Loves jollof rice.", createdAt:"2025-12-01" },
+    { id:1002, name:"Priya Sharma",             phone:"+1(704)555-0202", email:"priya.s@email.com",      classification:"Regular", notes:"Orders for family. Prefers mild spice.", createdAt:"2025-12-02" },
+    { id:1003, name:"James Wilson",             phone:"+1(704)555-0203", email:"j.wilson@email.com",     classification:"Regular", notes:"",                                        createdAt:"2025-12-03" },
+    { id:1004, name:"Lisa Carter",              phone:"+1(704)555-0204", email:"",                       classification:"Regular", notes:"Mild heat preference on all orders.",     createdAt:"2025-12-04" },
+    { id:1005, name:"David Kim",                phone:"+1(704)555-0205", email:"david.k@email.com",      classification:"Regular", notes:"",                                        createdAt:"2025-12-05" },
+    { id:1006, name:"Aisha Jackson",            phone:"+1(704)555-0206", email:"",                       classification:"Regular", notes:"Requests extra cheese on mac orders.",   createdAt:"2025-12-06" },
+    { id:1007, name:"Robert Brown",             phone:"+1(704)555-0207", email:"",                       classification:"Regular", notes:"",                                        createdAt:"2025-12-08" },
+    { id:1008, name:"Sandra Lee",               phone:"+1(704)555-0208", email:"s.lee@email.com",        classification:"Regular", notes:"Sauce always on the side.",               createdAt:"2025-12-09" },
+    { id:1009, name:"Tony Okafor",              phone:"+1(704)555-0209", email:"tony.o@email.com",       classification:"VIP",     notes:"Nigerian-born — appreciates authentic jollof. Large orders.", createdAt:"2025-12-10" },
+    { id:1010, name:"Michelle Davis",           phone:"+1(704)555-0210", email:"",                       classification:"Regular", notes:"",                                        createdAt:"2025-12-11" },
+    { id:1011, name:"Kevin Patel",              phone:"+1(704)555-0211", email:"k.patel@email.com",      classification:"Regular", notes:"",                                        createdAt:"2025-12-12" },
+    { id:1012, name:"Angela Moore",             phone:"+1(704)555-0212", email:"",                       classification:"Regular", notes:"",                                        createdAt:"2025-12-13" },
+    { id:1013, name:"Chris Johnson",            phone:"+1(704)555-0213", email:"",                       classification:"Regular", notes:"Regularly orders meat pies in bulk.",     createdAt:"2025-12-15" },
+    { id:1014, name:"Office Party",             phone:"+1(704)555-0214", email:"officeadmin@corp.com",   classification:"Corporate","notes":"Recurring office lunch order.",         createdAt:"2025-12-16" },
+    { id:1015, name:"Jennifer Adams",           phone:"+1(704)555-0215", email:"j.adams@email.com",      classification:"Regular", notes:"Repeat event client.",                    createdAt:"2025-12-17" },
+    { id:1016, name:"Samuel Green",             phone:"+1(704)555-0216", email:"",                       classification:"Regular", notes:"",                                        createdAt:"2025-12-18" },
+    { id:1017, name:"Patricia White",           phone:"+1(704)555-0217", email:"",                       classification:"Regular", notes:"",                                        createdAt:"2025-12-19" },
+    { id:1018, name:"Daniel Harris",            phone:"+1(704)555-0218", email:"d.harris@email.com",     classification:"Regular", notes:"",                                        createdAt:"2025-12-20" },
+    { id:1019, name:"Keisha Nwosu",             phone:"+1(704)555-0223", email:"keisha.n@email.com",     classification:"VIP",     notes:"Event planner — refers new catering clients.", createdAt:"2025-12-27" },
+    { id:1020, name:"Yolanda Scott",            phone:"+1(704)555-0224", email:"",                       classification:"Regular", notes:"",                                        createdAt:"2025-12-28" },
+    { id:1021, name:"Amara Diallo",             phone:"+1(704)555-0227", email:"a.diallo@email.com",     classification:"Regular", notes:"West African — loves authentic flavors.", createdAt:"2026-01-03" },
+    { id:1022, name:"Office Lunch",             phone:"+1(704)555-0229", email:"procurement@corp.com",   classification:"Corporate","notes":"Every Thursday recurring order.",       createdAt:"2026-01-09" },
+    { id:1023, name:"Marcus & Tanya Williams",  phone:"+1(704)555-1001", email:"mwilliams@email.com",    classification:"VIP",     notes:"Wedding client Dec 2025. Interested in anniversary dinner 2026.", createdAt:"2025-12-07" },
+    { id:1024, name:"Carolinas Healthcare Group",phone:"+1(704)555-1002",email:"events@chg.org",         classification:"Corporate","notes":"Monthly corporate lunch contract.",     createdAt:"2025-12-11" },
+    { id:1025, name:"Uptown Events LLC",        phone:"+1(704)555-1004", email:"bookings@uptown.com",    classification:"Corporate","notes":"Event agency. NYE Gala was huge. Potential annual partnership.", createdAt:"2025-12-31" },
+    { id:1026, name:"Priya & Raj Patel",        phone:"+1(704)555-1006", email:"priya.s@email.com",      classification:"VIP",     notes:"Engagement client Jan 2026. Planning wedding late 2026.", createdAt:"2026-01-25" },
+    { id:1027, name:"Latoya Hendricks",         phone:"+1(704)555-1008", email:"latoya.h@email.com",     classification:"Regular", notes:"Baby shower Feb 2026. Due in April.",    createdAt:"2026-02-01" },
+  ];
+
+  const biz = {
+    name:"Delightful Meals and Drinks",
+    tagline:"Transforming Events with Taste and Sip",
+    address:"2847 Freedom Drive, Suite 104",
+    city:"Charlotte, NC 28208",
+    phone:"+1 (704) 555-0100",
+    phone2:"+1 (704) 555-0199",
+    email:"info@delightfulmeals.com",
+    website:"www.delightfulmeals.com",
+    rccm:"",
+    taxId:"45-6789012",
+    paymentTerms:"Payment accepted by Cash, Credit Card, Zelle, and Bank Transfer. 50% deposit required to confirm catering events.",
+    bankName:"Bank of America",
+    bankAccount:"****4521",
+    footer:"Thank you for choosing Delightful Meals and Drinks — we look forward to serving you!",
+  };
+
+  return { inv, meals, catalog, catalog_cats, sales, events, proposals, overheads, batches, customers, biz };
+})();
+// ─── END DEMO DATA ────────────────────────────────────────────────
+
 // ─── HELPERS ──────────────────────────────────────────────────────
 const eCOGS = (c, costLines) => {
   if (Array.isArray(costLines) && costLines.length > 0)
@@ -12428,6 +12944,25 @@ export default function App() {
           const k = isDemo ? (row.key.startsWith("demo_") ? row.key.slice(5) : null) : (!row.key.startsWith("demo_") ? row.key : null);
           if (k) map[k] = row.data;
         });
+
+        // ── Demo seed: if demo login and no cloud data yet, seed from DEMO_DATA ──
+        if (isDemo && Object.keys(map).length === 0) {
+          setEvents(DEMO_DATA.events);         ls_set("cb_events",      DEMO_DATA.events);
+          setSales(DEMO_DATA.sales);           ls_set("cb_sales",       DEMO_DATA.sales);
+          setInvoices([]);                     ls_set("cb_invoices",    []);
+          setProposals(DEMO_DATA.proposals);   ls_set("cb_proposals",   DEMO_DATA.proposals);
+          setCatalogItems(DEMO_DATA.catalog);  ls_set("cb_catalog",     DEMO_DATA.catalog);
+          setCatalogCategories(DEMO_DATA.catalog_cats); ls_set("cb_catalog_cats", DEMO_DATA.catalog_cats);
+          setInventory(DEMO_DATA.inv);         ls_set("cb_inventory",   DEMO_DATA.inv);
+          setMeals(DEMO_DATA.meals);           ls_set("cb_meals",       DEMO_DATA.meals);
+          setBatches(DEMO_DATA.batches);       ls_set("cb_batches",     DEMO_DATA.batches);
+          setOverheads(DEMO_DATA.overheads);   ls_set("cb_overheads",   DEMO_DATA.overheads);
+          setBiz(DEMO_DATA.biz);               ls_set("cb_biz",         DEMO_DATA.biz);
+          setCustomers(DEMO_DATA.customers);   ls_set("cb_customers",   DEMO_DATA.customers);
+          setDbLoaded(true);
+          return;
+        }
+
         // Apply Supabase data — overrides localStorage with cloud truth
         if (map["cb_events"])        { setEvents(map["cb_events"]);               ls_set("cb_events", map["cb_events"]); }
         if (map["cb_sales"])         { setSales(map["cb_sales"]);                  ls_set("cb_sales", map["cb_sales"]); }
