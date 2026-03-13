@@ -11901,6 +11901,13 @@ function LoginScreen({ onLogin }) {
       setTimeout(() => onLogin("staff"), 400);
       return;
     }
+    // Demo account — hardcoded, always available, isolated data
+    if (emailLower === "demo@delightfulmeals.com" && pw === "demo1234") {
+      saveSession("demo");
+      setLoading(true);
+      setTimeout(() => onLogin("demo"), 400);
+      return;
+    }
 
     setError("Incorrect email or password.");
   };
@@ -12320,7 +12327,8 @@ const TABS = [
 export default function App() {
   const [authed, setAuthed] = useState(() => !!loadSession());
   const [role, setRole] = useState(() => loadSession()?.role || "owner");
-  const isOwner = role === "owner";
+  const isOwner = role === "owner" || role === "demo"; // demo gets full owner access
+  const isDemo = role === "demo";
   const visibleTabs = isOwner ? TABS : TABS.filter(t => STAFF_TABS.includes(t.id) && !t.ownerOnly);
   const [tab, setTab] = useState(() => {
     const sess = loadSession();
@@ -12328,14 +12336,15 @@ export default function App() {
     return "dashboard";
   });
   // ── localStorage helpers (fallback / cache layer) ─────────────────
+  const demoPrefix = isDemo ? "demo_" : "";
   function ls_get(key, fallback) {
     try {
-      const raw = localStorage.getItem(key);
+      const raw = localStorage.getItem(demoPrefix + key);
       return raw !== null ? JSON.parse(raw) : fallback;
     } catch { return fallback; }
   }
   function ls_set(key, value) {
-    try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
+    try { localStorage.setItem(demoPrefix + key, JSON.stringify(value)); } catch {}
   }
 
   // ── Supabase persistence ───────────────────────────────────────────
@@ -12371,15 +12380,16 @@ export default function App() {
     // Always write to localStorage immediately
     ls_set(key, value);
     // Debounce Supabase writes by 800ms
-    clearTimeout(dbTimers.current[key]);
-    dbTimers.current[key] = setTimeout(async () => {
+    const supaKey = demoPrefix + key;
+    clearTimeout(dbTimers.current[supaKey]);
+    dbTimers.current[supaKey] = setTimeout(async () => {
       try {
         await supabase.from("dm_store").upsert(
-          { key, data: value, updated_at: new Date().toISOString() },
+          { key: supaKey, data: value, updated_at: new Date().toISOString() },
           { onConflict: "key" }
         );
       } catch (e) {
-        console.warn("Supabase write failed for", key, e);
+        console.warn("Supabase write failed for", supaKey, e);
       }
     }, 800);
   }
@@ -12413,7 +12423,11 @@ export default function App() {
           .select("key, data");
         if (error) { console.warn("Supabase load error:", error); setDbLoaded(true); return; }
         const map = {};
-        (data || []).forEach(row => { map[row.key] = row.data; });
+        (data || []).forEach(row => {
+          // Strip demo prefix when building the map so keys match state names
+          const k = isDemo ? (row.key.startsWith("demo_") ? row.key.slice(5) : null) : (!row.key.startsWith("demo_") ? row.key : null);
+          if (k) map[k] = row.data;
+        });
         // Apply Supabase data — overrides localStorage with cloud truth
         if (map["cb_events"])        { setEvents(map["cb_events"]);               ls_set("cb_events", map["cb_events"]); }
         if (map["cb_sales"])         { setSales(map["cb_sales"]);                  ls_set("cb_sales", map["cb_sales"]); }
@@ -12576,6 +12590,16 @@ export default function App() {
             />
           </div>
           <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+            {isDemo && (
+              <span style={{
+                fontSize: 9, fontWeight: 800, letterSpacing: 0.8,
+                color: "#fff", background: "#e67e22",
+                border: "1px solid #e67e2260",
+                borderRadius: 20, padding: "1px 8px",
+                animation: "pulse 2s infinite",
+              }}>⚡ DEMO</span>
+            )}
+            {!isDemo && (
             <span style={{
               fontSize: 9, fontWeight: 700, letterSpacing: 0.5,
               color: isOwner ? T.accent : T.info,
@@ -12583,6 +12607,19 @@ export default function App() {
               border: `1px solid ${isOwner ? T.accent : T.info}40`,
               borderRadius: 20, padding: "1px 7px",
             }}>{isOwner ? "OWNER" : "STAFF"}</span>
+            )}
+            {isDemo && (
+              <button
+                style={{ ...S.btn("ghost"), fontSize: 10, padding: "3px 8px", color: "#e67e22", border: "1px solid #e67e2250" }}
+                title="Reset all demo data back to sample defaults"
+                onClick={() => {
+                  if (!window.confirm("Reset all demo data to sample defaults? This cannot be undone.")) return;
+                  const keys = ["cb_events","cb_sales","cb_invoices","cb_proposals","cb_catalog","cb_catalog_cats","cb_inventory","cb_meals","cb_batches","cb_overheads","cb_logo","cb_biz","cb_customers"];
+                  keys.forEach(k => localStorage.removeItem("demo_" + k));
+                  window.location.reload();
+                }}
+              >🔄 Reset Demo</button>
+            )}
             {isOwner && (
               <button
                 style={{ ...S.btn("ghost"), fontSize: 10, padding: "3px 7px", color: T.accent, border: `1px solid ${T.accent}50` }}
@@ -12636,6 +12673,14 @@ export default function App() {
             ))}
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
+            {isDemo ? (
+              <span style={{
+                fontSize: 9, fontWeight: 800, letterSpacing: 0.8,
+                color: "#fff", background: "#e67e22",
+                border: "1px solid #e67e2260",
+                borderRadius: 20, padding: "2px 8px", whiteSpace: "nowrap",
+              }}>⚡ DEMO MODE</span>
+            ) : (
             <span style={{
               fontSize: 9, fontWeight: 700, letterSpacing: 0.5,
               color: isOwner ? T.accent : T.info,
@@ -12643,6 +12688,7 @@ export default function App() {
               border: `1px solid ${isOwner ? T.accent : T.info}40`,
               borderRadius: 20, padding: "2px 8px", whiteSpace: "nowrap",
             }}>{isOwner ? "👑 Owner" : "👤 Staff"}</span>
+            )}
             <div style={{ fontSize: 10, color: T.textMuted, whiteSpace: "nowrap" }}>
               📍{biz.city} · {TODAY_LABEL}
             </div>
