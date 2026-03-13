@@ -6608,7 +6608,7 @@ function RestaurantPage({
                   </select>
                 </div>
                 <div>
-                  <label style={S.label}>Plates</label>
+                  <label style={S.label}>Products</label>
                   <input
                     type="number"
                     style={S.input}
@@ -6850,7 +6850,7 @@ function RestaurantPage({
                     {[
                       "Date",
                       "Meal",
-                      "Plates",
+                      "Products",
                       "Price/Plate",
                       "Del. Fee",
                       "Total",
@@ -8967,7 +8967,7 @@ function CustomersPage({ customers, setCustomers, invoices, setInvoices, events,
               <div style={S.sectionTitle}>Home Orders ({custSales(selCustomer.name).length})</div>
               {custSales(selCustomer.name).length === 0 ? <div style={{ color: T.textDim, fontSize: 13, marginBottom: 8 }}>No restaurant orders.</div> : (
                 <table style={{ ...S.table, marginBottom: 10 }}>
-                  <thead><tr>{["Date","Meal","Plates","Total","Paid","Balance","Notes"].map(h => <th key={h} style={S.th}>{h}</th>)}</tr></thead>
+                  <thead><tr>{["Date","Meal","Products","Total","Paid","Balance","Notes"].map(h => <th key={h} style={S.th}>{h}</th>)}</tr></thead>
                   <tbody>{custSales(selCustomer.name).map(s => {
                     const tot = orderTotal(s);
                     const paid = s.partialPaid !== "" && s.partialPaid != null ? Number(s.partialPaid) : tot;
@@ -9149,7 +9149,7 @@ function CustomersPage({ customers, setCustomers, invoices, setInvoices, events,
             ) : (
               <div className="tbl-wrap">
                 <table style={S.table}>
-                  <thead><tr>{["Date","Client","Meal","Plates","Order Total","Paid","Balance","Notes"].map(h => <th key={h} style={S.th}>{h}</th>)}</tr></thead>
+                  <thead><tr>{["Date","Client","Meal","Products","Order Total","Paid","Balance","Notes"].map(h => <th key={h} style={S.th}>{h}</th>)}</tr></thead>
                   <tbody>
                     {arSales.map(s => {
                       const tot = orderTotal(s);
@@ -12101,7 +12101,7 @@ function parseWorkbook(wb) {
     id: ts + 40000 + i,
     date: parseXLDate(r["Date *\n(YYYY-MM-DD)"] || r["Date *"] || r["Date"] || ""),
     meal: String(r["Meal Name *"] || r["Meal Name"] || "").trim(),
-    plates: Number(r["Plates /\nUnits *"] || r["Plates / Units *"] || r["Plates"] || 1),
+    plates: Number(r["Plates /\nUnits *"] || r["Plates / Units *"] || r["Products"] || 1),
     pricePerPlate: Number(r["Price / Plate\n(USD) *"] || r["Price / Plate (USD)"] || r["Price/Plate"] || 0),
     method: String(r["Payment\nMethod * \u25bc"] || r["Payment Method *"] || r["Payment Method"] || "Cash").trim(),
     type: String(r["Order Type *\n\u25bc"] || r["Order Type *"] || r["Order Type"] || "Delivery").trim(),
