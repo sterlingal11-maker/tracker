@@ -4134,7 +4134,7 @@ function CateringPage({ events, setEvents, proposals, setProposals, inventory, l
         </div>
         <button
           style={S.btn("primary")}
-          onClick={() => setAddingEvent(!addingEvent)}
+          onClick={() => { setCateringSubTab("events"); setAddingEvent(true); }}
         >
           + New Event
         </button>
@@ -4157,6 +4157,7 @@ function CateringPage({ events, setEvents, proposals, setProposals, inventory, l
           inventory={inventory}
           logo={logo}
           biz={biz}
+          customers={customers}
           proposalPrefillLines={proposalPrefillLines}
           clearProposalPrefill={clearProposalPrefill}
         />
@@ -5111,6 +5112,7 @@ function ProposalsPage({
   inventory,
   logo,
   biz,
+  customers,
   proposalPrefillLines,
   clearProposalPrefill,
 }) {
