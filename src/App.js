@@ -1,4 +1,10 @@
-import { useState, useRef, useMemo, useEffect } from "react";
+import { useState, useRef, useMemo, useEffect, useCallback } from "react";
+import { createClient } from "@supabase/supabase-js";
+
+// ─── SUPABASE CONFIG ──────────────────────────────────────────────
+const SUPA_URL  = "https://bvcphmgtpnnnmkindknr.supabase.co";
+const SUPA_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ2Y29obWd0cG5ubm1raW5ka25yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0MTQ0ODQsImV4cCI6MjA4ODk5MDQ4NH0.uotzNxHcvv83uZGkXvK09Zk1BY0D3QWr_JOqfGf__q8";
+const supabase  = createClient(SUPA_URL, SUPA_ANON);
 
 // ─── MOBILE DETECTION HOOK ────────────────────────────────────────
 function useIsMobile() {
@@ -12312,7 +12318,7 @@ export default function App() {
     if (sess?.role === "staff") return "restaurant";
     return "dashboard";
   });
-  // ── Persist & rehydrate all business data via localStorage ────────
+  // ── localStorage helpers (fallback / cache layer) ─────────────────
   function ls_get(key, fallback) {
     try {
       const raw = localStorage.getItem(key);
@@ -12320,33 +12326,61 @@ export default function App() {
     } catch { return fallback; }
   }
   function ls_set(key, value) {
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-    } catch (e) {
-      if (e && (e.name === "QuotaExceededError" || e.code === 22 || e.code === 1014)) {
-        console.warn("localStorage quota exceeded for key:", key);
-        // Try to free space by removing non-critical cached data first
-        try {
-          // Remove any stale session data
-          localStorage.removeItem("cb_session_v2");
-          // Retry the save
-          localStorage.setItem(key, JSON.stringify(value));
-        } catch (e2) {
-          // If still failing, alert the user once
-          if (!window._storageWarnShown) {
-            window._storageWarnShown = true;
-            alert("⚠️ Storage almost full. Please export a backup from Settings to avoid data loss.");
-          }
-        }
-      }
-    }
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
   }
 
+  // ── Supabase persistence ───────────────────────────────────────────
+  // Strategy: localStorage is used for instant startup (no flicker),
+  // Supabase is the source of truth. On mount we fetch from Supabase
+  // and overwrite local. On every state change we write to both.
+
+  const DB_KEYS = [
+    "cb_events","cb_sales","cb_invoices","cb_proposals",
+    "cb_catalog","cb_catalog_cats","cb_inventory","cb_meals",
+    "cb_batches","cb_overheads","cb_logo","cb_biz","cb_customers"
+  ];
+
+  const DEFAULTS = {
+    cb_events: INIT_EVENTS,
+    cb_sales: INIT_SALES,
+    cb_invoices: INIT_INVOICES,
+    cb_proposals: INIT_PROPOSALS,
+    cb_catalog: CAT_ITEMS,
+    cb_catalog_cats: CAT_CATS,
+    cb_inventory: INIT_INVENTORY,
+    cb_meals: INIT_MEALS,
+    cb_batches: [],
+    cb_overheads: INIT_OVERHEADS,
+    cb_logo: { src: LOGO_SRC },
+    cb_biz: INIT_BIZ,
+    cb_customers: [],
+  };
+
+  // Debounce map to avoid flooding Supabase on rapid state changes
+  const dbTimers = useRef({});
+  function supa_set(key, value) {
+    // Always write to localStorage immediately
+    ls_set(key, value);
+    // Debounce Supabase writes by 800ms
+    clearTimeout(dbTimers.current[key]);
+    dbTimers.current[key] = setTimeout(async () => {
+      try {
+        await supabase.from("dm_store").upsert(
+          { key, data: value, updated_at: new Date().toISOString() },
+          { onConflict: "key" }
+        );
+      } catch (e) {
+        console.warn("Supabase write failed for", key, e);
+      }
+    }, 800);
+  }
+
+  // State — initialized from localStorage for instant render
   const [events, setEvents] = useState(() => ls_get("cb_events", INIT_EVENTS));
   const [sales, setSales] = useState(() => ls_get("cb_sales", INIT_SALES));
   const [invoices, setInvoices] = useState(() => ls_get("cb_invoices", INIT_INVOICES));
   const [proposals, setProposals] = useState(() => ls_get("cb_proposals", INIT_PROPOSALS));
-  const [proposalPrefillLines, setProposalPrefillLines] = useState(null); // lines from catalog to prefill new proposal
+  const [proposalPrefillLines, setProposalPrefillLines] = useState(null);
   const [catalogItems, setCatalogItems] = useState(() => ls_get("cb_catalog", CAT_ITEMS));
   const [catalogCategories, setCatalogCategories] = useState(() => ls_get("cb_catalog_cats", CAT_CATS));
   const [inventory, setInventory] = useState(() => ls_get("cb_inventory", INIT_INVENTORY));
@@ -12356,31 +12390,57 @@ export default function App() {
   const [logo, setLogo] = useState(() => ls_get("cb_logo", { src: LOGO_SRC }));
   const [biz, setBiz] = useState(() => ls_get("cb_biz", INIT_BIZ));
   const [customers, setCustomers] = useState(() => ls_get("cb_customers", []));
+  const [dbLoaded, setDbLoaded] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const isMobile = useIsMobile();
 
-  // ── Sync state changes to localStorage ────────────────────────────
-  useEffect(() => { ls_set("cb_events", events); }, [events]);
-  useEffect(() => { ls_set("cb_sales", sales); }, [sales]);
-  useEffect(() => { ls_set("cb_invoices", invoices); }, [invoices]);
-  useEffect(() => { ls_set("cb_proposals", proposals); }, [proposals]);
-  useEffect(() => { ls_set("cb_catalog", catalogItems); }, [catalogItems]);
-  useEffect(() => { ls_set("cb_catalog_cats", catalogCategories); }, [catalogCategories]);
-  useEffect(() => { ls_set("cb_inventory", inventory); }, [inventory]);
-  useEffect(() => { ls_set("cb_meals", meals); }, [meals]);
-  useEffect(() => { ls_set("cb_batches", batches); }, [batches]);
-  useEffect(() => { ls_set("cb_overheads", overheads); }, [overheads]);
+  // ── On mount: fetch latest data from Supabase (source of truth) ───
   useEffect(() => {
-    // Only persist custom logos — the default is already bundled in LOGO_SRC
-    if (logo?.src && logo.src !== LOGO_SRC) {
-      ls_set("cb_logo", logo);
-    } else if (!logo?.src || logo.src === LOGO_SRC) {
-      try { localStorage.removeItem("cb_logo"); } catch {}
+    async function loadFromSupabase() {
+      try {
+        const { data, error } = await supabase
+          .from("dm_store")
+          .select("key, data");
+        if (error) { console.warn("Supabase load error:", error); setDbLoaded(true); return; }
+        const map = {};
+        (data || []).forEach(row => { map[row.key] = row.data; });
+        // Apply Supabase data — overrides localStorage with cloud truth
+        if (map["cb_events"])        { setEvents(map["cb_events"]);               ls_set("cb_events", map["cb_events"]); }
+        if (map["cb_sales"])         { setSales(map["cb_sales"]);                  ls_set("cb_sales", map["cb_sales"]); }
+        if (map["cb_invoices"])      { setInvoices(map["cb_invoices"]);            ls_set("cb_invoices", map["cb_invoices"]); }
+        if (map["cb_proposals"])     { setProposals(map["cb_proposals"]);          ls_set("cb_proposals", map["cb_proposals"]); }
+        if (map["cb_catalog"])       { setCatalogItems(map["cb_catalog"]);         ls_set("cb_catalog", map["cb_catalog"]); }
+        if (map["cb_catalog_cats"])  { setCatalogCategories(map["cb_catalog_cats"]); ls_set("cb_catalog_cats", map["cb_catalog_cats"]); }
+        if (map["cb_inventory"])     { setInventory(map["cb_inventory"]);          ls_set("cb_inventory", map["cb_inventory"]); }
+        if (map["cb_meals"])         { setMeals(map["cb_meals"]);                  ls_set("cb_meals", map["cb_meals"]); }
+        if (map["cb_batches"])       { setBatches(map["cb_batches"]);              ls_set("cb_batches", map["cb_batches"]); }
+        if (map["cb_overheads"])     { setOverheads(map["cb_overheads"]);          ls_set("cb_overheads", map["cb_overheads"]); }
+        if (map["cb_logo"])          { setLogo(map["cb_logo"]);                    ls_set("cb_logo", map["cb_logo"]); }
+        if (map["cb_biz"])           { setBiz(map["cb_biz"]);                      ls_set("cb_biz", map["cb_biz"]); }
+        if (map["cb_customers"])     { setCustomers(map["cb_customers"]);          ls_set("cb_customers", map["cb_customers"]); }
+      } catch(e) {
+        console.warn("Supabase fetch failed, using localStorage:", e);
+      }
+      setDbLoaded(true);
     }
-  }, [logo]);
-  useEffect(() => { ls_set("cb_biz", biz); }, [biz]);
-  useEffect(() => { ls_set("cb_customers", customers); }, [customers]);
+    loadFromSupabase();
+  }, []);
+
+  // ── Sync every state change to Supabase + localStorage ───────────
+  useEffect(() => { supa_set("cb_events", events); }, [events]);
+  useEffect(() => { supa_set("cb_sales", sales); }, [sales]);
+  useEffect(() => { supa_set("cb_invoices", invoices); }, [invoices]);
+  useEffect(() => { supa_set("cb_proposals", proposals); }, [proposals]);
+  useEffect(() => { supa_set("cb_catalog", catalogItems); }, [catalogItems]);
+  useEffect(() => { supa_set("cb_catalog_cats", catalogCategories); }, [catalogCategories]);
+  useEffect(() => { supa_set("cb_inventory", inventory); }, [inventory]);
+  useEffect(() => { supa_set("cb_meals", meals); }, [meals]);
+  useEffect(() => { supa_set("cb_batches", batches); }, [batches]);
+  useEffect(() => { supa_set("cb_overheads", overheads); }, [overheads]);
+  useEffect(() => { supa_set("cb_logo", logo); }, [logo]);
+  useEffect(() => { supa_set("cb_biz", biz); }, [biz]);
+  useEffect(() => { supa_set("cb_customers", customers); }, [customers]);
 
   // One-time backfill: seed customers from existing sales & events that predate the customers feature
   useEffect(() => {
