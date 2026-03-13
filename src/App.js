@@ -132,7 +132,7 @@ const INIT_BIZ = {
   tagline: "Nationwide Meals & Drinks Delivery",
   address: "Rue Njo Njo, Akwa",
   city: "Douala, Cameroun",
-  phone: "+237 6XX XXX XXX",
+  phone: "+1 (704) 555-0100",
   phone2: "",
   email: "cookiesbites@email.cm",
   website: "",
@@ -1671,7 +1671,7 @@ function buildReceiptHTML(inv, biz, logo) {
     inv.paid
   )}</div><div class="rh-sub">Against invoice ${
     inv.num
-  } · ${TODAY_LABEL}</div></div><div class="items-section"><div class="section-heading">Payment Breakdown</div><table><thead><tr><th>Description</th><th class="tr">Amount (XAF)</th></tr></thead><tbody><tr><td class="bold">Payment against ${
+  } · ${TODAY_LABEL}</div></div><div class="items-section"><div class="section-heading">Payment Breakdown</div><table><thead><tr><th>Description</th><th class="tr">Amount (USD)</th></tr></thead><tbody><tr><td class="bold">Payment against ${
     inv.num
   }</td><td class="tr" style="color:#16a34a;font-size:14px;font-weight:800">${fmt(
     inv.paid
@@ -1777,7 +1777,7 @@ function buildOrderReceiptHTML(sale, biz, logo) {
     `<div class="party-name">${biz.name}</div><div class="party-detail">${[biz.address, biz.city, biz.phone].filter(Boolean).join("<br/>")}</div>`,
     "Customer",
     `<div class="party-name">${clientName}</div><div class="party-detail">${clientDetail}</div>`
-  )}<div class="receipt-hero ${isPartial ? "partial" : ""}"><div class="rh-label">${statusLabel}</div><div class="rh-amount">${fmt(paid)}</div><div class="rh-sub">${sale.method} · ${sale.date}</div>${isPartial ? `<div class="rh-balance">Balance Outstanding: ${fmt(balance)}</div>` : ""}</div><div class="items-section"><div class="section-heading">Order Details</div><table><thead><tr><th>Item</th><th class="tc">Qty</th><th class="tr">Unit Price</th><th class="tr">Amount (XAF)</th></tr></thead><tbody><tr><td class="bold">${
+  )}<div class="receipt-hero ${isPartial ? "partial" : ""}"><div class="rh-label">${statusLabel}</div><div class="rh-amount">${fmt(paid)}</div><div class="rh-sub">${sale.method} · ${sale.date}</div>${isPartial ? `<div class="rh-balance">Balance Outstanding: ${fmt(balance)}</div>` : ""}</div><div class="items-section"><div class="section-heading">Order Details</div><table><thead><tr><th>Item</th><th class="tc">Qty</th><th class="tr">Unit Price</th><th class="tr">Amount (USD)</th></tr></thead><tbody><tr><td class="bold">${
     sale.meal
   }</td><td class="tc">${sale.plates} plate${sale.plates > 1 ? "s" : ""}</td><td class="tr">${fmt(sale.pricePerPlate)}</td><td class="tr">${fmt(
     sale.plates * sale.pricePerPlate
@@ -3623,7 +3623,7 @@ function CateringPage({ events, setEvents, proposals, setProposals, inventory, l
                 style={S.input}
                 value={newEvt.name}
                 onChange={(e) => setNewEvt({ ...newEvt, name: e.target.value })}
-                placeholder="e.g. Kamga Wedding · MTN Staff Party"
+                placeholder="e.g. Johnson Wedding · Corporate Luncheon"
               />
             </div>
             <div>
@@ -4329,7 +4329,7 @@ function CatalogPage({ categories, setCategories, items, setItems, meals, logo, 
             {!addingCat
               ? <button style={{ ...S.btn("ghost"), fontSize: 12 }} onClick={() => setAddingCat(true)}>＋ New Category</button>
               : <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                  <input style={{ ...S.input, width: 180, marginBottom: 0 }} placeholder="e.g. 🧆 Mezze" value={newCatName} onChange={e => setNewCatName(e.target.value)} onKeyDown={e => e.key === "Enter" && addCategory()} autoFocus />
+                  <input style={{ ...S.input, width: 180, marginBottom: 0 }} placeholder="e.g. 🍱 Meal Boxes" value={newCatName} onChange={e => setNewCatName(e.target.value)} onKeyDown={e => e.key === "Enter" && addCategory()} autoFocus />
                   <button style={S.btn("primary")} onClick={addCategory}>Add</button>
                   <button style={S.btn("ghost")} onClick={() => { setAddingCat(false); setNewCatName(""); }}>✕</button>
                 </div>
@@ -4435,7 +4435,7 @@ function CatalogPage({ categories, setCategories, items, setItems, meals, logo, 
               <div style={S.grid(3)}>
                 <div>
                   <label style={S.label}>Item Name *</label>
-                  <input style={S.input} value={ni.name} onChange={e => setNi({ ...ni, name: e.target.value })} placeholder="e.g. Jollof Rice" />
+                  <input style={S.input} value={ni.name} onChange={e => setNi({ ...ni, name: e.target.value })} placeholder="e.g. Spicy Chicken Box" />
                 </div>
                 <div>
                   <label style={S.label}>Category</label>
@@ -5815,7 +5815,7 @@ function BatchesTab({ batches, setBatches, meals, setMeals, inventory, setInvent
               <input
                 type="number"
                 style={S.input}
-                placeholder={suggestedCost > 0 ? `Suggested: ${Math.round(suggestedCost)}` : "e.g. 47500"}
+                placeholder={suggestedCost > 0 ? `Suggested: ${Math.round(suggestedCost)}` : "e.g. 25.00"}
                 value={nb.totalCost}
                 onChange={(e) => setNb((n) => ({ ...n, totalCost: e.target.value }))}
               />
@@ -5832,7 +5832,7 @@ function BatchesTab({ batches, setBatches, meals, setMeals, inventory, setInvent
             </div>
             <div style={{ gridColumn: isMobile ? "1" : "1 / -1" }}>
               <label style={S.label}>Notes (optional)</label>
-              <input style={S.input} placeholder="e.g. Used long-grain rice, extra spices" value={nb.notes} onChange={(e) => setNb((n) => ({ ...n, notes: e.target.value }))} />
+              <input style={S.input} placeholder="e.g. Used extra seasoning, packed in 12oz containers" value={nb.notes} onChange={(e) => setNb((n) => ({ ...n, notes: e.target.value }))} />
             </div>
           </div>
 
@@ -5879,7 +5879,7 @@ function BatchesTab({ batches, setBatches, meals, setMeals, inventory, setInvent
           <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>No batches recorded yet</div>
           <div style={{ fontSize: 11, lineHeight: 1.7 }}>
             Click <strong>+ Log Batch</strong> to record a production run.<br />
-            e.g. Jollof Rice · 25 portions · Cost: 47,500 XAF · 1,900 XAF/portion
+            e.g. Spicy Chicken Box · 25 portions · Cost: 47,500 XAF · 1,900 XAF/portion
           </div>
         </div>
       ) : (
@@ -6657,7 +6657,7 @@ function RestaurantPage({
                   <input
                     style={S.input}
                     list="rest-customer-list"
-                    placeholder="e.g. Jean Dupont or Table 4"
+                    placeholder="e.g. Sarah Johnson or Order #42"
                     value={ns.clientName}
                     onChange={(e) => {
                       const val = e.target.value;
@@ -6673,7 +6673,7 @@ function RestaurantPage({
                   <label style={S.label}>Client Phone <span style={{ color: T.textDim, fontWeight: 400 }}>(optional)</span></label>
                   <input
                     style={S.input}
-                    placeholder="+237 6XX XXX XXX"
+                    placeholder="+1 (704) 555-0100"
                     value={ns.clientPhone}
                     onChange={(e) => setNs({ ...ns, clientPhone: e.target.value })}
                   />
@@ -7517,7 +7517,7 @@ function RestaurantPage({
                       type="number"
                       min="0"
                       style={{ ...S.input, flex: 1 }}
-                      placeholder="Amount (XAF)"
+                      placeholder="Amount (USD)"
                       value={oc.amount}
                       onChange={(e) =>
                         setNm({
@@ -7573,7 +7573,7 @@ function RestaurantPage({
                     style={{ ...S.input, color: T.accent, fontWeight: 700 }}
                     value={nm.price}
                     onChange={(e) => setNm({ ...nm, price: e.target.value })}
-                    placeholder="e.g. 4500"
+                    placeholder="e.g. 12.00"
                   />
                 </div>
                 <div>
@@ -8934,7 +8934,7 @@ function CustomersPage({ customers, setCustomers, invoices, setInvoices, events,
                 </div>
                 <div>
                   <label style={S.label}>Phone</label>
-                  <input style={S.input} value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder="+237 6XX XXX XXX" />
+                  <input style={S.input} value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder="+1 (704) 555-0100" />
                 </div>
                 <div>
                   <label style={S.label}>Email</label>
@@ -9783,7 +9783,7 @@ function OverheadsPage({ overheads, setOverheads }) {
                   </div>
                 )}
                 <div>
-                  <label style={S.label}>Amount (XAF)</label>
+                  <label style={S.label}>Amount (USD)</label>
                   <input
                     type="number"
                     min="0"
@@ -9803,7 +9803,7 @@ function OverheadsPage({ overheads, setOverheads }) {
                     onChange={(e) =>
                       setForm({ ...form, vendor: e.target.value })
                     }
-                    placeholder="e.g. ENEO, Propriétaire, Fournisseur Bassa..."
+                    placeholder="e.g. Utility, Landlord, Supplier..."
                   />
                 </div>
                 <div>
@@ -10010,7 +10010,7 @@ function OverheadsPage({ overheads, setOverheads }) {
                         "Description",
                         "Vendor",
                         "Freq",
-                        "Amount (XAF)",
+                        "Amount (USD)",
                         "Status",
                         "",
                       ].map((h) => (
@@ -12123,7 +12123,7 @@ function parseWorkbook(wb) {
 
   // Invoices
   const invoices = getSheet(wb, "Invoice").map((r, i) => {
-    const total = Number(r["Total Amount\n(XAF) *"] || r["Total Amount (XAF)"] || r["Total Amount"] || 0);
+    const total = Number(r["Total Amount\n(XAF) *"] || r["Total Amount (USD)"] || r["Total Amount"] || 0);
     const paid = Number(r["Amount Paid\n(XAF)"] || r["Amount Paid (XAF)"] || r["Amount Paid"] || 0);
     const status = paid >= total && total > 0 ? "Paid" : paid > 0 ? "Partially Paid" : "Unpaid";
     return {
@@ -12145,7 +12145,7 @@ function parseWorkbook(wb) {
     entryType: String(r["Entry Type *\n\u25bc"] || r["Entry Type *"] || r["Entry Type"] || "opex").trim(),
     category: String(r["Category *\n\u25bc"] || r["Category *"] || r["Category"] || "Other").trim(),
     description: String(r["Description *"] || r["Description"] || "").trim(),
-    amount: Number(r["Amount\n(XAF) *"] || r["Amount (XAF) *"] || r["Amount (XAF)"] || r["Amount"] || 0),
+    amount: Number(r["Amount\n(XAF) *"] || r["Amount (USD) *"] || r["Amount (USD)"] || r["Amount"] || 0),
     frequency: String(r["Frequency *\n\u25bc"] || r["Frequency *"] || r["Frequency"] || "One-time").trim(),
     vendor: String(r["Vendor / Supplier"] || r["Vendor"] || "").trim(),
     paymentStatus: String(r["Payment Status *\n\u25bc"] || r["Payment Status *"] || r["Payment Status"] || "paid").trim(),
@@ -12967,7 +12967,7 @@ function AIStudioPage({ biz, events, meals, catalogItems, logo }) {
       <div style={{ fontSize: 10, fontWeight: 700, color: T.accent, letterSpacing: 0.6, textTransform: "uppercase", marginBottom: 8 }}>⭐ Review Links</div>
       {[
         { key: "google", icon: "🔍", label: "Google Business Review Link", ph: "https://g.page/r/YOUR_PLACE_ID/review", help: "Find it in Google Business Profile → Get more reviews" },
-        { key: "facebook", icon: "👤", label: "Facebook Page URL", ph: "https://facebook.com/cookiesbites" },
+        { key: "facebook", icon: "👤", label: "Facebook Page URL", ph: "https://facebook.com/delightfulmeals" },
       ].map(s => (
         <div key={s.key} style={{ marginBottom: 10 }}>
           <label style={S.label}>{s.icon} {s.label}</label>
@@ -12981,7 +12981,7 @@ function AIStudioPage({ biz, events, meals, catalogItems, logo }) {
       {[
         { key: "instagram", icon: "📷", label: "Instagram URL", ph: "https://instagram.com/cookiesbites" },
         { key: "tiktok", icon: "🎵", label: "TikTok URL", ph: "https://tiktok.com/@cookiesbites" },
-        { key: "whatsapp", icon: "💬", label: "WhatsApp Business Number", ph: "+237 6XX XXX XXX", help: "Numbers only used for WhatsApp links" },
+        { key: "whatsapp", icon: "💬", label: "WhatsApp Business Number", ph: "+1 (704) 555-0100", help: "Numbers only used for WhatsApp links" },
       ].map(s => (
         <div key={s.key} style={{ marginBottom: 10 }}>
           <label style={S.label}>{s.icon} {s.label}</label>
@@ -13239,7 +13239,7 @@ function AIStudioPage({ biz, events, meals, catalogItems, logo }) {
                   <label style={S.label}>Customer name <span style={{ color: T.textDim }}>(optional — personalises the message)</span></label>
                   <input style={S.input} value={opts.customerName}
                     onChange={e => setOpts(o => ({ ...o, customerName: e.target.value }))}
-                    placeholder="e.g. Marie, Mr. Ngando…" />
+                    placeholder="e.g. Sarah, Mr. Johnson..." />
                 </div>
 
                 {/* Occasion */}
@@ -13247,7 +13247,7 @@ function AIStudioPage({ biz, events, meals, catalogItems, logo }) {
                   <label style={S.label}>What did they experience? <span style={{ color: T.textDim }}>(optional)</span></label>
                   <input style={S.input} value={opts.occasion}
                     onChange={e => setOpts(o => ({ ...o, occasion: e.target.value }))}
-                    placeholder="e.g. Wedding catering for 120 guests, Delivery order last Sunday…" />
+                    placeholder="e.g. Wedding catering for 80 guests, Nationwide shipment last Friday..." />
                 </div>
 
                 {/* Google review link (contextual) */}
@@ -13284,7 +13284,7 @@ function AIStudioPage({ biz, events, meals, catalogItems, logo }) {
                     }}
                       value={opts.facebookLink || socialLinks.facebook}
                       onChange={e => setOpts(o => ({ ...o, facebookLink: e.target.value }))}
-                      placeholder="https://facebook.com/cookiesbites" />
+                      placeholder="https://facebook.com/delightfulmeals" />
                   </div>
                 )}
 
@@ -13364,7 +13364,7 @@ function AIStudioPage({ biz, events, meals, catalogItems, logo }) {
                       <label style={S.label}>Describe the image (helps AI write better)</label>
                       <input style={S.input} value={opts.mediaDesc}
                         onChange={e => setOpts(o => ({ ...o, mediaDesc: e.target.value }))}
-                        placeholder="e.g. Steaming jollof rice plated elegantly on white plate" />
+                        placeholder="e.g. Beautifully plated meal box ready for nationwide shipping" />
                     </div>
                   )}
                 </div>
