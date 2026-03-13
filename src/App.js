@@ -1779,7 +1779,7 @@ function buildOrderReceiptHTML(sale, biz, logo) {
     `<div class="party-name">${clientName}</div><div class="party-detail">${clientDetail}</div>`
   )}<div class="receipt-hero ${isPartial ? "partial" : ""}"><div class="rh-label">${statusLabel}</div><div class="rh-amount">${fmt(paid)}</div><div class="rh-sub">${sale.method} · ${sale.date}</div>${isPartial ? `<div class="rh-balance">Balance Outstanding: ${fmt(balance)}</div>` : ""}</div><div class="items-section"><div class="section-heading">Order Details</div><table><thead><tr><th>Item</th><th class="tc">Qty</th><th class="tr">Unit Price</th><th class="tr">Amount (USD)</th></tr></thead><tbody><tr><td class="bold">${
     sale.meal
-  }</td><td class="tc">${sale.plates} plate${sale.plates > 1 ? "s" : ""}</td><td class="tr">${fmt(sale.pricePerPlate)}</td><td class="tr">${fmt(
+  }</td><td class="tc">${sale.plates} unit${sale.plates > 1 ? "s" : ""}</td><td class="tr">${fmt(sale.pricePerPlate)}</td><td class="tr">${fmt(
     sale.plates * sale.pricePerPlate
   )}</td></tr>${
     sale.deliveryFee > 0
@@ -1802,7 +1802,7 @@ function buildOrderInvoiceHTML(sale, biz, logo) {
     sale.type + " Order",
   ].filter(Boolean).join("<br/>");
   const rows = [
-    `<tr><td class="bold">${sale.meal}</td><td class="tc">${sale.plates} plate${sale.plates > 1 ? "s" : ""}</td><td class="tr">${fmt(sale.pricePerPlate)}</td><td class="tr">${fmt(sale.plates * sale.pricePerPlate)}</td></tr>`,
+    `<tr><td class="bold">${sale.meal}</td><td class="tc">${sale.plates} unit${sale.plates > 1 ? "s" : ""}</td><td class="tr">${fmt(sale.pricePerPlate)}</td><td class="tr">${fmt(sale.plates * sale.pricePerPlate)}</td></tr>`,
     sale.deliveryFee > 0
       ? `<tr><td>Shipping Fee</td><td class="tc">—</td><td class="tr">${fmt(sale.deliveryFee)}</td><td class="tr">${fmt(sale.deliveryFee)}</td></tr>`
       : "",
@@ -6617,7 +6617,7 @@ function RestaurantPage({
                   />
                 </div>
                 <div>
-                  <label style={S.label}>Price/Plate (USD)</label>
+                  <label style={S.label}>Price/Unit (USD)</label>
                   <input
                     type="number"
                     style={S.input}
@@ -6775,7 +6775,7 @@ function RestaurantPage({
                     }}
                   >
                     <span>
-                      {s.method} · {fmt(s.pricePerPlate)}/plate
+                      {s.method} · {fmt(s.pricePerPlate)}/unit
                     </span>
                     {s.deliveryFee > 0 && (
                       <span style={{ color: T.delivery }}>
@@ -6851,7 +6851,7 @@ function RestaurantPage({
                       "Date",
                       "Meal",
                       "Products",
-                      "Price/Plate",
+                      "Price/Unit",
                       "Del. Fee",
                       "Total",
                       "Paid",
@@ -12102,7 +12102,7 @@ function parseWorkbook(wb) {
     date: parseXLDate(r["Date *\n(YYYY-MM-DD)"] || r["Date *"] || r["Date"] || ""),
     meal: String(r["Meal Name *"] || r["Meal Name"] || "").trim(),
     plates: Number(r["Plates /\nUnits *"] || r["Plates / Units *"] || r["Products"] || 1),
-    pricePerPlate: Number(r["Price / Plate\n(USD) *"] || r["Price / Plate (USD)"] || r["Price/Plate"] || 0),
+    pricePerPlate: Number(r["Price / Plate\n(USD) *"] || r["Price / Plate (USD)"] || r["Price/Unit"] || 0),
     method: String(r["Payment\nMethod * \u25bc"] || r["Payment Method *"] || r["Payment Method"] || "Cash").trim(),
     type: String(r["Order Type *\n\u25bc"] || r["Order Type *"] || r["Order Type"] || "Delivery").trim(),
     deliveryFee: Number(r["Delivery Fee\n(USD)"] || r["Shipping Fee (USD)"] || r["Delivery Fee"] || 0),
