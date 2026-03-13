@@ -12910,6 +12910,22 @@ export default function App() {
     }, 800);
   }
 
+  // ── Demo: seed localStorage on first visit (synchronous, before state init) ──
+  if (isDemo && !localStorage.getItem("demo_cb_sales")) {
+    localStorage.setItem("demo_cb_events",       JSON.stringify(DEMO_DATA.events));
+    localStorage.setItem("demo_cb_sales",         JSON.stringify(DEMO_DATA.sales));
+    localStorage.setItem("demo_cb_invoices",      JSON.stringify([]));
+    localStorage.setItem("demo_cb_proposals",     JSON.stringify(DEMO_DATA.proposals));
+    localStorage.setItem("demo_cb_catalog",       JSON.stringify(DEMO_DATA.catalog));
+    localStorage.setItem("demo_cb_catalog_cats",  JSON.stringify(DEMO_DATA.catalog_cats));
+    localStorage.setItem("demo_cb_inventory",     JSON.stringify(DEMO_DATA.inv));
+    localStorage.setItem("demo_cb_meals",         JSON.stringify(DEMO_DATA.meals));
+    localStorage.setItem("demo_cb_batches",       JSON.stringify(DEMO_DATA.batches));
+    localStorage.setItem("demo_cb_overheads",     JSON.stringify(DEMO_DATA.overheads));
+    localStorage.setItem("demo_cb_biz",           JSON.stringify(DEMO_DATA.biz));
+    localStorage.setItem("demo_cb_customers",     JSON.stringify(DEMO_DATA.customers));
+  }
+
   // State — initialized from localStorage for instant render
   const [events, setEvents] = useState(() => ls_get("cb_events", INIT_EVENTS));
   const [sales, setSales] = useState(() => ls_get("cb_sales", INIT_SALES));
