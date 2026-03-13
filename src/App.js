@@ -12911,20 +12911,25 @@ export default function App() {
   }
 
   // ── Demo: seed localStorage on first visit (synchronous, before state init) ──
-  if (isDemo && !localStorage.getItem("demo_cb_sales")) {
-    localStorage.setItem("demo_cb_events",       JSON.stringify(DEMO_DATA.events));
-    localStorage.setItem("demo_cb_sales",         JSON.stringify(DEMO_DATA.sales));
-    localStorage.setItem("demo_cb_invoices",      JSON.stringify([]));
-    localStorage.setItem("demo_cb_proposals",     JSON.stringify(DEMO_DATA.proposals));
-    localStorage.setItem("demo_cb_catalog",       JSON.stringify(DEMO_DATA.catalog));
-    localStorage.setItem("demo_cb_catalog_cats",  JSON.stringify(DEMO_DATA.catalog_cats));
-    localStorage.setItem("demo_cb_inventory",     JSON.stringify(DEMO_DATA.inv));
-    localStorage.setItem("demo_cb_meals",         JSON.stringify(DEMO_DATA.meals));
-    localStorage.setItem("demo_cb_batches",       JSON.stringify(DEMO_DATA.batches));
-    localStorage.setItem("demo_cb_overheads",     JSON.stringify(DEMO_DATA.overheads));
-    localStorage.setItem("demo_cb_biz",           JSON.stringify(DEMO_DATA.biz));
-    localStorage.setItem("demo_cb_customers",     JSON.stringify(DEMO_DATA.customers));
-  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useMemo(() => {
+    if (isDemo && !localStorage.getItem("demo_cb_sales")) {
+      localStorage.setItem("demo_cb_events",       JSON.stringify(DEMO_DATA.events));
+      localStorage.setItem("demo_cb_sales",         JSON.stringify(DEMO_DATA.sales));
+      localStorage.setItem("demo_cb_invoices",      JSON.stringify([]));
+      localStorage.setItem("demo_cb_proposals",     JSON.stringify(DEMO_DATA.proposals));
+      localStorage.setItem("demo_cb_catalog",       JSON.stringify(DEMO_DATA.catalog));
+      localStorage.setItem("demo_cb_catalog_cats",  JSON.stringify(DEMO_DATA.catalog_cats));
+      localStorage.setItem("demo_cb_inventory",     JSON.stringify(DEMO_DATA.inv));
+      localStorage.setItem("demo_cb_meals",         JSON.stringify(DEMO_DATA.meals));
+      localStorage.setItem("demo_cb_batches",       JSON.stringify(DEMO_DATA.batches));
+      localStorage.setItem("demo_cb_overheads",     JSON.stringify(DEMO_DATA.overheads));
+      localStorage.setItem("demo_cb_biz",           JSON.stringify(DEMO_DATA.biz));
+      localStorage.setItem("demo_cb_customers",     JSON.stringify(DEMO_DATA.customers));
+      window.location.reload();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDemo]);
 
   // State — initialized from localStorage for instant render
   const [events, setEvents] = useState(() => ls_get("cb_events", INIT_EVENTS));
@@ -13147,17 +13152,7 @@ export default function App() {
                 color: "#fff", background: "#e67e22",
                 border: "1px solid #e67e2260",
                 borderRadius: 20, padding: "1px 8px",
-                animation: "pulse 2s infinite",
               }}>⚡ DEMO</span>
-            )}
-            {!isDemo && (
-            <span style={{
-              fontSize: 9, fontWeight: 700, letterSpacing: 0.5,
-              color: isOwner ? T.accent : T.info,
-              background: isOwner ? T.accentSoft : `${T.info}18`,
-              border: `1px solid ${isOwner ? T.accent : T.info}40`,
-              borderRadius: 20, padding: "1px 7px",
-            }}>{isOwner ? "OWNER" : "STAFF"}</span>
             )}
             {isDemo && (
               <button
@@ -13169,9 +13164,9 @@ export default function App() {
                   keys.forEach(k => localStorage.removeItem("demo_" + k));
                   window.location.reload();
                 }}
-              >🔄 Reset Demo</button>
+              >🔄 Reset</button>
             )}
-            {isOwner && (
+            {isOwner && !isDemo && (
               <button
                 style={{ ...S.btn("ghost"), fontSize: 10, padding: "3px 7px", color: T.accent, border: `1px solid ${T.accent}50` }}
                 onClick={() => setShowImport(true)}
