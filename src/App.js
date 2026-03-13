@@ -5999,7 +5999,7 @@ function RestaurantPage({
     plates: "",
     pricePerPlate: "",
     method: "Cash",
-    type: "Dine-in",
+    type: "Delivery",
     deliveryFee: 0,
     deliveryAddress: "",
     clientName: "",
@@ -6060,20 +6060,13 @@ function RestaurantPage({
   const delFees = sales
     .filter((s) => s.type === "Delivery")
     .reduce((s, r) => s + (r.deliveryFee || 0), 0);
-  const dineRev = sales
-    .filter((s) => s.type === "Dine-in")
-    .reduce((s, r) => s + orderTotal(r), 0);
-  const tkRev = sales
-    .filter((s) => s.type === "Takeaway")
-    .reduce((s, r) => s + orderTotal(r), 0);
+
   const byMeal = {};
   sales.forEach((s) => {
     byMeal[s.meal] = (byMeal[s.meal] || 0) + s.plates * s.pricePerPlate;
   });
   const lowStock = inventory.filter((i) => i.stock <= i.reorderAt);
   const typeColor = {
-    "Dine-in": T.restaurant,
-    Takeaway: T.warning,
     Delivery: T.delivery,
   };
   const totalStockValue = inventory.reduce(
@@ -6366,8 +6359,6 @@ function RestaurantPage({
             <div style={S.cardTitle}>Revenue by Fulfillment (Week)</div>
             <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
               {[
-                { label: "🪑 Dine-in", val: dineRev, color: T.restaurant },
-                { label: "🥡 Takeaway", val: tkRev, color: T.warning },
                 { label: "📦 Shipment", val: delRev, color: T.delivery },
               ].map((item) => (
                 <div key={item.label} style={{ minWidth: 130 }}>
@@ -6412,7 +6403,7 @@ function RestaurantPage({
           )}
           <div style={{ ...S.row, marginBottom: 9, flexWrap: "wrap", gap: 5 }}>
             <div style={{ display: "flex", gap: 3 }}>
-              {["All", "Dine-in", "Takeaway", "Delivery"].map((t) => (
+              {["All", "Delivery"].map((t) => (
                 <button
                   key={t}
                   style={S.navBtn(filterType === t)}
@@ -6609,12 +6600,10 @@ function RestaurantPage({
                       setNs({
                         ...ns,
                         type: e.target.value,
-                        deliveryFee: e.target.value === "Delivery" ? 2000 : 0,
+                        deliveryFee: 0,
                       })
                     }
                   >
-                    <option>Dine-in</option>
-                    <option>Takeaway</option>
                     <option>Delivery</option>
                   </select>
                 </div>
@@ -12115,7 +12104,7 @@ function parseWorkbook(wb) {
     plates: Number(r["Plates /\nUnits *"] || r["Plates / Units *"] || r["Plates"] || 1),
     pricePerPlate: Number(r["Price / Plate\n(USD) *"] || r["Price / Plate (USD)"] || r["Price/Plate"] || 0),
     method: String(r["Payment\nMethod * \u25bc"] || r["Payment Method *"] || r["Payment Method"] || "Cash").trim(),
-    type: String(r["Order Type *\n\u25bc"] || r["Order Type *"] || r["Order Type"] || "Dine-in").trim(),
+    type: String(r["Order Type *\n\u25bc"] || r["Order Type *"] || r["Order Type"] || "Delivery").trim(),
     deliveryFee: Number(r["Delivery Fee\n(USD)"] || r["Shipping Fee (USD)"] || r["Delivery Fee"] || 0),
     clientName: String(r["Client Name\n(delivery only)"] || r["Client Name"] || "").trim(),
     deliveryAddress: "",
