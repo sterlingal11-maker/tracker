@@ -2129,7 +2129,7 @@ function SettingsModal({ biz, setBiz, onClose }) {
           </div>
           <div style={S.grid(2)}>
             <BizField draft={draft} setDraft={setDraft} label="Street Address" k="address" />
-            <BizField draft={draft} setDraft={setDraft} label="City / Country" k="city" />
+            <BizField draft={draft} setDraft={setDraft} label="City / State / ZIP" k="city" />
             <BizField draft={draft} setDraft={setDraft} label="Primary Phone" k="phone" />
             <BizField draft={draft} setDraft={setDraft} label="Secondary Phone" k="phone2" />
             <BizField draft={draft} setDraft={setDraft} label="Email" k="email" />
@@ -2149,8 +2149,8 @@ function SettingsModal({ biz, setBiz, onClose }) {
             Legal & Banking
           </div>
           <div style={S.grid(2)}>
-            <BizField draft={draft} setDraft={setDraft} label="RCCM / Business Reg. No." k="rccm" />
-            <BizField draft={draft} setDraft={setDraft} label="Tax ID / NIU" k="taxId" />
+            <BizField draft={draft} setDraft={setDraft} label="EIN / Business Reg. No." k="rccm" />
+            <BizField draft={draft} setDraft={setDraft} label="State Tax ID" k="taxId" />
             <BizField draft={draft} setDraft={setDraft} label="Bank Name" k="bankName" />
             <BizField draft={draft} setDraft={setDraft} label="Bank Account Number" k="bankAccount" />
           </div>
