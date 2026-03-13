@@ -12948,8 +12948,8 @@ export default function App() {
   }
 
   // ── Demo: seed localStorage on first visit (synchronous, before state init) ──
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useMemo(() => {
+  // ── Demo: seed localStorage on first visit, then reload so state picks it up ──
+  useEffect(() => {
     if (isDemo && !localStorage.getItem("demo_cb_sales")) {
       localStorage.setItem("demo_cb_events",       JSON.stringify(DEMO_DATA.events));
       localStorage.setItem("demo_cb_sales",         JSON.stringify(DEMO_DATA.sales));
@@ -12965,8 +12965,7 @@ export default function App() {
       localStorage.setItem("demo_cb_customers",     JSON.stringify(DEMO_DATA.customers));
       window.location.reload();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDemo]);
+  }, []); // run once on mount
 
   // State — initialized from localStorage for instant render
   const [events, setEvents] = useState(() => ls_get("cb_events", INIT_EVENTS));
