@@ -2559,9 +2559,10 @@ function SettingsModal({ biz, setBiz, onClose }) {
     if (hashPassword(currentPw) !== auth.owner.hash) { setPwMsg({ type: "error", text: "Current password is incorrect." }); return; }
     if (newPw.length < 6) { setPwMsg({ type: "error", text: "New password must be at least 6 characters." }); return; }
     if (newPw !== confirmPw) { setPwMsg({ type: "error", text: "Passwords do not match." }); return; }
-    saveOwnerAuth(auth.owner.email, newPw);
-    setCurrentPw(""); setNewPw(""); setConfirmPw("");
-    setPwMsg({ type: "success", text: "Password updated successfully." });
+    saveOwnerAuth(auth.owner.email, newPw).then(() => {
+      setCurrentPw(""); setNewPw(""); setConfirmPw("");
+      setPwMsg({ type: "success", text: "Password updated and synced to all devices." });
+    });
   };
 
   const handleSaveStaff = () => {
@@ -2571,26 +2572,24 @@ function SettingsModal({ biz, setBiz, onClose }) {
     if (!existingStaff && staffPw !== staffPw2) { setStaffMsg({ type: "error", text: "Passwords do not match." }); return; }
     if (staffPw && staffPw.length < 6) { setStaffMsg({ type: "error", text: "Password must be at least 6 characters." }); return; }
     if (staffPw && staffPw !== staffPw2) { setStaffMsg({ type: "error", text: "Passwords do not match." }); return; }
-    // If password left blank on edit, keep existing hash
-    const auth = loadAuth();
+    // If password left blank on edit, preserve existing hash and just update email
     if (existingStaff && !staffPw) {
-      saveStaffAuth(staffEmail, null); // save email update only — keep hash
-      // Actually just update email while preserving hash manually
       const existing = loadAuth() || {};
-      localStorage.setItem("cb_auth_v2", JSON.stringify({
-        ...existing,
-        staff: { email: staffEmail.trim().toLowerCase(), hash: existingStaff.hash }
-      }));
+      const updated = { ...existing, staff: { email: staffEmail.trim().toLowerCase(), hash: existingStaff.hash } };
+      localStorage.setItem(AUTH_KEY, JSON.stringify(updated));
+      supabase.from("dm_store").upsert({ key: "cb_auth_v2", data: updated, updated_at: new Date().toISOString() }, { onConflict: "key" }).catch(() => {});
     } else {
       saveStaffAuth(staffEmail, staffPw);
     }
     setStaffPw(""); setStaffPw2("");
-    setStaffMsg({ type: "success", text: existingStaff ? "Staff account updated." : "Staff account created successfully." });
+    setStaffMsg({ type: "success", text: existingStaff ? "Staff account updated and synced." : "Staff account created and synced." });
   };
 
   const handleRemoveStaff = () => {
     const existing = loadAuth() || {};
-    localStorage.setItem("cb_auth_v2", JSON.stringify({ ...existing, staff: null }));
+    const updated = { ...existing, staff: null };
+    localStorage.setItem(AUTH_KEY, JSON.stringify(updated));
+    supabase.from("dm_store").upsert({ key: "cb_auth_v2", data: updated, updated_at: new Date().toISOString() }, { onConflict: "key" }).catch(() => {});
     setStaffEmail(""); setStaffPw(""); setStaffPw2("");
     setStaffMsg({ type: "success", text: "Staff account removed." });
     setConfirmRemoveStaff(false);
@@ -12439,19 +12438,23 @@ function hashPassword(pw) {
 function loadAuth() {
   try { return JSON.parse(localStorage.getItem(AUTH_KEY)) || null; } catch { return null; }
 }
-function saveOwnerAuth(email, pw) {
+async function saveOwnerAuth(email, pw) {
   const existing = loadAuth() || {};
-  localStorage.setItem(AUTH_KEY, JSON.stringify({
-    ...existing,
-    owner: { email: email.trim().toLowerCase(), hash: hashPassword(pw) }
-  }));
+  const updated = { ...existing, owner: { email: email.trim().toLowerCase(), hash: hashPassword(pw) } };
+  localStorage.setItem(AUTH_KEY, JSON.stringify(updated));
+  // Sync to Supabase so any device can log in
+  try {
+    await supabase.from("dm_store").upsert({ key: "cb_auth_v2", data: updated, updated_at: new Date().toISOString() }, { onConflict: "key" });
+  } catch { /* offline — localStorage still updated */ }
 }
-function saveStaffAuth(email, pw) {
+async function saveStaffAuth(email, pw) {
   const existing = loadAuth() || {};
-  localStorage.setItem(AUTH_KEY, JSON.stringify({
-    ...existing,
-    staff: pw ? { email: email.trim().toLowerCase(), hash: hashPassword(pw) } : null
-  }));
+  const updated = { ...existing, staff: pw ? { email: email.trim().toLowerCase(), hash: hashPassword(pw) } : null };
+  localStorage.setItem(AUTH_KEY, JSON.stringify(updated));
+  // Sync to Supabase
+  try {
+    await supabase.from("dm_store").upsert({ key: "cb_auth_v2", data: updated, updated_at: new Date().toISOString() }, { onConflict: "key" });
+  } catch { /* offline */ }
 }
 function loadSession() {
   try {
@@ -12488,10 +12491,11 @@ function LoginScreen({ onLogin }) {
       // First-time owner setup
       if (pw.length < 6) { setError("Password must be at least 6 characters."); return; }
       if (pw !== pw2) { setError("Passwords do not match."); return; }
-      saveOwnerAuth(email, pw);
-      saveSession("owner");
       setLoading(true);
-      setTimeout(() => onLogin("owner"), 400);
+      saveOwnerAuth(email, pw).then(() => {
+        saveSession("owner");
+        onLogin("owner");
+      });
       return;
     }
 
@@ -12937,6 +12941,7 @@ const TABS = [
 export default function App() {
   const [authed, setAuthed] = useState(() => !!loadSession());
   const [role, setRole] = useState(() => loadSession()?.role || "owner");
+  const [authSynced, setAuthSynced] = useState(() => !!loadSession()); // skip sync if already logged in
   const isOwner = role === "owner" || role === "demo"; // demo gets full owner access
   const isDemo = role === "demo";
   const visibleTabs = isOwner ? TABS : TABS.filter(t => STAFF_TABS.includes(t.id) && !t.ownerOnly);
@@ -13148,10 +13153,41 @@ export default function App() {
     if (data.overheads.length)  setOverheads(data.overheads);
   };
 
+  // ── Pre-login: pull cb_auth_v2 from Supabase so any device can log in ──
+  useEffect(() => {
+    if (authed) return; // already logged in, no need
+    async function syncAuth() {
+      try {
+        const { data } = await supabase
+          .from("dm_store")
+          .select("data")
+          .eq("key", "cb_auth_v2")
+          .single();
+        if (data?.data) {
+          // Merge cloud auth into localStorage — cloud wins for owner/staff credentials
+          const local = (() => { try { return JSON.parse(localStorage.getItem(AUTH_KEY)) || {}; } catch { return {}; } })();
+          const merged = { ...local, ...data.data };
+          localStorage.setItem(AUTH_KEY, JSON.stringify(merged));
+        }
+      } catch { /* offline or no row yet — use localStorage as-is */ }
+      setAuthSynced(true);
+    }
+    syncAuth();
+  }, []); // run once on mount
+
   if (!authed) {
+    if (!authSynced) {
+      // Brief loading state while we pull credentials from Supabase
+      return (
+        <div style={{ background: "#0e0e0e", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 14 }}>
+          <img src={LOGO_SRC} alt="Delightful Meals" style={{ width: 90, height: 90, objectFit: "contain", opacity: 0.9 }} />
+          <div style={{ width: 28, height: 28, border: "3px solid #333", borderTopColor: "#E8C547", borderRadius: "50%", animation: "spin 0.75s linear infinite" }} />
+          <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+        </div>
+      );
+    }
     return <LoginScreen onLogin={(r) => {
       setRole(r);
-      // Redirect staff to their first allowed tab
       if (r === "staff") setTab("restaurant");
       setAuthed(true);
     }} />;
