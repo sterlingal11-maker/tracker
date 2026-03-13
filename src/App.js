@@ -1618,7 +1618,7 @@ function buildInvoiceHTML(inv, evt, biz, logo) {
     }</div>`
   )}<div class="status-banner ${stClass}"><div class="status-icon">${stIcon}</div><div class="status-text"><strong>${
     inv.status
-  }</strong><span>${stText}</span></div></div><div class="items-section"><div class="section-heading">Line Items</div><table><thead><tr><th>Description</th><th class="tc">Qty</th><th class="tr">Unit Amount</th><th class="tr">Total (XAF)</th></tr></thead><tbody>${rows}</tbody></table></div><div class="totals-block"><div class="totals-inner"><div class="total-row"><span class="label">Invoice Total</span><span class="value">${fmt(
+  }</strong><span>${stText}</span></div></div><div class="items-section"><div class="section-heading">Line Items</div><table><thead><tr><th>Description</th><th class="tc">Qty</th><th class="tr">Unit Amount</th><th class="tr">Total (USD)</th></tr></thead><tbody>${rows}</tbody></table></div><div class="totals-block"><div class="totals-inner"><div class="total-row"><span class="label">Invoice Total</span><span class="value">${fmt(
     inv.total
   )}</span></div><div class="total-row highlight"><span class="label">Amount Paid</span><span class="value">${fmt(
     inv.paid
@@ -1732,7 +1732,7 @@ function buildProposalHTML(prop, biz, logo) {
     }<br>${prop.eventType} · ${prop.plannedDate || "Date TBD"}<br>${
       prop.guests
     } guests · ${prop.location}</div>`
-  )}<div class="items-section"><div class="section-heading">Proposed Services</div><table><thead><tr><th>Service / Item</th><th class="tc">Unit</th><th class="tc">Qty</th><th class="tr">Unit Price</th><th class="tr">Total (XAF)</th></tr></thead><tbody>${rows}</tbody></table></div><div class="totals-block"><div class="totals-inner"><div class="total-row"><span class="label">Subtotal</span><span class="value">${fmt(
+  )}<div class="items-section"><div class="section-heading">Proposed Services</div><table><thead><tr><th>Service / Item</th><th class="tc">Unit</th><th class="tc">Qty</th><th class="tr">Unit Price</th><th class="tr">Total (USD)</th></tr></thead><tbody>${rows}</tbody></table></div><div class="totals-block"><div class="totals-inner"><div class="total-row"><span class="label">Subtotal</span><span class="value">${fmt(
     sub
   )}</span></div>${
     prop.discount > 0
@@ -1783,7 +1783,7 @@ function buildOrderReceiptHTML(sale, biz, logo) {
     sale.plates * sale.pricePerPlate
   )}</td></tr>${
     sale.deliveryFee > 0
-      ? `<tr><td>Delivery Fee</td><td class="tc">—</td><td class="tr">${fmt(sale.deliveryFee)}</td><td class="tr">${fmt(sale.deliveryFee)}</td></tr>`
+      ? `<tr><td>Shipping Fee</td><td class="tc">—</td><td class="tr">${fmt(sale.deliveryFee)}</td><td class="tr">${fmt(sale.deliveryFee)}</td></tr>`
       : ""
   }</tbody></table></div><div class="totals-block"><div class="totals-inner"><div class="total-row"><span class="label">Order Total</span><span class="value">${fmt(total)}</span></div><div class="total-row highlight"><span class="label">${amountLabel}</span><span class="value">${fmt(paid)}</span></div>${isPartial ? `<div class="total-row" style="color:#e53e3e;font-weight:700"><span class="label">Balance Due</span><span class="value">${fmt(balance)}</span></div>` : `<div class="total-row grand"><span class="label">TOTAL PAID</span><span class="value">${fmt(paid)}</span></div>`}</div></div>${sale.notes ? `<div class="notes-box"><strong>Order Notes:</strong> ${sale.notes}</div>` : ""}<div class="notes-box"><strong>${isPartial ? "Partial payment received. Please settle the remaining balance." : "Thank you!"}</strong>${isPartial ? "" : " We appreciate your order. Come back soon!"}</div>${footerHTML(biz)}`;
 }
@@ -1804,7 +1804,7 @@ function buildOrderInvoiceHTML(sale, biz, logo) {
   const rows = [
     `<tr><td class="bold">${sale.meal}</td><td class="tc">${sale.plates} plate${sale.plates > 1 ? "s" : ""}</td><td class="tr">${fmt(sale.pricePerPlate)}</td><td class="tr">${fmt(sale.plates * sale.pricePerPlate)}</td></tr>`,
     sale.deliveryFee > 0
-      ? `<tr><td>Delivery Fee</td><td class="tc">—</td><td class="tr">${fmt(sale.deliveryFee)}</td><td class="tr">${fmt(sale.deliveryFee)}</td></tr>`
+      ? `<tr><td>Shipping Fee</td><td class="tc">—</td><td class="tr">${fmt(sale.deliveryFee)}</td><td class="tr">${fmt(sale.deliveryFee)}</td></tr>`
       : "",
   ].join("");
 
@@ -1822,7 +1822,7 @@ function buildOrderInvoiceHTML(sale, biz, logo) {
     `<div class="party-name">${biz.name}</div><div class="party-detail">${[biz.address, biz.city, biz.phone, biz.email].filter(Boolean).join("<br/>")}</div>`,
     "Bill To",
     `<div class="party-name">${clientName}</div><div class="party-detail">${clientDetail}</div>`
-  )}${statusBanner}<div class="items-section"><div class="section-heading">Order Line Items</div><table><thead><tr><th>Description</th><th class="tc">Qty</th><th class="tr">Unit Price</th><th class="tr">Total (XAF)</th></tr></thead><tbody>${rows}</tbody></table></div><div class="totals-block"><div class="totals-inner"><div class="total-row"><span class="label">Subtotal</span><span class="value">${fmt(sale.plates * sale.pricePerPlate)}</span></div>${sale.deliveryFee > 0 ? `<div class="total-row"><span class="label">Delivery Fee</span><span class="value">${fmt(sale.deliveryFee)}</span></div>` : ""}<div class="total-row grand"><span class="label">ORDER TOTAL</span><span class="value">${fmt(total)}</span></div><div class="total-row highlight"><span class="label">Amount Paid</span><span class="value">${fmt(paid)}</span></div><div class="total-row ${balance > 0 ? "highlight" : ""}" style="${balance > 0 ? "color:#e53e3e;font-weight:800" : ""}"><span class="label">Balance Due</span><span class="value">${fmt(balance)}</span></div></div></div><div class="payment-box"><h4>Payment Information</h4><div class="payment-row"><span>Method:</span><strong>${sale.method}</strong></div><div class="payment-row"><span>Date:</span><strong>${sale.date}</strong></div><div class="payment-row"><span>Order type:</span><strong>${sale.type}</strong></div>${sale.notes ? `<div class="payment-row"><span>Notes:</span><strong>${sale.notes}</strong></div>` : ""}</div><div class="terms-box"><p>${balance > 0 ? `A balance of <strong>${fmt(balance)}</strong> remains outstanding. Please settle at your earliest convenience.` : "This invoice confirms a completed and paid order. Please retain for your records."}</p></div>${footerHTML(biz)}`;
+  )}${statusBanner}<div class="items-section"><div class="section-heading">Order Line Items</div><table><thead><tr><th>Description</th><th class="tc">Qty</th><th class="tr">Unit Price</th><th class="tr">Total (USD)</th></tr></thead><tbody>${rows}</tbody></table></div><div class="totals-block"><div class="totals-inner"><div class="total-row"><span class="label">Subtotal</span><span class="value">${fmt(sale.plates * sale.pricePerPlate)}</span></div>${sale.deliveryFee > 0 ? `<div class="total-row"><span class="label">Shipping Fee</span><span class="value">${fmt(sale.deliveryFee)}</span></div>` : ""}<div class="total-row grand"><span class="label">ORDER TOTAL</span><span class="value">${fmt(total)}</span></div><div class="total-row highlight"><span class="label">Amount Paid</span><span class="value">${fmt(paid)}</span></div><div class="total-row ${balance > 0 ? "highlight" : ""}" style="${balance > 0 ? "color:#e53e3e;font-weight:800" : ""}"><span class="label">Balance Due</span><span class="value">${fmt(balance)}</span></div></div></div><div class="payment-box"><h4>Payment Information</h4><div class="payment-row"><span>Method:</span><strong>${sale.method}</strong></div><div class="payment-row"><span>Date:</span><strong>${sale.date}</strong></div><div class="payment-row"><span>Order type:</span><strong>${sale.type}</strong></div>${sale.notes ? `<div class="payment-row"><span>Notes:</span><strong>${sale.notes}</strong></div>` : ""}</div><div class="terms-box"><p>${balance > 0 ? `A balance of <strong>${fmt(balance)}</strong> remains outstanding. Please settle at your earliest convenience.` : "This invoice confirms a completed and paid order. Please retain for your records."}</p></div>${footerHTML(biz)}`;
 }
 function buildCatalogHTML(items, categories, biz, logo) {
   const catMap = {};
@@ -3291,7 +3291,7 @@ function EventCostLedger({ evt, inventory, onUpdate }) {
               />
             </div>
             <div>
-              <label style={S.label}>Total (XAF)</label>
+              <label style={S.label}>Total (USD)</label>
               <div style={{ ...S.input, display: "flex", alignItems: "center", fontWeight: 700, color: T.accent, fontSize: 13 }}>
                 {fmt(Number(nl.qty || 0) * Number(nl.unitCost || 0))}
               </div>
@@ -5872,7 +5872,7 @@ function BatchesTab({ batches, setBatches, meals, setMeals, inventory, setInvent
         </div>
       )}
 
-      {/* Batches table */}
+      {/* Production table */}
       {filtered.length === 0 ? (
         <div style={{ color: T.textMuted, padding: 36, textAlign: "center", background: T.card, borderRadius: 10, border: `1px solid ${T.border}` }}>
           <div style={{ fontSize: 32, marginBottom: 8 }}>🍳</div>
@@ -6511,7 +6511,7 @@ function RestaurantPage({
                             style={{ background: "none", border: "none", color: T.accent, cursor: "pointer", fontSize: 11, fontWeight: 700, padding: 0 }}
                             onClick={() => setTab("batches")}
                           >
-                            🍳 Batches tab
+                            🍳 Production tab
                           </button>{" "}
                           first, or select a meal manually below.
                         </div>
@@ -6692,7 +6692,7 @@ function RestaurantPage({
                   <label style={S.label}>Notes</label>
                   <input
                     style={S.input}
-                    placeholder="e.g. No onions, window seat, allergies…"
+                    placeholder="e.g. No onions, spicy, allergies, gate code..."
                     value={ns.notes}
                     onChange={(e) => setNs({ ...ns, notes: e.target.value })}
                   />
@@ -6700,7 +6700,7 @@ function RestaurantPage({
                 {ns.type === "Delivery" && (
                   <>
                     <div>
-                      <label style={S.label}>Delivery Address</label>
+                      <label style={S.label}>Shipping Address</label>
                       <input
                         style={S.input}
                         value={ns.deliveryAddress}
@@ -6710,7 +6710,7 @@ function RestaurantPage({
                       />
                     </div>
                     <div>
-                      <label style={S.label}>Delivery Fee (XAF)</label>
+                      <label style={S.label}>Shipping Fee (USD)</label>
                       <input
                         type="number"
                         style={S.input}
@@ -12116,7 +12116,7 @@ function parseWorkbook(wb) {
     pricePerPlate: Number(r["Price / Plate\n(XAF) *"] || r["Price / Plate (XAF)"] || r["Price/Plate"] || 0),
     method: String(r["Payment\nMethod * \u25bc"] || r["Payment Method *"] || r["Payment Method"] || "Cash").trim(),
     type: String(r["Order Type *\n\u25bc"] || r["Order Type *"] || r["Order Type"] || "Dine-in").trim(),
-    deliveryFee: Number(r["Delivery Fee\n(XAF)"] || r["Delivery Fee (XAF)"] || r["Delivery Fee"] || 0),
+    deliveryFee: Number(r["Delivery Fee\n(XAF)"] || r["Shipping Fee (USD)"] || r["Delivery Fee"] || 0),
     clientName: String(r["Client Name\n(delivery only)"] || r["Client Name"] || "").trim(),
     deliveryAddress: "",
   })).filter(r => r.meal);
@@ -12304,7 +12304,7 @@ const TABS = [
   { id: "dashboard", label: "📊 Dashboard" },
   { id: "catering", label: "🎉 Catering" },
   { id: "catalog", label: "📦 Catalog" },
-  { id: "restaurant", label: "🍽️ Restaurant & Delivery" },
+  { id: "restaurant", label: "🏠 Home Orders" },
   { id: "customers", label: "👥 Customers" },
   { id: "vendors", label: "🏪 Vendors" },
   { id: "reports", label: "📑 Reports" },
