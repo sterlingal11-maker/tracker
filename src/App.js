@@ -174,37 +174,37 @@ const CAT_CATS = [
 
 const CAT_ITEMS = [
   // ── 🍚 Rice Dishes (cat 1) ──────────────────────────────────────
-  { id:2001, name:"Jollof Rice and Fried Rice",             categoryId:1,  price:140, costPerUnit:55,  unitType:"Tray", tags:["catering","popular"], description:"Full tray $140 · Half tray $70. West African classic jollof and fluffy fried rice served together.", photo:"" },
+  { id:2001, name:"Jollof Rice and Fried Rice",             catId:1,  price:140, costPerUnit:55,  unitType:"Tray", tags:["catering","popular"], description:"Full tray $140 · Half tray $70. West African classic jollof and fluffy fried rice served together.", photo:"" },
 
   // ── 🍗 Chicken (cat 2) ──────────────────────────────────────────
-  { id:2002, name:"Grilled Chicken",                        categoryId:2,  price:250, costPerUnit:95,  unitType:"Tray", tags:["catering","popular"], description:"Full tray $250 · Half tray $125. Juicy, perfectly seasoned grilled chicken.", photo:"" },
-  { id:2003, name:"Kati Kati",                              categoryId:2,  price:350, costPerUnit:130, unitType:"Tray", tags:["catering","signature"], description:"Full tray $350 · Half tray $175. Traditional Cameroonian fire-roasted chicken.", photo:"" },
+  { id:2002, name:"Grilled Chicken",                        catId:2,  price:250, costPerUnit:95,  unitType:"Tray", tags:["catering","popular"], description:"Full tray $250 · Half tray $125. Juicy, perfectly seasoned grilled chicken.", photo:"" },
+  { id:2003, name:"Kati Kati",                              catId:2,  price:350, costPerUnit:130, unitType:"Tray", tags:["catering","signature"], description:"Full tray $350 · Half tray $175. Traditional Cameroonian fire-roasted chicken.", photo:"" },
 
   // ── 🥩 Beef & Goat (cat 3) ──────────────────────────────────────
-  { id:2004, name:"Grilled Pork Ribs",                      categoryId:3,  price:200, costPerUnit:80,  unitType:"Tray", tags:["catering"], description:"Full tray $200 · Half tray $100. Slow-cooked, smoky grilled pork ribs.", photo:"" },
-  { id:2005, name:"Roasted Cameroon-Style Pork with Plantains", categoryId:3, price:220, costPerUnit:85, unitType:"Tray", tags:["catering","signature"], description:"Full tray $220 · Half tray $110. Roasted Cameroon-style pork served with roasted or fried plantains.", photo:"" },
-  { id:2006, name:"Cow Foot Pepper Soup",                   categoryId:3,  price:350, costPerUnit:130, unitType:"Tray", tags:["catering","signature"], description:"Full tray $350 · Half tray $175. Rich, spiced Cameroonian cow foot pepper soup.", photo:"" },
+  { id:2004, name:"Grilled Pork Ribs",                      catId:3,  price:200, costPerUnit:80,  unitType:"Tray", tags:["catering"], description:"Full tray $200 · Half tray $100. Slow-cooked, smoky grilled pork ribs.", photo:"" },
+  { id:2005, name:"Roasted Cameroon-Style Pork with Plantains", catId:3, price:220, costPerUnit:85, unitType:"Tray", tags:["catering","signature"], description:"Full tray $220 · Half tray $110. Roasted Cameroon-style pork served with roasted or fried plantains.", photo:"" },
+  { id:2006, name:"Cow Foot Pepper Soup",                   catId:3,  price:350, costPerUnit:130, unitType:"Tray", tags:["catering","signature"], description:"Full tray $350 · Half tray $175. Rich, spiced Cameroonian cow foot pepper soup.", photo:"" },
 
   // ── 🐟 Fish & Seafood (cat 4) ────────────────────────────────────
-  { id:2007, name:"Pepper Fish",                            categoryId:4,  price:270, costPerUnit:105, unitType:"Tray", tags:["catering"], description:"Full tray $270 · Half tray $135. Boldly spiced pepper fish, slow-cooked to perfection.", photo:"" },
-  { id:2008, name:"Grilled Fish",                           categoryId:4,  price:300, costPerUnit:115, unitType:"Tray", tags:["catering","popular"], description:"Full tray $300 · Half tray $150. Whole grilled fish with herbs and spices.", photo:"" },
+  { id:2007, name:"Pepper Fish",                            catId:4,  price:270, costPerUnit:105, unitType:"Tray", tags:["catering"], description:"Full tray $270 · Half tray $135. Boldly spiced pepper fish, slow-cooked to perfection.", photo:"" },
+  { id:2008, name:"Grilled Fish",                           catId:4,  price:300, costPerUnit:115, unitType:"Tray", tags:["catering","popular"], description:"Full tray $300 · Half tray $150. Whole grilled fish with herbs and spices.", photo:"" },
 
   // ── 🫙 Stews & Sauces (cat 5) ────────────────────────────────────
-  { id:2009, name:"Ndole",                                  categoryId:5,  price:300, costPerUnit:110, unitType:"Tray", tags:["catering","signature"], description:"Full tray $300 · Half tray $150. Cameroonian bitter leaf stew with groundnuts and meat.", photo:"" },
-  { id:2010, name:"Eru",                                    categoryId:5,  price:300, costPerUnit:110, unitType:"Tray", tags:["catering","signature"], description:"Full tray $300 · Half tray $150. Traditional Cameroonian eru cooked with waterleaf and palm oil.", photo:"" },
+  { id:2009, name:"Ndole",                                  catId:5,  price:300, costPerUnit:110, unitType:"Tray", tags:["catering","signature"], description:"Full tray $300 · Half tray $150. Cameroonian bitter leaf stew with groundnuts and meat.", photo:"" },
+  { id:2010, name:"Eru",                                    catId:5,  price:300, costPerUnit:110, unitType:"Tray", tags:["catering","signature"], description:"Full tray $300 · Half tray $150. Traditional Cameroonian eru cooked with waterleaf and palm oil.", photo:"" },
 
   // ── 🌿 Vegetarian (cat 6) ────────────────────────────────────────
-  { id:2011, name:"Sautéed Spinach and Kale",               categoryId:6,  price:150, costPerUnit:45,  unitType:"Tray", tags:["catering","vegetarian"], description:"Full tray $150 · Half tray $75. Fresh sautéed spinach and kale.", photo:"" },
-  { id:2012, name:"Sautéed Beans",                          categoryId:6,  price:100, costPerUnit:35,  unitType:"Tray", tags:["catering","vegetarian"], description:"Full tray $100 · Half tray $50. Seasoned sautéed beans.", photo:"" },
+  { id:2011, name:"Sautéed Spinach and Kale",               catId:6,  price:150, costPerUnit:45,  unitType:"Tray", tags:["catering","vegetarian"], description:"Full tray $150 · Half tray $75. Fresh sautéed spinach and kale.", photo:"" },
+  { id:2012, name:"Sautéed Beans",                          catId:6,  price:100, costPerUnit:35,  unitType:"Tray", tags:["catering","vegetarian"], description:"Full tray $100 · Half tray $50. Seasoned sautéed beans.", photo:"" },
 
   // ── 🍟 Sides (cat 7) ─────────────────────────────────────────────
-  { id:2013, name:"Fried Plantains",                        categoryId:7,  price:100, costPerUnit:30,  unitType:"Tray", tags:["catering","popular"], description:"Full tray $100 · Half tray $50. Sweet golden fried plantains.", photo:"" },
-  { id:2014, name:"Roasted Garlic Parsley Butter Potatoes", categoryId:7,  price:100, costPerUnit:30,  unitType:"Tray", tags:["catering"], description:"Full tray $100 · Half tray $50. Roasted potatoes with garlic, parsley and butter.", photo:"" },
-  { id:2015, name:"Cajun Alfredo Pasta",                    categoryId:7,  price:200, costPerUnit:65,  unitType:"Tray", tags:["catering","popular"], description:"Full tray $200 · Half tray $100. Creamy Cajun Alfredo pasta with a kick.", photo:"" },
-  { id:2016, name:"Lasagna",                                categoryId:7,  price:200, costPerUnit:70,  unitType:"Tray", tags:["catering"], description:"Full tray $200 · Half tray $100. Classic layered lasagna.", photo:"" },
+  { id:2013, name:"Fried Plantains",                        catId:7,  price:100, costPerUnit:30,  unitType:"Tray", tags:["catering","popular"], description:"Full tray $100 · Half tray $50. Sweet golden fried plantains.", photo:"" },
+  { id:2014, name:"Roasted Garlic Parsley Butter Potatoes", catId:7,  price:100, costPerUnit:30,  unitType:"Tray", tags:["catering"], description:"Full tray $100 · Half tray $50. Roasted potatoes with garlic, parsley and butter.", photo:"" },
+  { id:2015, name:"Cajun Alfredo Pasta",                    catId:7,  price:200, costPerUnit:65,  unitType:"Tray", tags:["catering","popular"], description:"Full tray $200 · Half tray $100. Creamy Cajun Alfredo pasta with a kick.", photo:"" },
+  { id:2016, name:"Lasagna",                                catId:7,  price:200, costPerUnit:70,  unitType:"Tray", tags:["catering"], description:"Full tray $200 · Half tray $100. Classic layered lasagna.", photo:"" },
 
   // ── 🍰 Desserts (cat 8) ──────────────────────────────────────────
-  { id:2017, name:"Puff Puff",                              categoryId:8,  price:200, costPerUnit:50,  unitType:"Tray", tags:["catering","popular"], description:"Full tray $200 · Half tray $100. Light, fluffy West African fried dough balls.", photo:"" },
+  { id:2017, name:"Puff Puff",                              catId:8,  price:200, costPerUnit:50,  unitType:"Tray", tags:["catering","popular"], description:"Full tray $200 · Half tray $100. Light, fluffy West African fried dough balls.", photo:"" },
 ];
 
 // ─── MEALS (Restaurant menu items with inventory linking) ─────────
@@ -13315,14 +13315,24 @@ export default function App() {
   useEffect(() => { supa_set("cb_biz", biz); }, [biz]);
   useEffect(() => { supa_set("cb_customers", customers); }, [customers]);
 
-  // ── Migrate: merge new CAT_ITEMS into live catalog (runs once after db loads) ──
+  // ── Migrate: merge new CAT_ITEMS into live catalog + fix categoryId → catId ──
   useEffect(() => {
     if (!dbLoaded || isDemo) return;
     setCatalogItems(prev => {
-      const existingIds = new Set(prev.map(i => i.id));
+      // Step 1: fix any items that were stored with categoryId instead of catId
+      let repaired = prev.map(i => {
+        if (i.categoryId !== undefined && i.catId === undefined) {
+          const { categoryId, ...rest } = i;
+          return { ...rest, catId: categoryId };
+        }
+        return i;
+      });
+      // Step 2: merge in any new CAT_ITEMS not yet in the catalog
+      const existingIds = new Set(repaired.map(i => i.id));
       const toAdd = CAT_ITEMS.filter(i => !existingIds.has(i.id));
-      if (toAdd.length === 0) return prev;
-      return [...prev, ...toAdd];
+      if (toAdd.length === 0 && repaired.length === prev.length &&
+          repaired.every((r, i) => r === prev[i])) return prev;
+      return [...repaired, ...toAdd];
     });
   }, [dbLoaded]); // run once after data loads
 
