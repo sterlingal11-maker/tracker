@@ -553,16 +553,14 @@ const DEMO_DATA = (() => {
       paymentTerms:"50% deposit ($4,300) required to confirm booking. Balance due 7 days before event. Cash, Zelle or bank transfer accepted.",
       inventoryLinks:[101,102,103],
       lines:[
-        {name:"Jollof Rice",qty:120,price:18,unitType:"Per head"},
-        {name:"Jerk Chicken",qty:120,price:22,unitType:"Per head"},
-        {name:"Coconut Rice & Peas",qty:120,price:12,unitType:"Per head"},
-        {name:"Baked Mac & Cheese",qty:120,price:14,unitType:"Per head"},
-        {name:"Rum Cake",qty:120,price:8,unitType:"Per head"},
-        {name:"Homemade Lemonade",qty:12,price:35,unitType:"Per gallon"},
-        {name:"Buffet Service Style",qty:1,price:150,unitType:"Flat"},
-        {name:"Chef / Lead Cook",qty:8,price:45,unitType:"Per hour"},
-        {name:"Server / Food Attendant (3)",qty:18,price:20,unitType:"Per hour"},
-        {name:"Delivery & Setup Fee",qty:1,price:75,unitType:"Flat"},
+        {name:"Jollof Rice and Fried Rice",qty:6,price:140,unitType:"Tray"},
+        {name:"Grilled Chicken",qty:5,price:250,unitType:"Tray"},
+        {name:"Ndole",qty:3,price:300,unitType:"Tray"},
+        {name:"Eru",qty:2,price:300,unitType:"Tray"},
+        {name:"Fried Plantains",qty:4,price:100,unitType:"Tray"},
+        {name:"Sautéed Spinach and Kale",qty:3,price:150,unitType:"Tray"},
+        {name:"Cajun Alfredo Pasta",qty:2,price:200,unitType:"Tray"},
+        {name:"Puff Puff",qty:3,price:200,unitType:"Tray"},
       ],
     },
     {
@@ -573,10 +571,11 @@ const DEMO_DATA = (() => {
       paymentTerms:"Net 15 — invoice issued day of event. Payment by check or bank transfer.",
       inventoryLinks:[101,102],
       lines:[
-        {name:"Corporate Box Lunch",qty:80,price:22,unitType:"Per box"},
-        {name:"Fruit Punch Bowl",qty:4,price:28,unitType:"Per gallon"},
-        {name:"Server / Food Attendant",qty:4,price:20,unitType:"Per hour"},
-        {name:"Delivery & Setup Fee",qty:1,price:75,unitType:"Flat"},
+        {name:"Jollof Rice and Fried Rice",qty:3,price:140,unitType:"Tray"},
+        {name:"Grilled Chicken",qty:3,price:250,unitType:"Tray"},
+        {name:"Cajun Alfredo Pasta",qty:2,price:200,unitType:"Tray"},
+        {name:"Sautéed Beans",qty:2,price:100,unitType:"Tray"},
+        {name:"Fried Plantains",qty:2,price:100,unitType:"Tray"},
       ],
     },
     {
@@ -587,17 +586,15 @@ const DEMO_DATA = (() => {
       paymentTerms:"50% deposit ($7,250) due upon signing. Remaining balance due Dec 24. No refunds within 5 days of event.",
       inventoryLinks:[101,102,103,104,105],
       lines:[
-        {name:"Jollof Rice",qty:200,price:18,unitType:"Per head"},
-        {name:"Jerk Chicken",qty:200,price:22,unitType:"Per head"},
-        {name:"Beef Stew",qty:200,price:24,unitType:"Per head"},
-        {name:"Shrimp Fried Rice",qty:200,price:26,unitType:"Per head"},
-        {name:"Fried Tilapia",qty:200,price:20,unitType:"Per head"},
-        {name:"Rum Cake",qty:200,price:8,unitType:"Per head"},
-        {name:"Homemade Lemonade",qty:20,price:35,unitType:"Per gallon"},
-        {name:"Buffet Service Style",qty:1,price:150,unitType:"Flat"},
-        {name:"Chef / Lead Cook",qty:10,price:45,unitType:"Per hour"},
-        {name:"Server / Food Attendant (5)",qty:40,price:20,unitType:"Per hour"},
-        {name:"Delivery & Setup Fee",qty:1,price:75,unitType:"Flat"},
+        {name:"Jollof Rice and Fried Rice",qty:8,price:140,unitType:"Tray"},
+        {name:"Grilled Chicken",qty:6,price:250,unitType:"Tray"},
+        {name:"Kati Kati",qty:4,price:350,unitType:"Tray"},
+        {name:"Ndole",qty:4,price:300,unitType:"Tray"},
+        {name:"Eru",qty:3,price:300,unitType:"Tray"},
+        {name:"Grilled Fish",qty:3,price:300,unitType:"Tray"},
+        {name:"Fried Plantains",qty:5,price:100,unitType:"Tray"},
+        {name:"Roasted Garlic Parsley Butter Potatoes",qty:3,price:100,unitType:"Tray"},
+        {name:"Puff Puff",qty:4,price:200,unitType:"Tray"},
       ],
     },
     {
@@ -608,15 +605,11 @@ const DEMO_DATA = (() => {
       paymentTerms:"Ticket sales — full payment at time of booking. No refunds within 48 hours of event.",
       inventoryLinks:[101,102,105],
       lines:[
-        {name:"Jerk Chicken (plated)",qty:40,price:22,unitType:"Per head"},
-        {name:"Shrimp Fried Rice (plated)",qty:40,price:26,unitType:"Per head"},
-        {name:"Garden Pasta Salad (starter)",qty:40,price:11,unitType:"Per head"},
-        {name:"Rum Cake",qty:40,price:8,unitType:"Per head"},
-        {name:"Fruit Punch Bowl",qty:4,price:28,unitType:"Per gallon"},
-        {name:"Plated Service Style",qty:40,price:8,unitType:"Per head"},
-        {name:"Chef / Lead Cook",qty:8,price:45,unitType:"Per hour"},
-        {name:"Server / Food Attendant (2)",qty:12,price:20,unitType:"Per hour"},
-        {name:"Floral Table Centerpiece",qty:5,price:65,unitType:"Per table"},
+        {name:"Jollof Rice and Fried Rice",qty:2,price:140,unitType:"Tray"},
+        {name:"Grilled Chicken",qty:2,price:250,unitType:"Tray"},
+        {name:"Pepper Fish",qty:1,price:270,unitType:"Tray"},
+        {name:"Sautéed Spinach and Kale",qty:1,price:150,unitType:"Tray"},
+        {name:"Puff Puff",qty:2,price:200,unitType:"Tray"},
       ],
     },
     {
@@ -627,13 +620,11 @@ const DEMO_DATA = (() => {
       paymentTerms:"50% deposit required to confirm. Balance due day of event. Cash or Zelle only.",
       inventoryLinks:[102,106,107],
       lines:[
-        {name:"Garden Pasta Salad",qty:45,price:11,unitType:"Per head"},
-        {name:"Coconut Rice & Peas",qty:45,price:12,unitType:"Per head"},
-        {name:"Caribbean Chicken Soup",qty:45,price:14,unitType:"Per head"},
-        {name:"Rum Cake",qty:45,price:8,unitType:"Per head"},
-        {name:"Homemade Lemonade",qty:5,price:35,unitType:"Per gallon"},
-        {name:"Server / Food Attendant",qty:5,price:20,unitType:"Per hour"},
-        {name:"Delivery & Setup Fee",qty:1,price:75,unitType:"Flat"},
+        {name:"Jollof Rice and Fried Rice",qty:2,price:140,unitType:"Tray"},
+        {name:"Grilled Chicken",qty:2,price:250,unitType:"Tray"},
+        {name:"Sautéed Spinach and Kale",qty:2,price:150,unitType:"Tray"},
+        {name:"Cajun Alfredo Pasta",qty:1,price:200,unitType:"Tray"},
+        {name:"Puff Puff",qty:2,price:200,unitType:"Tray"},
       ],
     },
     {
@@ -644,10 +635,11 @@ const DEMO_DATA = (() => {
       paymentTerms:"Net 15 after event. Invoice issued same day. Payment by check or ACH transfer.",
       inventoryLinks:[101,102,103],
       lines:[
-        {name:"Corporate Box Lunch",qty:100,price:22,unitType:"Per box"},
-        {name:"Fruit Punch Bowl",qty:5,price:28,unitType:"Per gallon"},
-        {name:"Server / Food Attendant (2)",qty:8,price:20,unitType:"Per hour"},
-        {name:"Delivery & Setup Fee",qty:1,price:75,unitType:"Flat"},
+        {name:"Jollof Rice and Fried Rice",qty:4,price:140,unitType:"Tray"},
+        {name:"Grilled Chicken",qty:3,price:250,unitType:"Tray"},
+        {name:"Cajun Alfredo Pasta",qty:3,price:200,unitType:"Tray"},
+        {name:"Sautéed Beans",qty:2,price:100,unitType:"Tray"},
+        {name:"Fried Plantains",qty:2,price:100,unitType:"Tray"},
       ],
     },
     {
@@ -658,18 +650,15 @@ const DEMO_DATA = (() => {
       paymentTerms:"30% deposit to hold date. 50% due 30 days before event. Balance due on event day. Cash, Zelle or bank transfer.",
       inventoryLinks:[],
       lines:[
-        {name:"Jollof Rice",qty:160,price:18,unitType:"Per head"},
-        {name:"Jerk Chicken",qty:160,price:22,unitType:"Per head"},
-        {name:"Beef Stew",qty:160,price:24,unitType:"Per head"},
-        {name:"Baked Mac & Cheese",qty:160,price:14,unitType:"Per head"},
-        {name:"Southern Collard Greens",qty:160,price:10,unitType:"Per head"},
-        {name:"Rum Cake",qty:160,price:8,unitType:"Per head"},
-        {name:"Homemade Lemonade",qty:16,price:35,unitType:"Per gallon"},
-        {name:"Buffet Service Style",qty:1,price:150,unitType:"Flat"},
-        {name:"Floral Table Centerpiece",qty:12,price:65,unitType:"Per table"},
-        {name:"Chef / Lead Cook",qty:10,price:45,unitType:"Per hour"},
-        {name:"Server / Food Attendant (4)",qty:32,price:20,unitType:"Per hour"},
-        {name:"Delivery & Setup Fee",qty:1,price:75,unitType:"Flat"},
+        {name:"Jollof Rice and Fried Rice",qty:6,price:140,unitType:"Tray"},
+        {name:"Grilled Chicken",qty:5,price:250,unitType:"Tray"},
+        {name:"Kati Kati",qty:3,price:350,unitType:"Tray"},
+        {name:"Ndole",qty:3,price:300,unitType:"Tray"},
+        {name:"Eru",qty:2,price:300,unitType:"Tray"},
+        {name:"Fried Plantains",qty:4,price:100,unitType:"Tray"},
+        {name:"Roasted Garlic Parsley Butter Potatoes",qty:3,price:100,unitType:"Tray"},
+        {name:"Cajun Alfredo Pasta",qty:2,price:200,unitType:"Tray"},
+        {name:"Puff Puff",qty:3,price:200,unitType:"Tray"},
       ],
     },
   ];
@@ -790,6 +779,11 @@ const DEMO_DATA = (() => {
     website:"www.delightfulmeals.com",
     rccm:"",
     taxId:"45-6789012",
+    instagram:"@delightfulmealsanddrinksCharlotte",
+    facebook:"https://facebook.com/delightfulmeals",
+    tiktok:"@delightfulmeals",
+    whatsapp:"+17045550100",
+    googleReview:"https://g.page/r/delightfulmeals/review",
     paymentTerms:"Payment accepted by Cash, Credit Card, Zelle, and Bank Transfer. 50% deposit required to confirm catering events.",
     bankName:"Bank of America",
     bankAccount:"****4521",
@@ -13361,8 +13355,8 @@ export default function App() {
       localStorage.setItem("demo_cb_sales",         JSON.stringify(DEMO_DATA.sales));
       localStorage.setItem("demo_cb_invoices",      JSON.stringify(DEMO_DATA.invoices));
       localStorage.setItem("demo_cb_proposals",     JSON.stringify(DEMO_DATA.proposals));
-      localStorage.setItem("demo_cb_catalog",       JSON.stringify(DEMO_DATA.catalog));
-      localStorage.setItem("demo_cb_catalog_cats",  JSON.stringify(DEMO_DATA.catalog_cats));
+      localStorage.setItem("demo_cb_catalog",       JSON.stringify(CAT_ITEMS));
+      localStorage.setItem("demo_cb_catalog_cats",  JSON.stringify(CAT_CATS));
       localStorage.setItem("demo_cb_inventory",     JSON.stringify(DEMO_DATA.inv));
       localStorage.setItem("demo_cb_meals",         JSON.stringify(DEMO_DATA.meals));
       localStorage.setItem("demo_cb_batches",       JSON.stringify(DEMO_DATA.batches));
@@ -13414,8 +13408,8 @@ export default function App() {
           setSales(DEMO_DATA.sales);           ls_set("cb_sales",       DEMO_DATA.sales);
           setInvoices(DEMO_DATA.invoices);     ls_set("cb_invoices",    DEMO_DATA.invoices);
           setProposals(DEMO_DATA.proposals);   ls_set("cb_proposals",   DEMO_DATA.proposals);
-          setCatalogItems(DEMO_DATA.catalog);  ls_set("cb_catalog",     DEMO_DATA.catalog);
-          setCatalogCategories(DEMO_DATA.catalog_cats); ls_set("cb_catalog_cats", DEMO_DATA.catalog_cats);
+          setCatalogItems(CAT_ITEMS);          ls_set("cb_catalog",     CAT_ITEMS);
+          setCatalogCategories(CAT_CATS);      ls_set("cb_catalog_cats", CAT_CATS);
           setInventory(DEMO_DATA.inv);         ls_set("cb_inventory",   DEMO_DATA.inv);
           setMeals(DEMO_DATA.meals);           ls_set("cb_meals",       DEMO_DATA.meals);
           setBatches(DEMO_DATA.batches);       ls_set("cb_batches",     DEMO_DATA.batches);
