@@ -13855,6 +13855,7 @@ export default function App() {
         {tab === "studio" && isOwner && (
           <AIStudioPage
             biz={biz}
+            setBiz={setBiz}
             events={events}
             meals={meals}
             catalogItems={catalogItems}
@@ -14013,7 +14014,7 @@ Output only the ready-to-send message. No commentary.`,
 const TONES = ["Professional", "Casual & Friendly", "Exciting & Bold", "Warm & Personal", "Luxurious"];
 const EMAIL_TYPES = ["Follow-up", "Proposal introduction", "Thank you after event", "Booking confirmation", "Payment reminder"];
 
-function AIStudioPage({ biz, events, meals, catalogItems, logo }) {
+function AIStudioPage({ biz, setBiz, events, meals, catalogItems, logo }) {
   const isMobile = useIsMobile();
 
   // Context derived from app data
@@ -14048,10 +14049,25 @@ function AIStudioPage({ biz, events, meals, catalogItems, logo }) {
   const [copied, setCopied] = useState(false);
   const [history, setHistory] = useState([]); // [{tool, output, ts}]
   const [showHistory, setShowHistory] = useState(false);
-  const [socialLinks, setSocialLinks] = useState({
-    instagram: "", facebook: "", tiktok: "", whatsapp: "",
-    google: "",
-  });
+  // socialLinks is derived from biz and writes back to biz on change (persisted via Supabase)
+  const socialLinks = {
+    instagram: biz.instagram || "",
+    facebook:  biz.facebook  || "",
+    tiktok:    biz.tiktok    || "",
+    whatsapp:  biz.whatsapp  || "",
+    google:    biz.googleReview || "",
+  };
+  const setSocialLinks = (updater) => {
+    const next = typeof updater === "function" ? updater(socialLinks) : updater;
+    setBiz(prev => ({
+      ...prev,
+      instagram:    next.instagram || prev.instagram || "",
+      facebook:     next.facebook  || prev.facebook  || "",
+      tiktok:       next.tiktok    || prev.tiktok    || "",
+      whatsapp:     next.whatsapp  || prev.whatsapp  || "",
+      googleReview: next.google    || prev.googleReview || "",
+    }));
+  };
   const [showSocial, setShowSocial] = useState(false);
   const [apiKey, setApiKey] = useState(() => localStorage.getItem("cb_api_key") || "");
   const [showApiKey, setShowApiKey] = useState(false);
@@ -14143,7 +14159,8 @@ function AIStudioPage({ biz, events, meals, catalogItems, logo }) {
         <button style={{ ...S.btn("ghost"), fontSize: 11, padding: "3px 8px" }} onClick={() => setShowSocial(false)}>✕</button>
       </div>
       <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 14, lineHeight: 1.6 }}>
-        Add your links once — they'll be used across all tools for quick-open buttons and auto-inserted into review request messages.
+        These links sync with your business Settings and are saved to your account. 
+        Changes here update across the whole platform — including your business card.
       </div>
 
       {/* Review links section */}
@@ -14173,7 +14190,7 @@ function AIStudioPage({ biz, events, meals, catalogItems, logo }) {
         </div>
       ))}
       <div style={{ fontSize: 10, color: T.textDim, marginTop: 10, padding: "8px 10px", background: T.card, borderRadius: 6 }}>
-        🔒 Saved in your browser only. Never sent to any server.
+        🔒 Saved to your account and synced across all your devices.
       </div>
     </div>
   );
