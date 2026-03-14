@@ -142,6 +142,11 @@ const INIT_BIZ = {
   phone2: "",
   email: "info@delightfulmeals.com",
   website: "",
+  instagram: "",
+  facebook: "",
+  tiktok: "",
+  whatsapp: "",
+  googleReview: "",
   rccm: "",
   taxId: "",
   paymentTerms:
@@ -2128,6 +2133,102 @@ function footerHTML(biz) {
     biz.footer || "Thank you for your business!"
   }</div><div class="doc-footer-right">${biz.name} — ${biz.city}</div></div>`;
 }
+function buildBusinessCardHTML(biz, logo) {
+  const logoSrc = logo?.src || "";
+  const socials = [
+    biz.instagram    && { icon: "📸", label: "Instagram", val: biz.instagram },
+    biz.facebook     && { icon: "👍", label: "Facebook",  val: biz.facebook  },
+    biz.tiktok       && { icon: "🎵", label: "TikTok",    val: biz.tiktok    },
+    biz.whatsapp     && { icon: "💬", label: "WhatsApp",  val: biz.whatsapp  },
+    biz.googleReview && { icon: "⭐", label: "Review Us", val: biz.googleReview },
+  ].filter(Boolean);
+
+  const socialRows = socials.map(s => {
+    const isUrl = s.val.startsWith("http");
+    const display = isUrl ? s.val.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "") : s.val;
+    const href = isUrl ? s.val : (s.label === "WhatsApp" ? `https://wa.me/${s.val.replace(/\D/g,"")}` : `https://${s.val}`);
+    return `<a href="${href}" class="social-row" target="_blank"><span class="s-icon">${s.icon}</span><span class="s-label">${s.label}</span><span class="s-val">${display}</span></a>`;
+  }).join("");
+
+  // Front of card (landscape 3.5" × 2")
+  const front = `
+    <div class="card front">
+      <div class="card-left">
+        ${logoSrc ? `<img src="${logoSrc}" class="card-logo" alt="Logo"/>` : `<div class="card-logo-placeholder">${(biz.name||"DM")[0]}</div>`}
+      </div>
+      <div class="card-right">
+        <div class="card-name">${biz.name || "Delightful Meals and Drinks"}</div>
+        <div class="card-tagline">${biz.tagline || ""}</div>
+        <div class="card-divider"></div>
+        <div class="card-contacts">
+          ${biz.phone    ? `<div class="contact-row"><span>📞</span><span>${biz.phone}</span></div>` : ""}
+          ${biz.phone2   ? `<div class="contact-row"><span>📞</span><span>${biz.phone2}</span></div>` : ""}
+          ${biz.email    ? `<div class="contact-row"><span>✉️</span><span>${biz.email}</span></div>` : ""}
+          ${biz.website  ? `<div class="contact-row"><span>🌐</span><span>${biz.website.replace(/^https?:\/\/(www\.)?/,"")}</span></div>` : ""}
+          ${biz.city     ? `<div class="contact-row"><span>📍</span><span>${biz.city}</span></div>` : ""}
+        </div>
+      </div>
+    </div>`;
+
+  // Back of card — socials + tagline
+  const back = `
+    <div class="card back">
+      <div class="back-logo">
+        ${logoSrc ? `<img src="${logoSrc}" class="back-logo-img" alt="Logo"/>` : ""}
+      </div>
+      <div class="back-tagline">${biz.tagline || biz.name}</div>
+      ${socials.length > 0 ? `<div class="socials">${socialRows}</div>` : ""}
+      ${biz.whatsapp ? `<div class="qr-hint">💬 Message us on WhatsApp: ${biz.whatsapp}</div>` : ""}
+    </div>`;
+
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"/>
+  <title>Business Card — ${biz.name}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'DM Sans',sans-serif;background:#f0f0f0;display:flex;flex-direction:column;align-items:center;gap:32px;padding:48px 24px;min-height:100vh}
+    h2{font-size:13px;font-weight:700;color:#666;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:-16px}
+    .card{width:3.5in;height:2in;border-radius:12px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.18);display:flex;position:relative;page-break-after:always}
+    /* FRONT */
+    .front{background:#111;color:#fff}
+    .card-left{width:1.1in;background:linear-gradient(160deg,#1a1a1a 0%,#0e0e0e 100%);display:flex;align-items:center;justify-content:center;padding:12px;border-right:1px solid #2a2a2a}
+    .card-logo{width:70px;height:70px;object-fit:contain;border-radius:50%;border:2px solid #E8C54740}
+    .card-logo-placeholder{width:70px;height:70px;border-radius:50%;background:#E8C547;color:#111;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900}
+    .card-right{flex:1;padding:14px 16px 12px;display:flex;flex-direction:column;justify-content:center}
+    .card-name{font-size:13.5px;font-weight:800;color:#E8C547;line-height:1.2;margin-bottom:3px}
+    .card-tagline{font-size:8.5px;color:#999;font-style:italic;margin-bottom:8px}
+    .card-divider{height:1px;background:linear-gradient(90deg,#E8C54760,transparent);margin-bottom:8px}
+    .card-contacts{display:flex;flex-direction:column;gap:3px}
+    .contact-row{display:flex;align-items:center;gap:5px;font-size:8px;color:#ccc}
+    .contact-row span:first-child{font-size:9px;width:12px;text-align:center}
+    /* BACK */
+    .back{background:linear-gradient(135deg,#E8C547 0%,#d4a820 100%);flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:16px}
+    .back-logo-img{width:44px;height:44px;object-fit:contain;border-radius:50%;border:2px solid rgba(0,0,0,0.15);margin-bottom:2px}
+    .back-tagline{font-size:10px;font-weight:700;color:#111;text-align:center;margin-bottom:4px}
+    .socials{display:flex;flex-direction:column;gap:3px;width:100%}
+    .social-row{display:flex;align-items:center;gap:6px;text-decoration:none;background:rgba(0,0,0,0.08);border-radius:5px;padding:3px 7px}
+    .s-icon{font-size:10px;width:14px;text-align:center}
+    .s-label{font-size:8px;font-weight:700;color:#333;width:52px}
+    .s-val{font-size:7.5px;color:#111;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+    .qr-hint{font-size:7px;color:#555;text-align:center;margin-top:2px}
+    .print-note{font-size:11px;color:#888;text-align:center;max-width:4in;line-height:1.6}
+    @media print{
+      body{background:#fff;padding:0;gap:0.3in}
+      .print-note{display:none}
+      .card{box-shadow:none}
+    }
+  </style>
+  </head><body>
+  <h2>Front</h2>${front}
+  <h2>Back</h2>${back}
+  <p class="print-note">
+    💡 To save as PDF: use your browser's <strong>Print</strong> (Ctrl+P / Cmd+P), 
+    set paper size to match the card, or choose <strong>"Save as PDF"</strong>.<br/>
+    Print on standard business card stock (3.5" × 2") for best results.
+  </p>
+  </body></html>`;
+}
+
 function buildInvoiceHTML(inv, evt, biz, logo) {
   const bal = inv.total - inv.paid;
   const stClass =
@@ -2565,7 +2666,7 @@ function BizField({ label, k, placeholder, area, draft, setDraft }) {
   );
 }
 
-function SettingsModal({ biz, setBiz, onClose }) {
+function SettingsModal({ biz, setBiz, logo, onClose }) {
   const [draft, setDraft] = useState({ ...biz });
   const [pwSection, setPwSection] = useState(false);
   const [currentPw, setCurrentPw] = useState("");
@@ -2716,6 +2817,11 @@ function SettingsModal({ biz, setBiz, onClose }) {
             <BizField draft={draft} setDraft={setDraft} label="Secondary Phone" k="phone2" />
             <BizField draft={draft} setDraft={setDraft} label="Email" k="email" />
             <BizField draft={draft} setDraft={setDraft} label="Website" k="website" />
+            <BizField draft={draft} setDraft={setDraft} label="Instagram (handle or URL)" k="instagram" placeholder="@delightfulmeals or https://instagram.com/..." />
+            <BizField draft={draft} setDraft={setDraft} label="Facebook (page URL)" k="facebook" placeholder="https://facebook.com/delightfulmeals" />
+            <BizField draft={draft} setDraft={setDraft} label="TikTok (handle or URL)" k="tiktok" placeholder="@delightfulmeals" />
+            <BizField draft={draft} setDraft={setDraft} label="WhatsApp Business Number" k="whatsapp" placeholder="+1 (704) 555-0100" />
+            <BizField draft={draft} setDraft={setDraft} label="Google Review Link" k="googleReview" placeholder="https://g.page/r/..." />
           </div>
           <div
             style={{
@@ -2897,6 +3003,16 @@ function SettingsModal({ biz, setBiz, onClose }) {
         >
           <button style={S.btn("ghost")} onClick={onClose}>
             Cancel
+          </button>
+          <button
+            style={{ ...S.btn("ghost"), borderColor: T.accent, color: T.accent }}
+            onClick={() => {
+              const html = buildBusinessCardHTML(draft, logo);
+              const win = window.open("", "_blank");
+              if (win) { win.document.write(html); win.document.close(); }
+            }}
+          >
+            🪪 Business Card
           </button>
           <button style={S.btn("primary")} onClick={save}>
             Save Settings
@@ -13495,6 +13611,7 @@ export default function App() {
         <SettingsModal
           biz={biz}
           setBiz={setBiz}
+          logo={logo}
           onClose={() => setShowSettings(false)}
         />
       )}
