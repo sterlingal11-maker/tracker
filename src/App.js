@@ -6128,6 +6128,38 @@ function ProposalsPage({
                   )}
                 </div>
 
+                {/* ── Editable Notes & Payment Terms ── */}
+                <div style={{ display: "grid", gap: 8, marginBottom: 12 }} onClick={e => e.stopPropagation()}>
+                  <div>
+                    <label style={{ ...S.label, fontSize: 10 }}>Notes</label>
+                    <input
+                      style={{ ...S.input, fontSize: 12 }}
+                      placeholder="Add notes visible on the proposal…"
+                      value={p.notes || ""}
+                      onClick={e => e.stopPropagation()}
+                      onChange={e => {
+                        e.stopPropagation();
+                        const u = [...proposals]; u[i] = { ...p, notes: e.target.value }; setProposals(u);
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ ...S.label, fontSize: 10 }}>
+                      Payment Terms <span style={{ color: T.textDim, fontWeight: 400 }}>(overrides business default on this proposal)</span>
+                    </label>
+                    <textarea
+                      style={{ ...S.input, fontSize: 12, minHeight: 52, resize: "vertical" }}
+                      placeholder={biz.paymentTerms || "e.g. 50% deposit required. Balance due before event date."}
+                      value={p.paymentTerms || ""}
+                      onClick={e => e.stopPropagation()}
+                      onChange={e => {
+                        e.stopPropagation();
+                        const u = [...proposals]; u[i] = { ...p, paymentTerms: e.target.value }; setProposals(u);
+                      }}
+                    />
+                  </div>
+                </div>
+
                 <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
                   <button
                     style={{ ...S.btn("primary"), fontSize: 11, padding: "4px 9px" }}
