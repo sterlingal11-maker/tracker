@@ -2730,127 +2730,92 @@ function DocModal({ doc, onClose }) {
 // ─── SETTINGS ─────────────────────────────────────────────────────
 // ─── Cloud Storage Setup Section ─────────────────────────────────
 function StorageSetupSection() {
-  const [status, setStatus] = React.useState("checking"); // checking | ready | missing | error
-  const [showSQL, setShowSQL] = React.useState(false);
+  const [showSQL, setShowSQL] = useState(false);
+  const [status, setStatus] = useState("idle"); // idle | checking | ready | missing | error
 
-  React.useEffect(() => {
-    async function check() {
-      try {
-        // Try a dummy upload of a tiny blob to probe bucket existence
-        const testBlob = new Blob(["ping"], { type: "text/plain" });
-        const testFile = new File([testBlob], "ping.txt", { type: "text/plain" });
-        const { error } = await supabase.storage
-          .from(STORAGE_BUCKET)
-          .upload(`_ping/${Date.now()}.txt`, testFile, { upsert: true });
-        if (!error) {
-          // Clean up the test file
-          supabase.storage.from(STORAGE_BUCKET).remove([`_ping/${Date.now()}.txt`]).catch(() => {});
-          setStatus("ready");
-        } else if (error.message?.includes("not found") || error.statusCode === 404 || error.error === "Bucket not found") {
-          setStatus("missing");
-        } else if (error.message?.includes("policy") || error.statusCode === 403) {
-          setStatus("policy");
-        } else {
-          setStatus("missing");
-        }
-      } catch { setStatus("error"); }
-    }
-    check();
-  }, []);
+  const checkStorage = async () => {
+    setStatus("checking");
+    try {
+      const testBlob = new Blob(["ping"], { type: "text/plain" });
+      const testFile = new File([testBlob], "ping.txt", { type: "text/plain" });
+      const { error } = await supabase.storage
+        .from(STORAGE_BUCKET)
+        .upload(`_ping/${Date.now()}.txt`, testFile, { upsert: true });
+      if (!error) {
+        setStatus("ready");
+      } else if (error.message?.includes("not found") || error.error === "Bucket not found") {
+        setStatus("missing");
+      } else {
+        setStatus("missing");
+      }
+    } catch { setStatus("error"); }
+  };
 
-  const SQL = `-- Run this in Supabase → SQL Editor → New query
--- Step 1: Create the storage bucket
+  const SQL = `-- Paste into Supabase → SQL Editor → New query → Run
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values (
-  'dm-media',
-  'dm-media',
-  true,
-  104857600,
-  array['image/jpeg','image/png','image/webp','image/gif','video/mp4','video/quicktime','video/webm','application/pdf']
-)
+values ('dm-media', 'dm-media', true, 104857600,
+  array['image/jpeg','image/png','image/webp','image/gif','video/mp4','video/quicktime','video/webm','application/pdf'])
 on conflict (id) do nothing;
 
--- Step 2: Allow anyone to upload, view, and delete files
-create policy "Public read" on storage.objects
-  for select using (bucket_id = 'dm-media');
+create policy "Public read" on storage.objects for select using (bucket_id = 'dm-media');
+create policy "Public upload" on storage.objects for insert with check (bucket_id = 'dm-media');
+create policy "Public delete" on storage.objects for delete using (bucket_id = 'dm-media');`;
 
-create policy "Public upload" on storage.objects
-  for insert with check (bucket_id = 'dm-media');
-
-create policy "Public delete" on storage.objects
-  for delete using (bucket_id = 'dm-media');`;
-
-  const statusConfig = {
-    checking: { color: T.textMuted,  icon: "⏳", label: "Checking storage status…" },
-    ready:    { color: T.success,    icon: "✅", label: "Cloud storage is active — photos and videos upload to Supabase Storage" },
-    missing:  { color: T.warning,    icon: "⚠️", label: "Storage bucket not set up yet — photos stored as base64, videos blocked" },
-    policy:   { color: T.warning,    icon: "🔒", label: "Bucket exists but upload policy is missing" },
-    error:    { color: T.textMuted,  icon: "❓", label: "Could not check storage status" },
-  };
-  const cfg = statusConfig[status] || statusConfig.error;
+  const statusIcon = { idle:"☁️", checking:"⏳", ready:"✅", missing:"⚠️", error:"❓" }[status] || "☁️";
+  const statusLabel = {
+    idle:     "Cloud Storage — click to check status",
+    checking: "Checking…",
+    ready:    "Active — photos and videos upload to Supabase Storage",
+    missing:  "Not set up — photos use base64, videos blocked",
+    error:    "Could not reach storage",
+  }[status] || "";
+  const statusColor = { ready: T.success, missing: T.warning, error: T.textMuted, idle: T.textMuted, checking: T.textMuted }[status];
 
   return (
-    <div>
-      <button
-        style={{ background:"none", border:"none", padding:0, cursor:"pointer", fontSize:10, fontWeight:700,
-          color: T.textMuted, letterSpacing:0.8, textTransform:"uppercase",
-          display:"flex", alignItems:"center", gap:5 }}
-        onClick={() => setShowSQL(s => !s)}
-      >
-        {showSQL ? "▾" : "▸"} ☁️ Cloud Storage
-      </button>
-
-      <div style={{ marginTop: 8, display:"flex", alignItems:"center", gap:8 }}>
-        <span style={{ fontSize:14 }}>{cfg.icon}</span>
-        <span style={{ fontSize:11, color: cfg.color, fontWeight: status === "ready" ? 600 : 400 }}>{cfg.label}</span>
+    <div style={{ marginTop: 4 }}>
+      <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+        <button
+          style={{ background:"none", border:"none", padding:0, cursor:"pointer", fontSize:10, fontWeight:700,
+            color: T.textMuted, letterSpacing:0.8, textTransform:"uppercase", display:"flex", alignItems:"center", gap:5 }}
+          onClick={() => setShowSQL(s => !s)}
+        >
+          {showSQL ? "▾" : "▸"} {statusIcon} Cloud Storage
+        </button>
+        <span style={{ fontSize:10, color: statusColor }}>{statusLabel}</span>
+        {status === "idle" && (
+          <button style={{ ...S.btn("ghost"), fontSize:10, padding:"1px 8px" }} onClick={checkStorage}>Check</button>
+        )}
+        {(status === "missing" || status === "error") && (
+          <button style={{ ...S.btn("ghost"), fontSize:10, padding:"1px 8px" }} onClick={checkStorage}>Re-check</button>
+        )}
       </div>
 
-      {showSQL && status !== "ready" && (
+      {showSQL && (
         <div style={{ marginTop: 10, background: T.surface, border:`1px solid ${T.border}`, borderRadius:8, padding:"12px 14px" }}>
-          <div style={{ fontSize:11, fontWeight:700, marginBottom:8 }}>One-time setup — takes 2 minutes</div>
+          <div style={{ fontSize:11, fontWeight:700, marginBottom:8 }}>One-time setup — 2 minutes</div>
           <div style={{ fontSize:11, color: T.textMuted, lineHeight:1.7, marginBottom:10 }}>
-            1. Go to <strong>supabase.com</strong> → your project<br/>
-            2. Click <strong>SQL Editor</strong> → <strong>New query</strong><br/>
-            3. Paste the SQL below → click <strong>Run</strong><br/>
-            4. Come back here — storage status will update to ✅
+            1. Go to <strong>supabase.com</strong> → your project → <strong>SQL Editor</strong><br/>
+            2. Click <strong>New query</strong>, paste the SQL below, click <strong>Run</strong><br/>
+            3. Come back and click Re-check — status will show ✅
           </div>
           <div style={{ position:"relative" }}>
             <pre style={{ background:"#0e0e0e", color:"#e8c547", borderRadius:6, padding:"10px 12px",
-              fontSize:10, lineHeight:1.6, overflowX:"auto", margin:0, whiteSpace:"pre-wrap" }}>
-              {SQL}
-            </pre>
+              fontSize:9, lineHeight:1.6, overflowX:"auto", margin:0, whiteSpace:"pre-wrap" }}>{SQL}</pre>
             <button
               style={{ position:"absolute", top:6, right:6, ...S.btn("ghost"), fontSize:10, padding:"2px 8px" }}
-              onClick={() => navigator.clipboard.writeText(SQL).then(() => alert("✅ SQL copied to clipboard!"))}
-            >
-              Copy
-            </button>
+              onClick={() => { try { navigator.clipboard.writeText(SQL).then(() => alert("✅ SQL copied!")); } catch(e) { prompt("Copy this:", SQL); } }}
+            >Copy</button>
           </div>
-          <div style={{ marginTop:10, fontSize:10, color:T.textDim, lineHeight:1.6 }}>
-            <strong>What this enables:</strong> Event photos and videos upload directly to Supabase Storage (up to 100 MB per file, 1 GB total free).
-            Catalog photos, meal photos, and your logo also use Storage — keeping your database lean and fast.
-            Existing photos stored as base64 continue to work without any changes.
+          <div style={{ marginTop:8, fontSize:10, color:T.textDim }}>
+            Enables: event videos (up to 100 MB each), catalog/meal photos stored as URLs not base64.
+            All existing base64 photos continue to work unchanged.
           </div>
-          <button
-            style={{ ...S.btn("primary"), fontSize:11, marginTop:10 }}
-            onClick={async () => {
-              setStatus("checking");
-              // Re-run the check
-              try {
-                const testBlob = new Blob(["ping"], { type: "text/plain" });
-                const testFile = new File([testBlob], "ping.txt", { type: "text/plain" });
-                const { error } = await supabase.storage.from(STORAGE_BUCKET).upload(`_ping/${Date.now()}.txt`, testFile, { upsert: true });
-                setStatus(!error ? "ready" : (error.message?.includes("not found") || error.error === "Bucket not found") ? "missing" : "policy");
-              } catch { setStatus("error"); }
-            }}
-          >
-            🔄 Re-check Status
-          </button>
         </div>
       )}
     </div>
   );
 }
+
 
 function BizField({ label, k, placeholder, area, draft, setDraft }) {
   return (
