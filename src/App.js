@@ -5079,7 +5079,12 @@ function CatalogPage({ categories, setCategories, items, setItems, meals, logo, 
       tags: typeof ni.tags === "string" ? ni.tags.split(",").map(t => t.trim()).filter(Boolean) : ni.tags,
     };
     if (editId != null) {
-      setItems(prev => prev.map(it => it.id === editId ? { ...item, id: editId } : it));
+      setItems(prev => prev.map(it => {
+        if (it.id !== editId) return it;
+        // Never overwrite an existing photo with null — only update if a new one was uploaded
+        const photo = item.photo !== null ? item.photo : it.photo;
+        return { ...item, id: editId, photo };
+      }));
       setEditId(null);
     } else {
       setItems(prev => [...prev, { ...item, id: Date.now() }]);
@@ -5090,7 +5095,10 @@ function CatalogPage({ categories, setCategories, items, setItems, meals, logo, 
 
   const startEdit = (item) => {
     setNi({ ...item, price: String(item.price), costPerUnit: String(item.costPerUnit || ""), tags: Array.isArray(item.tags) ? item.tags.join(", ") : item.tags });
-    setEditId(item.id); setAdding(true);
+    setEditId(item.id);
+    setAdding(true);
+    // Navigate into the item's category so the form is visible
+    if (!selCat) setSelCat(item.catId);
   };
 
   const addCategory = () => {
@@ -5337,6 +5345,27 @@ function CatalogItemCard({ item, categories, setItems, startEdit, handlePhoto, o
             Cost: {fmt(item.costPerUnit)} {margin && <span style={{ color: T.success }}>· Margin: {margin}%</span>}
           </div>
         )}
+        {/* Move to category */}
+        <div style={{ marginBottom: 6 }}>
+          <select
+            style={{ ...S.select, fontSize: 10, padding: "2px 4px", color: T.textMuted }}
+            value={item.catId}
+            onChange={e => {
+              const newCatId = Number(e.target.value);
+              if (newCatId === item.catId) return;
+              const newCat = categories.find(c => c.id === newCatId);
+              // Preserve photo explicitly when moving category
+              setItems(prev => prev.map(it => it.id === item.id ? { ...it, catId: newCatId, photo: it.photo } : it));
+              if (newCat) {
+                // Brief visual confirmation
+                setTimeout(() => alert(`✅ "${item.name}" moved to ${newCat.name}`), 50);
+              }
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        </div>
         <div style={{ display: "flex", gap: 3, alignItems: "center", flexWrap: "wrap", marginTop: 4 }}>
           {(Array.isArray(item.tags) ? item.tags : []).map(t => <span key={t} style={S.tag}>{t}</span>)}
           <div style={{ marginLeft: "auto", display: "flex", gap: 4 }}>
