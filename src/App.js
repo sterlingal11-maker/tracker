@@ -11673,6 +11673,7 @@ function ReportsPage({
   biz,
   inventory,
   meals,
+  customers,
 }) {
   const [reportType, setReportType] = useState("pl");
   const [periodId, setPeriodId] = useState(() => {
@@ -11775,11 +11776,16 @@ function ReportsPage({
           alignItems: "center",
         }}
       >
-        <div style={{ display: "flex", gap: 3 }}>
+        <div style={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
           {[
             ["pl", "📊 P&L"],
             ["bs", "🏦 Balance Sheet"],
             ["cf", "💸 Cash Flows"],
+            ["sales_product", "🏆 Sales by Product"],
+            ["clients", "👥 Client Revenue"],
+            ["pipeline", "🎯 Event Pipeline"],
+            ["trend", "📈 Monthly Trend"],
+            ["expenses", "🧾 Expense Breakdown"],
           ].map(([t, label]) => (
             <button
               key={t}
@@ -11825,11 +11831,14 @@ function ReportsPage({
           style={S.btn("primary")}
           onClick={() =>
             printReport(
-              reportType === "pl"
-                ? "Profit & Loss Statement"
-                : reportType === "bs"
-                ? "Balance Sheet"
-                : "Statement of Cash Flows"
+              reportType === "pl" ? "Profit & Loss Statement"
+              : reportType === "bs" ? "Balance Sheet"
+              : reportType === "cf" ? "Statement of Cash Flows"
+              : reportType === "sales_product" ? "Sales by Product"
+              : reportType === "clients" ? "Client Revenue Report"
+              : reportType === "pipeline" ? "Event Pipeline"
+              : reportType === "trend" ? "Monthly Revenue Trend"
+              : "Expense Breakdown"
             )
           }
         >
@@ -13004,6 +13013,456 @@ function ReportsPage({
           </div>
         </div>
       )}
+
+      {/* ══ SALES BY PRODUCT ══════════════════════════════════════════ */}
+      {reportType === "sales_product" && (() => {
+        // Aggregate sales by catalog item name across home orders
+        const itemMap = {};
+        d.pSales.forEach(s => {
+          const key = s.meal || "Other";
+          if (!itemMap[key]) itemMap[key] = { name: key, units: 0, revenue: 0, orders: 0 };
+          itemMap[key].units   += Number(s.plates) || 0;
+          itemMap[key].revenue += orderTotal(s);
+          itemMap[key].orders  += 1;
+        });
+        // Also aggregate catering events by type
+        const eventTypeMap = {};
+        d.pEvents.forEach(e => {
+          const key = e.eventType || "Catering";
+          if (!eventTypeMap[key]) eventTypeMap[key] = { name: key, revenue: 0, events: 0, guests: 0 };
+          eventTypeMap[key].revenue += e.revenue || 0;
+          eventTypeMap[key].events  += 1;
+          eventTypeMap[key].guests  += e.guests || 0;
+        });
+        const topItems  = Object.values(itemMap).sort((a,b)=>b.revenue-a.revenue);
+        const topEvents = Object.values(eventTypeMap).sort((a,b)=>b.revenue-a.revenue);
+        const maxRev = Math.max(...topItems.map(i=>i.revenue), 1);
+        return (
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }}>
+            {/* Home Orders — by item */}
+            <div style={S.card}>
+              <div style={S.cardTitle}>🏠 Home Orders — Revenue by Item</div>
+              {topItems.length === 0
+                ? <div style={{fontSize:11,color:T.textMuted}}>No orders in this period.</div>
+                : topItems.map((item,i) => (
+                  <div key={item.name} style={{marginBottom:10}}>
+                    <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
+                      <span style={{fontSize:12,fontWeight:i===0?800:600}}>{item.name}</span>
+                      <span style={{fontSize:12,fontWeight:700,color:T.accent}}>{fmt(item.revenue)}</span>
+                    </div>
+                    <div style={{height:6,background:T.border,borderRadius:3,overflow:"hidden",marginBottom:2}}>
+                      <div style={{height:"100%",width:`${(item.revenue/maxRev)*100}%`,background:i===0?T.accent:T.info,borderRadius:3}}/>
+                    </div>
+                    <div style={{fontSize:10,color:T.textMuted}}>{item.units} units · {item.orders} order{item.orders!==1?"s":""}</div>
+                  </div>
+                ))
+              }
+            </div>
+            {/* Catering — by event type */}
+            <div style={S.card}>
+              <div style={S.cardTitle}>🎉 Catering — Revenue by Event Type</div>
+              {topEvents.length === 0
+                ? <div style={{fontSize:11,color:T.textMuted}}>No events in this period.</div>
+                : (() => {
+                  const maxE = Math.max(...topEvents.map(e=>e.revenue),1);
+                  return topEvents.map((ev,i) => (
+                    <div key={ev.name} style={{marginBottom:10}}>
+                      <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
+                        <span style={{fontSize:12,fontWeight:i===0?800:600}}>{ev.name}</span>
+                        <span style={{fontSize:12,fontWeight:700,color:T.catering}}>{fmt(ev.revenue)}</span>
+                      </div>
+                      <div style={{height:6,background:T.border,borderRadius:3,overflow:"hidden",marginBottom:2}}>
+                        <div style={{height:"100%",width:`${(ev.revenue/maxE)*100}%`,background:T.catering,borderRadius:3}}/>
+                      </div>
+                      <div style={{fontSize:10,color:T.textMuted}}>{ev.events} event{ev.events!==1?"s":""} · {ev.guests} guests total</div>
+                    </div>
+                  ));
+                })()
+              }
+            </div>
+            {/* Combined top-level KPIs */}
+            <div style={{...S.card,gridColumn:"span 2"}}>
+              <div style={S.cardTitle}>Summary</div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10}}>
+                {[
+                  ["Total Products Sold", d.pSales.reduce((s,r)=>s+Number(r.plates||0),0), T.info, "units"],
+                  ["Home Order Revenue", fmt(d.rdRevenue), T.success, ""],
+                  ["Catering Revenue", fmt(d.catRevenue), T.catering, ""],
+                  ["Avg Order Value", d.pSales.length>0?fmt(d.rdRevenue/d.pSales.length):"—", T.accent, ""],
+                ].map(([label,val,color,unit])=>(
+                  <div key={label} style={{background:T.surface,borderRadius:8,padding:"10px 12px",border:`1px solid ${T.border}`}}>
+                    <div style={{fontSize:9,color:T.textMuted,marginBottom:4,textTransform:"uppercase",letterSpacing:0.5}}>{label}</div>
+                    <div style={{fontSize:18,fontWeight:800,color}}>{val} <span style={{fontSize:10,fontWeight:400}}>{unit}</span></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ══ CLIENT REVENUE ════════════════════════════════════════════ */}
+      {reportType === "clients" && (() => {
+        // Build per-client totals from sales + events
+        const clientMap = {};
+        d.pSales.forEach(s => {
+          const name = (s.clientName||"Walk-in").trim() || "Walk-in";
+          if (!clientMap[name]) clientMap[name] = {name,salesRev:0,eventRev:0,orders:0,events:0,lastDate:""};
+          clientMap[name].salesRev += orderTotal(s);
+          clientMap[name].orders   += 1;
+          if (s.date > (clientMap[name].lastDate||"")) clientMap[name].lastDate = s.date;
+        });
+        d.pEvents.forEach(e => {
+          const name = (e.clientName||"").trim() || "Unknown";
+          if (!clientMap[name]) clientMap[name] = {name,salesRev:0,eventRev:0,orders:0,events:0,lastDate:""};
+          clientMap[name].eventRev += e.revenue || 0;
+          clientMap[name].events   += 1;
+          if (e.eventDate > (clientMap[name].lastDate||"")) clientMap[name].lastDate = e.eventDate;
+        });
+        const sorted = Object.values(clientMap)
+          .map(c=>({...c,total:c.salesRev+c.eventRev}))
+          .sort((a,b)=>b.total-a.total);
+        const maxRev = Math.max(...sorted.map(c=>c.total),1);
+        const totalRev = sorted.reduce((s,c)=>s+c.total,0);
+        // AR per client from invoices
+        const arByClient = {};
+        invoices.forEach(inv=>{ arByClient[inv.client]=(arByClient[inv.client]||0)+(inv.total-inv.paid); });
+        return (
+          <div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:14}}>
+              {[
+                ["Unique Clients",sorted.length,T.info],
+                ["Total Client Revenue",fmt(totalRev),T.success],
+                ["AR Outstanding",fmt(Object.values(arByClient).reduce((s,v)=>s+v,0)),T.danger],
+              ].map(([label,val,color])=>(
+                <div key={label} style={{...S.card,textAlign:"center"}}>
+                  <div style={{fontSize:10,color:T.textMuted,marginBottom:4}}>{label}</div>
+                  <div style={{fontSize:20,fontWeight:800,color}}>{val}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{...S.card}}>
+              <div style={S.cardTitle}>Top Clients by Revenue</div>
+              <div className="tbl-wrap">
+                <table style={S.table}>
+                  <thead>
+                    <tr>{["Rank","Client","Orders","Events","Revenue","AR Owed","Last Activity","% Share"].map(h=>(
+                      <th key={h} style={S.th}>{h}</th>
+                    ))}</tr>
+                  </thead>
+                  <tbody>
+                    {sorted.map((c,i)=>(
+                      <tr key={c.name}>
+                        <td style={{...S.td,fontWeight:700,color:i<3?T.accent:T.textMuted}}>#{i+1}</td>
+                        <td style={{...S.td,fontWeight:700}}>{c.name}</td>
+                        <td style={S.td}>{c.orders||"—"}</td>
+                        <td style={S.td}>{c.events||"—"}</td>
+                        <td style={{...S.td,fontWeight:700,color:T.success}}>{fmt(c.total)}</td>
+                        <td style={{...S.td,color:arByClient[c.name]>0?T.danger:T.textMuted}}>{arByClient[c.name]>0?fmt(arByClient[c.name]):"—"}</td>
+                        <td style={{...S.td,fontSize:10,color:T.textMuted}}>{c.lastDate||"—"}</td>
+                        <td style={{...S.td,fontSize:11}}>
+                          <div style={{display:"flex",alignItems:"center",gap:6}}>
+                            <div style={{flex:1,height:5,background:T.border,borderRadius:2,overflow:"hidden"}}>
+                              <div style={{height:"100%",width:`${(c.total/maxRev)*100}%`,background:T.accent,borderRadius:2}}/>
+                            </div>
+                            <span style={{fontSize:10,color:T.textMuted,flexShrink:0}}>{totalRev>0?((c.total/totalRev)*100).toFixed(1):0}%</span>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ══ EVENT PIPELINE ════════════════════════════════════════════ */}
+      {reportType === "pipeline" && (() => {
+        const today = new Date().toISOString().slice(0,10);
+        const upcoming = events
+          .filter(e=>e.eventDate && e.eventDate >= today && e.phase !== "Completed")
+          .sort((a,b)=>a.eventDate.localeCompare(b.eventDate));
+        const pipeline = events
+          .filter(e=>e.phase !== "Completed")
+          .reduce((s,e)=>s+(e.revenue||0),0);
+        const confirmed = events
+          .filter(e=>e.phase==="Confirmed" && e.eventDate >= today)
+          .reduce((s,e)=>s+(e.revenue||0),0);
+        const phaseColors = { "Lead / Inquiry":T.info, "Confirmed":T.success, "In Progress":T.warning, "Completed":T.textMuted };
+        const phaseCounts = {};
+        events.filter(e=>e.phase!=="Completed").forEach(e=>{ phaseCounts[e.phase]=(phaseCounts[e.phase]||0)+1; });
+        return (
+          <div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:14}}>
+              {[
+                ["Upcoming Events",upcoming.length,T.info],
+                ["Confirmed Revenue",fmt(confirmed),T.success],
+                ["Total Pipeline",fmt(pipeline),T.catering],
+                ["Leads in Progress",phaseCounts["Lead / Inquiry"]||0,T.warning],
+              ].map(([label,val,color])=>(
+                <div key={label} style={{...S.card,textAlign:"center"}}>
+                  <div style={{fontSize:10,color:T.textMuted,marginBottom:4}}>{label}</div>
+                  <div style={{fontSize:20,fontWeight:800,color}}>{val}</div>
+                </div>
+              ))}
+            </div>
+            <div style={S.card}>
+              <div style={S.cardTitle}>Upcoming Events</div>
+              {upcoming.length===0
+                ? <div style={{fontSize:11,color:T.textMuted,padding:"20px 0",textAlign:"center"}}>No upcoming events. Start by adding events in the Catering tab.</div>
+                : <div className="tbl-wrap">
+                    <table style={S.table}>
+                      <thead>
+                        <tr>{["Date","Event","Client","Guests","Revenue","Stage","Days Away"].map(h=>(<th key={h} style={S.th}>{h}</th>))}</tr>
+                      </thead>
+                      <tbody>
+                        {upcoming.map(e=>{
+                          const daysAway = Math.ceil((new Date(e.eventDate)-new Date(today))/(1000*60*60*24));
+                          const inv = invoices.find(i=>i.eventId===e.id);
+                          const paid = inv ? inv.paid : 0;
+                          const bal = (e.revenue||0) - paid;
+                          return (
+                            <tr key={e.id}>
+                              <td style={{...S.td,fontWeight:700,whiteSpace:"nowrap"}}>{e.eventDate}</td>
+                              <td style={{...S.td,fontWeight:700}}>{e.name}</td>
+                              <td style={S.td}>{e.clientName}</td>
+                              <td style={{...S.td,textAlign:"center"}}>{e.guests}</td>
+                              <td style={{...S.td,fontWeight:700,color:T.success}}>{fmt(e.revenue)}</td>
+                              <td style={S.td}>
+                                <span style={{fontSize:10,padding:"2px 7px",borderRadius:10,background:(phaseColors[e.phase]||T.textMuted)+"22",color:phaseColors[e.phase]||T.textMuted,fontWeight:700}}>{e.phase}</span>
+                              </td>
+                              <td style={{...S.td,fontWeight:700,color:daysAway<=7?T.danger:daysAway<=14?T.warning:T.success}}>{daysAway}d</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+              }
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ══ MONTHLY TREND ═════════════════════════════════════════════ */}
+      {reportType === "trend" && (() => {
+        // Build month-by-month data for the selected year from the period or trailing 12 months
+        const now = new Date();
+        const year = d.from.getFullYear();
+        const months = Array.from({length:12},(_,i)=>{
+          const m = String(i+1).padStart(2,"0");
+          const label = new Date(year,i,1).toLocaleString("en-US",{month:"short"});
+          const from = `${year}-${m}-01`;
+          const daysInMonth = new Date(year,i+1,0).getDate();
+          const to = `${year}-${m}-${String(daysInMonth).padStart(2,"0")}`;
+          const mSales = sales.filter(s=>s.date>=from && s.date<=to);
+          const mEvents = events.filter(e=>e.eventDate>=from && e.eventDate<=to);
+          const mOverheads = overheads.filter(o=>o.date>=from && o.date<=to && (o.entryType||"opex")==="opex");
+          const salesRev = mSales.reduce((s,r)=>s+orderTotal(r),0);
+          const eventRev = mEvents.reduce((s,e)=>s+(e.revenue||0),0);
+          const rev = salesRev + eventRev;
+          const cogs = mSales.reduce((s,r)=>s+orderCOGS(r,catalogItems,meals),0)+mEvents.reduce((s,e)=>s+evtCOGS(e),0);
+          const oh = mOverheads.reduce((s,o)=>s+Number(o.amount),0);
+          const profit = rev - cogs - oh;
+          const orders = mSales.length;
+          return {label,month:m,year,rev,salesRev,eventRev,cogs,oh,profit,orders};
+        });
+        const maxRev = Math.max(...months.map(m=>m.rev),1);
+        const maxProfit = Math.max(...months.map(m=>Math.abs(m.profit)),1);
+        const ytdRevenue = months.filter(m=>m.month<=String(now.getMonth()+1).padStart(2,"0")||year<now.getFullYear()).reduce((s,m)=>s+m.rev,0);
+        const ytdProfit  = months.filter(m=>m.month<=String(now.getMonth()+1).padStart(2,"0")||year<now.getFullYear()).reduce((s,m)=>s+m.profit,0);
+        const bestMonth  = [...months].sort((a,b)=>b.rev-a.rev)[0];
+        return (
+          <div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:14}}>
+              {[
+                [`${year} Revenue to Date`,fmt(ytdRevenue),T.success],
+                [`${year} Profit to Date`,fmt(ytdProfit),ytdProfit>=0?T.success:T.danger],
+                [`Best Month`,`${bestMonth.label} — ${fmt(bestMonth.rev)}`,T.accent],
+              ].map(([label,val,color])=>(
+                <div key={label} style={{...S.card,textAlign:"center"}}>
+                  <div style={{fontSize:10,color:T.textMuted,marginBottom:4}}>{label}</div>
+                  <div style={{fontSize:16,fontWeight:800,color}}>{val}</div>
+                </div>
+              ))}
+            </div>
+            {/* Bar chart */}
+            <div style={S.card}>
+              <div style={S.cardTitle}>Monthly Revenue vs Profit — {year}</div>
+              <div style={{display:"flex",gap:3,alignItems:"flex-end",height:160,marginBottom:8,marginTop:8}}>
+                {months.map((m,i)=>{
+                  const isCurrentMonth = m.month===String(now.getMonth()+1).padStart(2,"0") && year===now.getFullYear();
+                  const revH = Math.max(4,(m.rev/maxRev)*130);
+                  const profitH = m.profit!==0?Math.max(3,(Math.abs(m.profit)/maxProfit)*80):0;
+                  return (
+                    <div key={m.label} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
+                      <div style={{fontSize:8,color:T.textMuted,fontWeight:700,marginBottom:2}}>{m.rev>0?fmt(m.rev).replace("$",""):""}</div>
+                      <div style={{display:"flex",gap:1,alignItems:"flex-end",width:"100%",justifyContent:"center"}}>
+                        <div style={{width:"45%",height:revH,background:isCurrentMonth?T.accent:T.info,borderRadius:"2px 2px 0 0",opacity:0.9}} title={`${m.label}: Revenue ${fmt(m.rev)}`}/>
+                        <div style={{width:"45%",height:profitH,background:m.profit>=0?T.success:T.danger,borderRadius:"2px 2px 0 0",opacity:0.8}} title={`${m.label}: Profit ${fmt(m.profit)}`}/>
+                      </div>
+                      <div style={{fontSize:8,color:isCurrentMonth?T.accent:T.textMuted,fontWeight:isCurrentMonth?800:400,textAlign:"center"}}>{m.label}</div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div style={{display:"flex",gap:14,justifyContent:"center",fontSize:10}}>
+                <span><span style={{display:"inline-block",width:10,height:10,background:T.info,borderRadius:2,marginRight:4}}/> Revenue</span>
+                <span><span style={{display:"inline-block",width:10,height:10,background:T.success,borderRadius:2,marginRight:4}}/> Profit</span>
+                <span><span style={{display:"inline-block",width:10,height:10,background:T.accent,borderRadius:2,marginRight:4}}/> Current month</span>
+              </div>
+            </div>
+            {/* Monthly detail table */}
+            <div style={{...S.card,marginTop:12}}>
+              <div style={S.cardTitle}>Month-by-Month Detail</div>
+              <div className="tbl-wrap">
+                <table style={S.table}>
+                  <thead>
+                    <tr>{["Month","Orders","Home Rev","Catering Rev","Total Revenue","COGS","Overheads","Net Profit","Margin"].map(h=>(<th key={h} style={S.th}>{h}</th>))}</tr>
+                  </thead>
+                  <tbody>
+                    {months.map((m,i)=>{
+                      const margin = m.rev>0?((m.profit/m.rev)*100).toFixed(1):0;
+                      const isCurrentMonth = m.month===String(now.getMonth()+1).padStart(2,"0") && year===now.getFullYear();
+                      return (
+                        <tr key={m.label} style={{background:isCurrentMonth?T.accentSoft:i%2===0?"":"transparent"}}>
+                          <td style={{...S.td,fontWeight:isCurrentMonth?800:600}}>{m.label} {year}</td>
+                          <td style={{...S.td,textAlign:"center"}}>{m.orders||"—"}</td>
+                          <td style={S.td}>{m.salesRev>0?fmt(m.salesRev):"—"}</td>
+                          <td style={S.td}>{m.eventRev>0?fmt(m.eventRev):"—"}</td>
+                          <td style={{...S.td,fontWeight:700,color:T.success}}>{m.rev>0?fmt(m.rev):"—"}</td>
+                          <td style={{...S.td,color:T.danger}}>{m.cogs>0?fmt(m.cogs):"—"}</td>
+                          <td style={{...S.td,color:T.warning}}>{m.oh>0?fmt(m.oh):"—"}</td>
+                          <td style={{...S.td,fontWeight:700,color:m.profit>=0?T.success:T.danger}}>{m.rev>0?fmt(m.profit):"—"}</td>
+                          <td style={{...S.td,color:Number(margin)>=20?T.success:T.warning}}>{m.rev>0?`${margin}%`:"—"}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ══ EXPENSE BREAKDOWN ═════════════════════════════════════════ */}
+      {reportType === "expenses" && (() => {
+        const byCategory = {};
+        d.pOverheads.forEach(o=>{
+          const cat = o.category || "Uncategorised";
+          if (!byCategory[cat]) byCategory[cat] = {name:cat,total:0,paid:0,unpaid:0,entries:[],type:o.entryType||"opex"};
+          byCategory[cat].total   += Number(o.amount)||0;
+          byCategory[cat].entries.push(o);
+          if (o.paymentStatus==="paid") byCategory[cat].paid += Number(o.amount)||0;
+          else byCategory[cat].unpaid += Number(o.amount)||0;
+        });
+        const cats = Object.values(byCategory).sort((a,b)=>b.total-a.total);
+        const totalExp = cats.reduce((s,c)=>s+c.total,0);
+        const totalPaid = cats.reduce((s,c)=>s+c.paid,0);
+        const totalUnpaid = cats.reduce((s,c)=>s+c.unpaid,0);
+        const maxCat = Math.max(...cats.map(c=>c.total),1);
+        // By vendor
+        const byVendor = {};
+        d.pOverheads.forEach(o=>{
+          const v = (o.vendor||"").trim() || "Unspecified";
+          if (!byVendor[v]) byVendor[v]={name:v,total:0,count:0};
+          byVendor[v].total += Number(o.amount)||0;
+          byVendor[v].count += 1;
+        });
+        const topVendors = Object.values(byVendor).sort((a,b)=>b.total-a.total).slice(0,10);
+        return (
+          <div>
+            {/* KPIs */}
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:14}}>
+              {[
+                ["Total Expenses",fmt(totalExp),T.danger],
+                ["Paid",fmt(totalPaid),T.success],
+                ["Unpaid / Accrued",fmt(totalUnpaid),T.warning],
+                ["Expenses as % of Revenue",d.totalRevenue>0?`${((totalExp/d.totalRevenue)*100).toFixed(1)}%`:"—",T.info],
+              ].map(([label,val,color])=>(
+                <div key={label} style={{...S.card,textAlign:"center"}}>
+                  <div style={{fontSize:10,color:T.textMuted,marginBottom:4}}>{label}</div>
+                  <div style={{fontSize:16,fontWeight:800,color}}>{val}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+              {/* By category */}
+              <div style={S.card}>
+                <div style={S.cardTitle}>Breakdown by Category</div>
+                {cats.length===0
+                  ? <div style={{fontSize:11,color:T.textMuted}}>No expenses in this period.</div>
+                  : cats.map((cat,i)=>(
+                    <div key={cat.name} style={{marginBottom:10}}>
+                      <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
+                        <span style={{fontSize:11,fontWeight:600}}>{cat.name}</span>
+                        <div style={{textAlign:"right"}}>
+                          <span style={{fontSize:12,fontWeight:700,color:T.danger}}>{fmt(cat.total)}</span>
+                          <span style={{fontSize:9,color:T.textMuted,marginLeft:6}}>{totalExp>0?((cat.total/totalExp)*100).toFixed(1):0}%</span>
+                        </div>
+                      </div>
+                      <div style={{height:6,background:T.border,borderRadius:3,overflow:"hidden",marginBottom:2}}>
+                        <div style={{height:"100%",width:`${(cat.total/maxCat)*100}%`,background:T.warning,borderRadius:3}}/>
+                      </div>
+                      <div style={{fontSize:9,color:T.textMuted}}>{cat.entries.length} entr{cat.entries.length!==1?"ies":"y"} · {cat.paid>0?fmt(cat.paid)+" paid":""}{cat.unpaid>0?` · ${fmt(cat.unpaid)} unpaid`:""}</div>
+                    </div>
+                  ))
+                }
+              </div>
+              {/* By vendor */}
+              <div style={S.card}>
+                <div style={S.cardTitle}>Top Vendors by Spend</div>
+                {topVendors.length===0
+                  ? <div style={{fontSize:11,color:T.textMuted}}>No vendor data in this period.</div>
+                  : topVendors.map((v,i)=>{
+                    const maxV = Math.max(...topVendors.map(x=>x.total),1);
+                    return (
+                      <div key={v.name} style={{marginBottom:10}}>
+                        <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
+                          <span style={{fontSize:11,fontWeight:i<3?700:500}}>{v.name}</span>
+                          <span style={{fontSize:12,fontWeight:700,color:T.danger}}>{fmt(v.total)}</span>
+                        </div>
+                        <div style={{height:5,background:T.border,borderRadius:3,overflow:"hidden",marginBottom:2}}>
+                          <div style={{height:"100%",width:`${(v.total/maxV)*100}%`,background:i===0?T.danger:T.warning,borderRadius:3}}/>
+                        </div>
+                        <div style={{fontSize:9,color:T.textMuted}}>{v.count} purchase{v.count!==1?"s":""}</div>
+                      </div>
+                    );
+                  })
+                }
+              </div>
+            </div>
+            {/* Full expense list */}
+            <div style={{...S.card,marginTop:12}}>
+              <div style={S.cardTitle}>All Expenses This Period ({d.pOverheads.length})</div>
+              <div className="tbl-wrap">
+                <table style={S.table}>
+                  <thead>
+                    <tr>{["Date","Category","Description","Vendor","Type","Status","Amount"].map(h=>(<th key={h} style={S.th}>{h}</th>))}</tr>
+                  </thead>
+                  <tbody>
+                    {[...d.pOverheads].sort((a,b)=>b.date.localeCompare(a.date)).map((o,i)=>(
+                      <tr key={i}>
+                        <td style={{...S.td,whiteSpace:"nowrap"}}>{o.date}</td>
+                        <td style={S.td}>{o.category}</td>
+                        <td style={{...S.td,fontWeight:600}}>{o.description}</td>
+                        <td style={{...S.td,color:T.textMuted}}>{o.vendor||"—"}</td>
+                        <td style={S.td}><span style={{fontSize:10,padding:"2px 6px",borderRadius:4,background:o.entryType==="capex"?T.catering+"22":T.info+"22",color:o.entryType==="capex"?T.catering:T.info,fontWeight:700}}>{(o.entryType||"opex").toUpperCase()}</span></td>
+                        <td style={S.td}><span style={{fontSize:10,color:o.paymentStatus==="paid"?T.success:T.warning,fontWeight:600}}>{o.paymentStatus==="paid"?"Paid":"Unpaid"}</span></td>
+                        <td style={{...S.td,fontWeight:700,color:T.danger,textAlign:"right"}}>{fmt(Number(o.amount))}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
     </div>
   );
 }
@@ -14203,6 +14662,7 @@ export default function App() {
             biz={biz}
             inventory={inventory}
             meals={meals}
+            customers={customers}
           />
         )}
         {tab === "studio" && isOwner && (
