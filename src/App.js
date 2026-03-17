@@ -5369,6 +5369,7 @@ function ProposalsPage({
 }) {
   const [sel, setSel] = useState(null);
   const [building, setBuilding] = useState(false);
+  const [editingPropIdx, setEditingPropIdx] = useState(null); // index of proposal being edited
   const [draft, setDraft] = useState({
     client: "",
     clientPhone: "",
@@ -5463,14 +5464,24 @@ function ProposalsPage({
       ],
     }));
   const saveDraft = () => {
-    const newNum = proposals.length + 1;
-    const p = {
-      ...draft,
-      id: Date.now(),
-      num: `PROP-${THIS_YEAR}-${String(newNum).padStart(4, "0")}`,
-      status: "Draft",
-    };
-    setProposals((prev) => [...prev, p]);
+    if (editingPropIdx !== null) {
+      // Editing an existing proposal — preserve id, num, status, eventId
+      const existing = proposals[editingPropIdx];
+      const updated = { ...existing, ...draft, id: existing.id, num: existing.num, eventId: existing.eventId };
+      const u = [...proposals];
+      u[editingPropIdx] = updated;
+      setProposals(u);
+      setEditingPropIdx(null);
+    } else {
+      const newNum = proposals.length + 1;
+      const p = {
+        ...draft,
+        id: Date.now(),
+        num: `PROP-${THIS_YEAR}-${String(newNum).padStart(4, "0")}`,
+        status: "Draft",
+      };
+      setProposals((prev) => [...prev, p]);
+    }
     setBuilding(false);
     setDraft({ ...BLANK_DRAFT });
   };
@@ -5584,15 +5595,15 @@ function ProposalsPage({
             {templates.length > 0 && <span style={{ ...S.badge(T.accent), marginLeft: 6 }}>⭐ {templates.length} template{templates.length > 1 ? "s" : ""}</span>}
           </div>
         </div>
-        <button style={S.btn("primary")} onClick={() => { setBuilding(!building); setShowTemplates(false); }}>
+        <button style={S.btn("primary")} onClick={() => { setBuilding(!building); setShowTemplates(false); if (building) { setEditingPropIdx(null); setDraft({ ...BLANK_DRAFT }); } }}>
           {building ? "✕ Cancel" : "+ New Proposal"}
         </button>
       </div>
 
       {building && (
-        <div style={{ ...S.card, marginBottom: 14, borderColor: T.accent }}>
+        <div style={{ ...S.card, marginBottom: 14, borderColor: editingPropIdx !== null ? T.warning : T.accent }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <div style={S.sectionTitle}>Build Proposal</div>
+            <div style={S.sectionTitle}>{editingPropIdx !== null ? `✏️ Edit Proposal — ${proposals[editingPropIdx]?.num}` : "Build Proposal"}</div>
             {proposals.length > 0 && (
               <button style={{ ...S.btn("ghost"), fontSize: 11, padding: "4px 10px" }} onClick={() => setShowTemplates(!showTemplates)}>
                 {showTemplates ? "✕ Close" : "📋 Load from existing…"}
@@ -6103,11 +6114,11 @@ function ProposalsPage({
             </div>
           )}
           <div style={{ ...S.row, marginTop: 10, justifyContent: "flex-end" }}>
-            <button style={S.btn("ghost")} onClick={() => { setBuilding(false); setShowTemplates(false); }}>
+            <button style={S.btn("ghost")} onClick={() => { setBuilding(false); setShowTemplates(false); setEditingPropIdx(null); setDraft({ ...BLANK_DRAFT }); }}>
               Cancel
             </button>
             <button style={S.btn("primary")} onClick={saveDraft}>
-              Save Proposal
+              {editingPropIdx !== null ? "✓ Save Changes" : "Save Proposal"}
             </button>
           </div>
         </div>
@@ -6529,6 +6540,42 @@ function ProposalsPage({
                     ✉️ Mark Sent
                   </button>
                   <button
+                    style={{ ...S.btn("ghost"), fontSize: 11, padding: "4px 9px", color: "#25D366", borderColor: "#25D36650" }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const total = propTotal(p.lines, p.discount);
+                      const deposit = total * 0.5;
+                      const fmt2 = (n) => "$" + Number(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                      const templates = [
+                        {
+                          label: "Send Proposal",
+                          msg: `Hi ${p.client?.split(" ")[0] || "there"}, thank you for your interest in Delightful Meals and Drinks!\n\nI have prepared your proposal (${p.num}) for your ${p.eventType || "event"} on ${p.plannedDate || "the planned date"}.\n\n📋 Total: ${fmt2(total)}\n💰 Deposit to confirm: ${fmt2(deposit)}\n\nI will send the full proposal document shortly. Please feel free to ask any questions.\n\nBest regards,\n${biz.name}${biz.phone ? "\n" + biz.phone : ""}`,
+                        },
+                        {
+                          label: "Follow Up",
+                          msg: `Hi ${p.client?.split(" ")[0] || "there"}, I wanted to follow up on the proposal I sent for your ${p.eventType || "event"} (${p.num}).\n\nTotal: ${fmt2(total)} | Deposit: ${fmt2(deposit)}\n\nAre you ready to proceed? I would love to help make your event a success! Please let me know if you have any questions.\n\n${biz.name}${biz.phone ? "\n" + biz.phone : ""}`,
+                        },
+                        {
+                          label: "Confirm Deposit",
+                          msg: `Hi ${p.client?.split(" ")[0] || "there"}, great news — your proposal (${p.num}) has been approved!\n\nTo secure your date, a deposit of ${fmt2(deposit)} is required.\n\nPayment accepted via: ${biz.paymentTerms || "Cash, Zelle, Credit Card or Bank Transfer"}.\n\nOnce your deposit is received, your booking will be confirmed. Looking forward to working with you!\n\n${biz.name}${biz.phone ? "\n" + biz.phone : ""}`,
+                        },
+                      ];
+                      const choice = window.prompt(
+                        `📱 Choose a message template for ${p.client}:\n\n1 — Send Proposal\n2 — Follow Up\n3 — Confirm Deposit\n\nType 1, 2 or 3:`
+                      );
+                      if (!choice) return;
+                      const tmpl = templates[Number(choice) - 1];
+                      if (!tmpl) return;
+                      navigator.clipboard.writeText(tmpl.msg).then(() => {
+                        alert(`✅ "${tmpl.label}" message copied to clipboard!\n\nPaste it into WhatsApp, SMS, or email to send to ${p.client}.`);
+                      }).catch(() => {
+                        window.prompt("Copy this message:", tmpl.msg);
+                      });
+                    }}
+                  >
+                    💬 Message
+                  </button>
+                  <button
                     style={{ ...S.btn("ghost"), fontSize: 11, padding: "4px 9px", borderColor: T.success, color: T.success }}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -6544,6 +6591,35 @@ function ProposalsPage({
                       onClick={(e) => { e.stopPropagation(); convertToEvent(i); }}
                     >
                       🎉 Convert to Event
+                    </button>
+                  )}
+                  {["Draft","Sent","Approved"].includes(p.status) && (
+                    <button
+                      style={{ ...S.btn("ghost"), fontSize: 11, padding: "4px 9px", borderColor: T.warning, color: T.warning }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDraft({
+                          client: p.client || "",
+                          clientPhone: p.clientPhone || "",
+                          eventType: p.eventType || "",
+                          plannedDate: p.plannedDate || "",
+                          guests: p.guests || "",
+                          location: p.location || "",
+                          discount: p.discount || 0,
+                          notes: p.notes || "",
+                          paymentTerms: p.paymentTerms || "",
+                          lines: p.lines ? [...p.lines] : [],
+                          inventoryLinks: p.inventoryLinks ? [...p.inventoryLinks] : [],
+                          eventId: p.eventId || null,
+                        });
+                        setEditingPropIdx(i);
+                        setBuilding(true);
+                        setSel(null);
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
+                      title="Edit this proposal"
+                    >
+                      ✏️ Edit
                     </button>
                   )}
                   <button
@@ -7375,20 +7451,25 @@ function RestaurantPage({
             </div>
           </div>
           {lowStock.length > 0 && (
-            <div
-              style={{
-                background: `${T.warning}12`,
-                border: `1px solid ${T.warning}40`,
-                borderRadius: 6,
-                padding: 8,
-                marginBottom: 8,
-                fontSize: 11,
-              }}
-            >
-              <strong style={{ color: T.warning }}>⚠️ Low Stock:</strong>{" "}
-              {lowStock
-                .map((i) => `${i.name} (${i.stock} ${i.unit})`)
-                .join(" · ")}
+            <div style={{ background:`${T.danger}0D`, border:`1.5px solid ${T.danger}50`, borderRadius:8, padding:"10px 14px", marginBottom:12 }}>
+              <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:8 }}>
+                <span style={{ fontSize:16 }}>🚨</span>
+                <strong style={{ color:T.danger, fontSize:12 }}>Low Stock Alert — {lowStock.length} item{lowStock.length!==1?"s":""} need restocking</strong>
+              </div>
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))", gap:6 }}>
+                {lowStock.map(item => (
+                  <div key={item.id} style={{ background:`${T.danger}0A`, border:`1px solid ${T.danger}30`, borderRadius:6, padding:"6px 10px", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                    <div>
+                      <div style={{ fontSize:11, fontWeight:700, color:T.text }}>{item.name}</div>
+                      <div style={{ fontSize:10, color:T.textMuted }}>Reorder at: {item.reorderAt} {item.unit}</div>
+                    </div>
+                    <div style={{ textAlign:"right", flexShrink:0 }}>
+                      <div style={{ fontSize:13, fontWeight:900, color:item.stock===0?T.danger:T.warning }}>{item.stock}</div>
+                      <div style={{ fontSize:9, color:T.textMuted }}>{item.unit} left</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
           <div style={{ ...S.row, marginBottom: 9, flexWrap: "wrap", gap: 5 }}>
@@ -9471,25 +9552,25 @@ function RestaurantPage({
             </div>
           )}
           {lowStock.length > 0 && (
-            <div
-              style={{
-                background: `${T.danger}12`,
-                border: `1px solid ${T.danger}40`,
-                borderRadius: 6,
-                padding: 9,
-                marginBottom: 10,
-                fontSize: 11,
-              }}
-            >
-              <strong style={{ color: T.danger }}>⚠️ Reorder Needed:</strong>{" "}
-              {lowStock
-                .map(
-                  (i) =>
-                    `${i.name} (${Math.round(i.stock * 10) / 10} ${
-                      i.unit
-                    } — min ${i.reorderAt})`
-                )
-                .join(" · ")}
+            <div style={{ background:`${T.danger}0D`, border:`1.5px solid ${T.danger}50`, borderRadius:8, padding:"10px 14px", marginBottom:12 }}>
+              <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:8 }}>
+                <span style={{ fontSize:16 }}>🚨</span>
+                <strong style={{ color:T.danger, fontSize:12 }}>Reorder Needed — {lowStock.length} item{lowStock.length!==1?"s":""} below threshold</strong>
+              </div>
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))", gap:6 }}>
+                {lowStock.map(item => (
+                  <div key={item.id} style={{ background:`${T.danger}0A`, border:`1px solid ${item.stock===0?T.danger:T.warning}60`, borderRadius:6, padding:"6px 10px", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                    <div>
+                      <div style={{ fontSize:11, fontWeight:700, color:T.text }}>{item.name}</div>
+                      <div style={{ fontSize:10, color:T.textMuted }}>Min: {item.reorderAt} {item.unit}</div>
+                    </div>
+                    <div style={{ textAlign:"right", flexShrink:0 }}>
+                      <div style={{ fontSize:13, fontWeight:900, color:item.stock===0?T.danger:T.warning }}>{item.stock}</div>
+                      <div style={{ fontSize:9, color:T.textMuted }}>{item.unit} left</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
           <div className="tbl-wrap">
@@ -9792,24 +9873,22 @@ function InvoicesPage({ invoices, setInvoices, events, logo, biz }) {
                       </div>
                     </td>
                     <td style={S.td}>
-                      {bal > 0 && (
-                        <button
-                          style={{
-                            ...S.btn("primary"),
-                            padding: "3px 8px",
-                            fontSize: 11,
-                          }}
-                          onClick={() => {
-                            const a = prompt(
-                              `Record payment – ${inv.num}\nBalance: ${fmt(
-                                bal
-                              )}\n\nEnter amount (USD):`
-                            );
-                            if (a && !isNaN(Number(a))) recordPmt(i, a);
-                          }}
-                        >
-                          + Pmt
-                        </button>
+                      {bal > 0 ? (
+                        <div style={{ display:"flex", flexDirection:"column", gap:3 }}>
+                          <button
+                            style={{ ...S.btn("primary"), padding:"3px 8px", fontSize:10, whiteSpace:"nowrap" }}
+                            onClick={() => {
+                              const a = prompt(`Record payment – ${inv.num}\nBalance: ${fmt(bal)}\n\nEnter amount (USD):`);
+                              if (a && !isNaN(Number(a))) recordPmt(i, a);
+                            }}
+                          >+ Pmt</button>
+                          <button
+                            style={{ ...S.btn("ghost"), padding:"3px 8px", fontSize:10, color:T.success, borderColor:T.success+"50", whiteSpace:"nowrap" }}
+                            onClick={() => { if (window.confirm(`Mark ${inv.num} as fully paid?\nAmount: ${fmt(bal)}`)) recordPmt(i, String(bal)); }}
+                          >✓ Paid in Full</button>
+                        </div>
+                      ) : (
+                        <span style={{ fontSize:10, color:T.success, fontWeight:700 }}>✅ Paid</span>
                       )}
                     </td>
                   </tr>
