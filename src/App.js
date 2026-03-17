@@ -4295,11 +4295,14 @@ function CateringPage({ events, setEvents, proposals, setProposals, inventory, l
           events={events}
           setEvents={setEvents}
           catalogItems={catalogItems}
+          setCatalogItems={setCatalogItems}
           catalogCategories={catalogCategories}
           inventory={inventory}
           logo={logo}
           biz={biz}
           customers={customers}
+          invoices={invoices}
+          setInvoices={setInvoices}
           proposalPrefillLines={proposalPrefillLines}
           clearProposalPrefill={clearProposalPrefill}
         />
@@ -5250,11 +5253,14 @@ function ProposalsPage({
   events,
   setEvents,
   catalogItems,
+  setCatalogItems,
   catalogCategories,
   inventory,
   logo,
   biz,
   customers,
+  invoices,
+  setInvoices,
   proposalPrefillLines,
   clearProposalPrefill,
 }) {
@@ -5419,8 +5425,9 @@ function ProposalsPage({
     const total = propTotal(p.lines, p.discount);
     const guests = Number(p.guests) || 0;
     const pricePerHead = guests > 0 ? Math.round(total / guests) : 0;
+    const eventId = Date.now();
     const newEvent = {
-      id: Date.now(),
+      id: eventId,
       name: `${p.eventType || "Event"} – ${p.client}`,
       clientName: p.client,
       clientPhone: p.clientPhone || "",
@@ -5437,10 +5444,29 @@ function ProposalsPage({
       revenue: total,
       media: [],
       costs: { inventory: 0, labor: 0, transport: 0, overhead: 0 },
+      costLines: [],
     };
     setEvents((prev) => [...prev, newEvent]);
+
+    // Auto-generate invoice for the new event
+    const thisYear = new Date().getFullYear();
+    const inv = {
+      id: eventId + 1,
+      num: `INV-${thisYear}-${String(eventId).slice(-4)}`,
+      client: p.client,
+      clientPhone: p.clientPhone || "",
+      issued: p.plannedDate || new Date().toISOString().slice(0, 10),
+      due: p.plannedDate || new Date().toISOString().slice(0, 10),
+      total,
+      paid: 0,
+      status: "Unpaid",
+      eventId,
+      notes: `Auto-generated from proposal ${p.num}`,
+    };
+    setInvoices((prev) => [...prev, inv]);
+
     const u = [...proposals];
-    u[propIdx] = { ...p, status: "Converted to Event", eventId: newEvent.id };
+    u[propIdx] = { ...p, status: "Converted to Event", eventId };
     setProposals(u);
   };
 
@@ -6401,7 +6427,11 @@ function ProposalsPage({
                   </button>
                   <button
                     style={{ ...S.btn("ghost"), fontSize: 11, padding: "4px 9px", borderColor: T.success, color: T.success }}
-                    onClick={(e) => { e.stopPropagation(); const u = [...proposals]; u[i] = { ...p, status: "Approved" }; setProposals(u); }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!window.confirm(`Approve proposal ${p.num}?\n\nThis will automatically:\n✅ Create a new Catering Event\n✅ Generate an unpaid Invoice\n\nYou can record the deposit payment in the Customers → Invoices tab.`)) return;
+                      convertToEvent(i);
+                    }}
                   >
                     ✓ Approve
                   </button>
