@@ -6,6 +6,53 @@ const SUPA_URL  = "https://bvcphmgtpnnnmkindknr.supabase.co";
 const SUPA_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ2Y29obWd0cG5ubm1raW5ka25yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0MTQ0ODQsImV4cCI6MjA4ODk5MDQ4NH0.uotzNxHcvv83uZGkXvK09Zk1BY0D3QWr_JOqfGf__q8";
 const supabase  = createClient(SUPA_URL, SUPA_ANON);
 
+// ─── Supabase Storage helpers ─────────────────────────────────────
+const STORAGE_BUCKET = "dm-media";
+
+// Upload a File object to Supabase Storage. Returns the public URL or null on failure.
+async function uploadToStorage(file, folder = "media") {
+  try {
+    const ext  = file.name.split(".").pop() || "bin";
+    const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const { data, error } = await supabase.storage
+      .from(STORAGE_BUCKET)
+      .upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type });
+    if (error) {
+      // Bucket may not exist yet — try to create it then retry once
+      if (error.message?.includes("not found") || error.statusCode === 404 || error.error === "Bucket not found") {
+        await supabase.storage.createBucket(STORAGE_BUCKET, {
+          public: true,
+          fileSizeLimit: 104857600,
+          allowedMimeTypes: ["image/*", "video/*", "application/pdf"],
+        });
+        const retry = await supabase.storage.from(STORAGE_BUCKET).upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type });
+        if (retry.error) { console.warn("Storage upload failed after bucket creation:", retry.error); return null; }
+        const { data: urlData } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(retry.data.path);
+        return urlData?.publicUrl || null;
+      }
+      console.warn("Storage upload error:", error);
+      return null;
+    }
+    const { data: urlData } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(data.path);
+    return urlData?.publicUrl || null;
+  } catch (e) {
+    console.warn("Storage upload exception:", e);
+    return null;
+  }
+}
+
+// Delete a file from Supabase Storage by its public URL
+async function deleteFromStorage(url) {
+  try {
+    if (!url || !url.includes(STORAGE_BUCKET)) return;
+    const path = url.split(`/${STORAGE_BUCKET}/`)[1];
+    if (path) await supabase.storage.from(STORAGE_BUCKET).remove([path]);
+  } catch (e) { console.warn("Storage delete failed:", e); }
+}
+
+// Check if a src is a Storage URL (not base64)
+const isStorageUrl = (src) => src && typeof src === "string" && src.startsWith("http");
+
 // ─── MOBILE DETECTION HOOK ────────────────────────────────────────
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(
@@ -1410,6 +1457,7 @@ function PhasedMediaGallery({ media, onAdd, onDelete, onUpdate, currentPhase }) 
   const [filterPhase, setFilterPhase] = useState("All");
   const [filterCat, setFilterCat] = useState("All");
   const [isDragging, setIsDragging] = useState(false);
+  const [uploadingCount, setUploadingCount] = useState(0);
 
   // Keep uploadPhase in sync when currentPhase changes
   useEffect(() => { if (currentPhase) setUploadPhase(currentPhase); }, [currentPhase]);
@@ -1418,14 +1466,20 @@ function PhasedMediaGallery({ media, onAdd, onDelete, onUpdate, currentPhase }) 
   const suggestedCats = PHASE_MEDIA_HINTS[uploadPhase] || ["photo", "other"];
 
   const processFiles = (files) => {
-    Array.from(files).forEach((f) => {
-      const r = new FileReader();
-      r.onload = (ev) => {
-        const isPdf = f.type === "application/pdf";
-        const isVideo = f.type.startsWith("video/");
+    Array.from(files).forEach(async (f) => {
+      const isPdf   = f.type === "application/pdf";
+      const isVideo = f.type.startsWith("video/");
+
+      setUploadingCount(n => n + 1);
+      // Try Supabase Storage first (handles large files + videos)
+      const storageUrl = await uploadToStorage(f, "events");
+      setUploadingCount(n => Math.max(0, n - 1));
+
+      if (storageUrl) {
         onAdd({
           id: Date.now() + Math.random(),
-          src: ev.target.result,
+          src: storageUrl,
+          storageUrl,
           type: isPdf ? "pdf" : isVideo ? "video" : "image",
           name: f.name,
           size: f.size,
@@ -1434,10 +1488,29 @@ function PhasedMediaGallery({ media, onAdd, onDelete, onUpdate, currentPhase }) 
           caption: uploadCaption,
           uploadedAt: new Date().toLocaleDateString("en-US", { day: "2-digit", month: "short", year: "numeric" }),
         });
-      };
-      r.readAsDataURL(f);
+      } else {
+        if (isVideo) {
+          alert("⚠️ Video upload requires Cloud Storage to be enabled.\n\nGo to ⚙️ Settings → Cloud Storage to set it up (takes 2 minutes).");
+          return;
+        }
+        const r = new FileReader();
+        r.onload = (ev) => {
+          onAdd({
+            id: Date.now() + Math.random(),
+            src: ev.target.result,
+            type: isPdf ? "pdf" : "image",
+            name: f.name,
+            size: f.size,
+            phase: uploadPhase,
+            category: uploadCat,
+            caption: uploadCaption,
+            uploadedAt: new Date().toLocaleDateString("en-US", { day: "2-digit", month: "short", year: "numeric" }),
+          });
+        };
+        r.readAsDataURL(f);
+      }
+      setUploadCaption("");
     });
-    setUploadCaption("");
   };
 
   const handleFileInput = (e) => { processFiles(e.target.files); e.target.value = ""; };
@@ -1586,23 +1659,35 @@ function PhasedMediaGallery({ media, onAdd, onDelete, onUpdate, currentPhase }) 
           {/* Drop zone */}
           <div
             style={{
-              border: `2px dashed ${isDragging ? T.accent : T.border}`,
+              border: `2px dashed ${isDragging ? T.accent : uploadingCount > 0 ? T.success : T.border}`,
               borderRadius: 8, padding: "20px 16px", textAlign: "center",
-              background: isDragging ? T.accentSoft : T.card,
+              background: isDragging ? T.accentSoft : uploadingCount > 0 ? `${T.success}0A` : T.card,
               cursor: "pointer", transition: "all 0.15s",
             }}
-            onClick={() => fileRef.current.click()}
+            onClick={() => uploadingCount === 0 && fileRef.current.click()}
             onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
             onDragLeave={() => setIsDragging(false)}
             onDrop={handleDrop}
           >
-            <div style={{ fontSize: 28, marginBottom: 6 }}>{catInfo(uploadCat).icon}</div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: isDragging ? T.accent : T.text }}>
-              Drop files here or click to browse
-            </div>
-            <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>
-              Images · Videos · PDFs · Documents · Multiple files supported
-            </div>
+            {uploadingCount > 0 ? (
+              <>
+                <div style={{ fontSize: 28, marginBottom: 6 }}>⏫</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: T.success }}>
+                  Uploading {uploadingCount} file{uploadingCount > 1 ? "s" : ""} to Cloud Storage…
+                </div>
+                <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>Please wait</div>
+              </>
+            ) : (
+              <>
+                <div style={{ fontSize: 28, marginBottom: 6 }}>{catInfo(uploadCat).icon}</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: isDragging ? T.accent : T.text }}>
+                  Drop files here or click to browse
+                </div>
+                <div style={{ fontSize: 10, color: T.textMuted, marginTop: 4 }}>
+                  Images · Videos · PDFs · Documents · Multiple files supported
+                </div>
+              </>
+            )}
           </div>
           <input ref={fileRef} type="file" accept={catInfo(uploadCat).accept} multiple style={{ display: "none" }} onChange={handleFileInput} />
         </div>
@@ -1739,12 +1824,18 @@ function LogoArea({ logo, setLogo, biz, onSettings }) {
         type="file"
         accept="image/*"
         style={{ display: "none" }}
-        onChange={(e) => {
+        onChange={async (e) => {
           const f = e.target.files[0];
           if (!f) return;
-          const r = new FileReader();
-          r.onload = (ev) => setLogo({ src: ev.target.result });
-          r.readAsDataURL(f);
+          // Try Storage first, fall back to base64
+          const storageUrl = await uploadToStorage(f, "logos");
+          if (storageUrl) {
+            setLogo({ src: storageUrl });
+          } else {
+            const r = new FileReader();
+            r.onload = (ev) => setLogo({ src: ev.target.result });
+            r.readAsDataURL(f);
+          }
         }}
       />
       {onSettings && (
@@ -2637,6 +2728,130 @@ function DocModal({ doc, onClose }) {
 }
 
 // ─── SETTINGS ─────────────────────────────────────────────────────
+// ─── Cloud Storage Setup Section ─────────────────────────────────
+function StorageSetupSection() {
+  const [status, setStatus] = React.useState("checking"); // checking | ready | missing | error
+  const [showSQL, setShowSQL] = React.useState(false);
+
+  React.useEffect(() => {
+    async function check() {
+      try {
+        // Try a dummy upload of a tiny blob to probe bucket existence
+        const testBlob = new Blob(["ping"], { type: "text/plain" });
+        const testFile = new File([testBlob], "ping.txt", { type: "text/plain" });
+        const { error } = await supabase.storage
+          .from(STORAGE_BUCKET)
+          .upload(`_ping/${Date.now()}.txt`, testFile, { upsert: true });
+        if (!error) {
+          // Clean up the test file
+          supabase.storage.from(STORAGE_BUCKET).remove([`_ping/${Date.now()}.txt`]).catch(() => {});
+          setStatus("ready");
+        } else if (error.message?.includes("not found") || error.statusCode === 404 || error.error === "Bucket not found") {
+          setStatus("missing");
+        } else if (error.message?.includes("policy") || error.statusCode === 403) {
+          setStatus("policy");
+        } else {
+          setStatus("missing");
+        }
+      } catch { setStatus("error"); }
+    }
+    check();
+  }, []);
+
+  const SQL = `-- Run this in Supabase → SQL Editor → New query
+-- Step 1: Create the storage bucket
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'dm-media',
+  'dm-media',
+  true,
+  104857600,
+  array['image/jpeg','image/png','image/webp','image/gif','video/mp4','video/quicktime','video/webm','application/pdf']
+)
+on conflict (id) do nothing;
+
+-- Step 2: Allow anyone to upload, view, and delete files
+create policy "Public read" on storage.objects
+  for select using (bucket_id = 'dm-media');
+
+create policy "Public upload" on storage.objects
+  for insert with check (bucket_id = 'dm-media');
+
+create policy "Public delete" on storage.objects
+  for delete using (bucket_id = 'dm-media');`;
+
+  const statusConfig = {
+    checking: { color: T.textMuted,  icon: "⏳", label: "Checking storage status…" },
+    ready:    { color: T.success,    icon: "✅", label: "Cloud storage is active — photos and videos upload to Supabase Storage" },
+    missing:  { color: T.warning,    icon: "⚠️", label: "Storage bucket not set up yet — photos stored as base64, videos blocked" },
+    policy:   { color: T.warning,    icon: "🔒", label: "Bucket exists but upload policy is missing" },
+    error:    { color: T.textMuted,  icon: "❓", label: "Could not check storage status" },
+  };
+  const cfg = statusConfig[status] || statusConfig.error;
+
+  return (
+    <div>
+      <button
+        style={{ background:"none", border:"none", padding:0, cursor:"pointer", fontSize:10, fontWeight:700,
+          color: T.textMuted, letterSpacing:0.8, textTransform:"uppercase",
+          display:"flex", alignItems:"center", gap:5 }}
+        onClick={() => setShowSQL(s => !s)}
+      >
+        {showSQL ? "▾" : "▸"} ☁️ Cloud Storage
+      </button>
+
+      <div style={{ marginTop: 8, display:"flex", alignItems:"center", gap:8 }}>
+        <span style={{ fontSize:14 }}>{cfg.icon}</span>
+        <span style={{ fontSize:11, color: cfg.color, fontWeight: status === "ready" ? 600 : 400 }}>{cfg.label}</span>
+      </div>
+
+      {showSQL && status !== "ready" && (
+        <div style={{ marginTop: 10, background: T.surface, border:`1px solid ${T.border}`, borderRadius:8, padding:"12px 14px" }}>
+          <div style={{ fontSize:11, fontWeight:700, marginBottom:8 }}>One-time setup — takes 2 minutes</div>
+          <div style={{ fontSize:11, color: T.textMuted, lineHeight:1.7, marginBottom:10 }}>
+            1. Go to <strong>supabase.com</strong> → your project<br/>
+            2. Click <strong>SQL Editor</strong> → <strong>New query</strong><br/>
+            3. Paste the SQL below → click <strong>Run</strong><br/>
+            4. Come back here — storage status will update to ✅
+          </div>
+          <div style={{ position:"relative" }}>
+            <pre style={{ background:"#0e0e0e", color:"#e8c547", borderRadius:6, padding:"10px 12px",
+              fontSize:10, lineHeight:1.6, overflowX:"auto", margin:0, whiteSpace:"pre-wrap" }}>
+              {SQL}
+            </pre>
+            <button
+              style={{ position:"absolute", top:6, right:6, ...S.btn("ghost"), fontSize:10, padding:"2px 8px" }}
+              onClick={() => navigator.clipboard.writeText(SQL).then(() => alert("✅ SQL copied to clipboard!"))}
+            >
+              Copy
+            </button>
+          </div>
+          <div style={{ marginTop:10, fontSize:10, color:T.textDim, lineHeight:1.6 }}>
+            <strong>What this enables:</strong> Event photos and videos upload directly to Supabase Storage (up to 100 MB per file, 1 GB total free).
+            Catalog photos, meal photos, and your logo also use Storage — keeping your database lean and fast.
+            Existing photos stored as base64 continue to work without any changes.
+          </div>
+          <button
+            style={{ ...S.btn("primary"), fontSize:11, marginTop:10 }}
+            onClick={async () => {
+              setStatus("checking");
+              // Re-run the check
+              try {
+                const testBlob = new Blob(["ping"], { type: "text/plain" });
+                const testFile = new File([testBlob], "ping.txt", { type: "text/plain" });
+                const { error } = await supabase.storage.from(STORAGE_BUCKET).upload(`_ping/${Date.now()}.txt`, testFile, { upsert: true });
+                setStatus(!error ? "ready" : (error.message?.includes("not found") || error.error === "Bucket not found") ? "missing" : "policy");
+              } catch { setStatus("error"); }
+            }}
+          >
+            🔄 Re-check Status
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function BizField({ label, k, placeholder, area, draft, setDraft }) {
   return (
     <div>
@@ -2985,6 +3200,12 @@ function SettingsModal({ biz, setBiz, logo, onClose }) {
               </div>
             )}
           </div>
+
+          {/* ── CLOUD STORAGE SETUP ── */}
+          <div style={{ marginTop: 18 }}>
+            <StorageSetupSection />
+          </div>
+
         </div>
         <div
           style={{
@@ -4186,14 +4407,19 @@ function CateringPage({ events, setEvents, proposals, setProposals, invoices, se
         e.id === id ? { ...e, media: [...(e.media || []), mediaItem] } : e
       )
     );
-  const deleteMedia = (id, mediaId) =>
-    setEvents((prev) =>
-      prev.map((e) =>
+  const deleteMedia = (id, mediaId) => {
+    // Clean up from Supabase Storage if the item was stored there
+    setEvents((prev) => {
+      const evt = prev.find(e => e.id === id);
+      const item = evt?.media?.find(m => m.id === mediaId);
+      if (item?.storageUrl) deleteFromStorage(item.storageUrl);
+      return prev.map((e) =>
         e.id === id
           ? { ...e, media: (e.media || []).filter((m) => m.id !== mediaId) }
           : e
-      )
-    );
+      );
+    });
+  };
   const updateMedia = (id, mediaId, patch) =>
     setEvents((prev) =>
       prev.map((e) =>
@@ -5046,14 +5272,22 @@ function CatalogPage({ categories, setCategories, items, setItems, meals, logo, 
     ? items.filter(i => i.catId === selCat && (!search || i.name.toLowerCase().includes(search.toLowerCase())))
     : items.filter(i => !search || i.name.toLowerCase().includes(search.toLowerCase()));
 
-  const handlePhoto = (e, forItem = null) => {
+  const handlePhoto = async (e, forItem = null) => {
     const f = e.target.files[0]; if (!f) return;
-    const r = new FileReader();
-    r.onload = (ev) => {
-      if (forItem != null) setItems(prev => prev.map(it => it.id === forItem ? { ...it, photo: ev.target.result } : it));
-      else setNi(n => ({ ...n, photo: ev.target.result }));
-    };
-    r.readAsDataURL(f);
+    // Try Storage first — keeps base64 out of the database for catalog photos
+    const storageUrl = await uploadToStorage(f, "catalog");
+    if (storageUrl) {
+      if (forItem != null) setItems(prev => prev.map(it => it.id === forItem ? { ...it, photo: storageUrl } : it));
+      else setNi(n => ({ ...n, photo: storageUrl }));
+    } else {
+      // Fallback to base64
+      const r = new FileReader();
+      r.onload = (ev) => {
+        if (forItem != null) setItems(prev => prev.map(it => it.id === forItem ? { ...it, photo: ev.target.result } : it));
+        else setNi(n => ({ ...n, photo: ev.target.result }));
+      };
+      r.readAsDataURL(f);
+    }
   };
 
   const pullFromMeal = (mealId) => {
@@ -8381,13 +8615,17 @@ function RestaurantPage({
                       type="file"
                       accept="image/*"
                       style={{ display: "none" }}
-                      onChange={(e) => {
+                      onChange={async (e) => {
                         const f = e.target.files[0];
                         if (!f) return;
-                        const r = new FileReader();
-                        r.onload = (ev) =>
-                          setNm((n) => ({ ...n, photo: ev.target.result }));
-                        r.readAsDataURL(f);
+                        const storageUrl = await uploadToStorage(f, "meals");
+                        if (storageUrl) {
+                          setNm((n) => ({ ...n, photo: storageUrl }));
+                        } else {
+                          const r = new FileReader();
+                          r.onload = (ev) => setNm((n) => ({ ...n, photo: ev.target.result }));
+                          r.readAsDataURL(f);
+                        }
                       }}
                     />
                   </div>
