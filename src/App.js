@@ -4302,6 +4302,68 @@ function EventCostLedger({ evt, inventory, onUpdate }) {
   );
 }
 
+// Proper sub-component so useState hooks are legal
+function EventPaymentRecorder({ linkedInv, bal, setInvoices }) {
+  const [pmtAmt, setPmtAmt] = useState("");
+  const [pmtMethod, setPmtMethod] = useState("Cash");
+  return (
+    <div style={{ background: `${T.success}0A`, border: `1px solid ${T.success}30`, borderRadius: 7, padding: "9px 10px" }}>
+      <div style={{ fontSize: 10, fontWeight: 700, color: T.success, marginBottom: 7 }}>Record a Payment</div>
+      <div style={{ display: "flex", gap: 6, alignItems: "flex-end", flexWrap: "wrap" }}>
+        <div style={{ flex: 1, minWidth: 80 }}>
+          <label style={{ ...S.label, fontSize: 9 }}>Amount (USD)</label>
+          <input
+            type="number"
+            style={{ ...S.input, fontSize: 12 }}
+            placeholder={`e.g. ${fmt(bal)}`}
+            value={pmtAmt}
+            onChange={e => setPmtAmt(e.target.value)}
+          />
+        </div>
+        <div style={{ flex: 1, minWidth: 80 }}>
+          <label style={{ ...S.label, fontSize: 9 }}>Method</label>
+          <select style={{ ...S.select, fontSize: 12 }} value={pmtMethod} onChange={e => setPmtMethod(e.target.value)}>
+            {["Cash","Zelle","Credit Card","Bank Transfer","Check","Other"].map(m => <option key={m}>{m}</option>)}
+          </select>
+        </div>
+        <button
+          type="button"
+          style={{ ...S.btn("primary"), fontSize: 11, padding: "5px 12px", opacity: pmtAmt && Number(pmtAmt) > 0 ? 1 : 0.4, flexShrink: 0 }}
+          onClick={() => {
+            const amount = Number(pmtAmt);
+            if (!amount || amount <= 0) return;
+            setInvoices(prev => prev.map(inv => {
+              if (inv.id !== linkedInv.id) return inv;
+              const newPaid = Math.min(inv.paid + amount, inv.total);
+              return {
+                ...inv,
+                paid: newPaid,
+                status: newPaid >= inv.total ? "Paid" : newPaid > 0 ? "Partial" : "Unpaid",
+                notes: inv.notes ? `${inv.notes} | ${pmtMethod} $${amount} recorded` : `${pmtMethod} $${amount} recorded`,
+              };
+            }));
+            setPmtAmt("");
+          }}
+        >✓ Record</button>
+        {bal > 0 && (
+          <button
+            type="button"
+            title="Record full balance as paid"
+            style={{ ...S.btn("ghost"), fontSize: 10, padding: "5px 8px", flexShrink: 0 }}
+            onClick={() => {
+              setInvoices(prev => prev.map(inv => {
+                if (inv.id !== linkedInv.id) return inv;
+                return { ...inv, paid: inv.total, status: "Paid", notes: inv.notes ? `${inv.notes} | Full payment ${pmtMethod} recorded` : `Full payment ${pmtMethod} recorded` };
+              }));
+              setPmtAmt("");
+            }}
+          >Pay in Full</button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function CateringPage({ events, setEvents, proposals, setProposals, invoices, setInvoices, inventory, logo, biz, customers, setCustomers, catalogItems, catalogCategories, proposalPrefillLines, clearProposalPrefill }) {
   const [cateringSubTab, setCateringSubTab] = useState("events");
   const [sel, setSel] = useState(null);
@@ -5115,66 +5177,9 @@ function CateringPage({ events, setEvents, proposals, setProposals, invoices, se
                     <div style={{ fontSize: 9, color: stColor, fontWeight: 700, marginTop: 4 }}>{stLabel}</div>
                   </div>
                   {/* Record payment */}
-                  {!isPaid && (() => {
-                    const [pmtAmt, setPmtAmt] = React.useState("");
-                    const [pmtMethod, setPmtMethod] = React.useState("Cash");
-                    return (
-                      <div style={{ background: `${T.success}0A`, border: `1px solid ${T.success}30`, borderRadius: 7, padding: "9px 10px" }}>
-                        <div style={{ fontSize: 10, fontWeight: 700, color: T.success, marginBottom: 7 }}>Record a Payment</div>
-                        <div style={{ display: "flex", gap: 6, alignItems: "flex-end", flexWrap: "wrap" }}>
-                          <div style={{ flex: 1, minWidth: 80 }}>
-                            <label style={{ ...S.label, fontSize: 9 }}>Amount (USD)</label>
-                            <input
-                              type="number"
-                              style={{ ...S.input, fontSize: 12 }}
-                              placeholder={`e.g. ${fmt(bal)}`}
-                              value={pmtAmt}
-                              onChange={e => setPmtAmt(e.target.value)}
-                            />
-                          </div>
-                          <div style={{ flex: 1, minWidth: 80 }}>
-                            <label style={{ ...S.label, fontSize: 9 }}>Method</label>
-                            <select style={{ ...S.select, fontSize: 12 }} value={pmtMethod} onChange={e => setPmtMethod(e.target.value)}>
-                              {["Cash","Zelle","Credit Card","Bank Transfer","Check","Other"].map(m => <option key={m}>{m}</option>)}
-                            </select>
-                          </div>
-                          <button
-                            type="button"
-                            style={{ ...S.btn("primary"), fontSize: 11, padding: "5px 12px", opacity: pmtAmt && Number(pmtAmt) > 0 ? 1 : 0.4, flexShrink: 0 }}
-                            onClick={() => {
-                              const amount = Number(pmtAmt);
-                              if (!amount || amount <= 0) return;
-                              setInvoices(prev => prev.map(inv => {
-                                if (inv.id !== linkedInv.id) return inv;
-                                const newPaid = Math.min(inv.paid + amount, inv.total);
-                                return {
-                                  ...inv,
-                                  paid: newPaid,
-                                  status: newPaid >= inv.total ? "Paid" : newPaid > 0 ? "Partial" : "Unpaid",
-                                  notes: inv.notes ? `${inv.notes} | ${pmtMethod} $${amount} recorded` : `${pmtMethod} $${amount} recorded`,
-                                };
-                              }));
-                              setPmtAmt("");
-                            }}
-                          >✓ Record</button>
-                          {bal > 0 && (
-                            <button
-                              type="button"
-                              title="Record full balance as paid"
-                              style={{ ...S.btn("ghost"), fontSize: 10, padding: "5px 8px", flexShrink: 0 }}
-                              onClick={() => {
-                                setInvoices(prev => prev.map(inv => {
-                                  if (inv.id !== linkedInv.id) return inv;
-                                  return { ...inv, paid: inv.total, status: "Paid", notes: inv.notes ? `${inv.notes} | Full payment ${pmtMethod} recorded` : `Full payment ${pmtMethod} recorded` };
-                                }));
-                                setPmtAmt("");
-                              }}
-                            >Pay in Full</button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })()}
+                  {!isPaid && (
+                    <EventPaymentRecorder linkedInv={linkedInv} bal={bal} setInvoices={setInvoices} />
+                  )}
                 </div>
               );
             })()}
