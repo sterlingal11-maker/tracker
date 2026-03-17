@@ -4081,7 +4081,7 @@ function EventCostLedger({ evt, inventory, onUpdate }) {
   );
 }
 
-function CateringPage({ events, setEvents, proposals, setProposals, inventory, logo, biz, customers, setCustomers, catalogItems, catalogCategories, proposalPrefillLines, clearProposalPrefill }) {
+function CateringPage({ events, setEvents, proposals, setProposals, invoices, setInvoices, inventory, logo, biz, customers, setCustomers, catalogItems, catalogCategories, proposalPrefillLines, clearProposalPrefill }) {
   const [cateringSubTab, setCateringSubTab] = useState("events");
   const [sel, setSel] = useState(null);
   const [filter, setFilter] = useState("All");
@@ -4846,6 +4846,109 @@ function CateringPage({ events, setEvents, proposals, setProposals, inventory, l
                       </div>
                     ))
                   )}
+                </div>
+              );
+            })()}
+            <Divider />
+            {/* ── Payment Status & Recording ── */}
+            {(() => {
+              const linkedInv = (invoices || []).find(inv => inv.eventId === evt.id);
+              if (!linkedInv) {
+                return (
+                  <div style={{ marginBottom: 8 }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>💰 Payment</div>
+                    <div style={{ fontSize: 11, color: T.textDim }}>No invoice linked. Use the Invoice button below to generate one, or approve a proposal to auto-create it.</div>
+                  </div>
+                );
+              }
+              const bal = linkedInv.total - linkedInv.paid;
+              const isPaid = bal <= 0;
+              const stColor = isPaid ? T.success : linkedInv.paid > 0 ? T.warning : T.danger;
+              const stLabel = isPaid ? "Fully Paid" : linkedInv.paid > 0 ? "Partially Paid" : "Unpaid";
+              return (
+                <div style={{ marginBottom: 10 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>💰 Payment — {linkedInv.num}</div>
+                  {/* Status bar */}
+                  <div style={{ background: T.surface, borderRadius: 8, padding: "8px 10px", marginBottom: 8, border: `1px solid ${stColor}40` }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
+                      <span style={{ fontSize: 10, color: T.textMuted }}>Invoice Total</span>
+                      <span style={{ fontSize: 12, fontWeight: 700 }}>{fmt(linkedInv.total)}</span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
+                      <span style={{ fontSize: 10, color: T.textMuted }}>Paid</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: T.success }}>{fmt(linkedInv.paid)}</span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", paddingTop: 5, borderTop: `1px solid ${T.border}` }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: stColor }}>Balance Due</span>
+                      <span style={{ fontSize: 13, fontWeight: 800, color: stColor }}>{fmt(bal)}</span>
+                    </div>
+                    {/* Progress bar */}
+                    <div style={{ height: 4, borderRadius: 2, background: T.border, marginTop: 7, overflow: "hidden" }}>
+                      <div style={{ height: "100%", width: `${Math.min(100, linkedInv.total > 0 ? (linkedInv.paid / linkedInv.total) * 100 : 0)}%`, background: stColor, borderRadius: 2, transition: "width 0.3s" }} />
+                    </div>
+                    <div style={{ fontSize: 9, color: stColor, fontWeight: 700, marginTop: 4 }}>{stLabel}</div>
+                  </div>
+                  {/* Record payment */}
+                  {!isPaid && (() => {
+                    const [pmtAmt, setPmtAmt] = React.useState("");
+                    const [pmtMethod, setPmtMethod] = React.useState("Cash");
+                    return (
+                      <div style={{ background: `${T.success}0A`, border: `1px solid ${T.success}30`, borderRadius: 7, padding: "9px 10px" }}>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: T.success, marginBottom: 7 }}>Record a Payment</div>
+                        <div style={{ display: "flex", gap: 6, alignItems: "flex-end", flexWrap: "wrap" }}>
+                          <div style={{ flex: 1, minWidth: 80 }}>
+                            <label style={{ ...S.label, fontSize: 9 }}>Amount (USD)</label>
+                            <input
+                              type="number"
+                              style={{ ...S.input, fontSize: 12 }}
+                              placeholder={`e.g. ${fmt(bal)}`}
+                              value={pmtAmt}
+                              onChange={e => setPmtAmt(e.target.value)}
+                            />
+                          </div>
+                          <div style={{ flex: 1, minWidth: 80 }}>
+                            <label style={{ ...S.label, fontSize: 9 }}>Method</label>
+                            <select style={{ ...S.select, fontSize: 12 }} value={pmtMethod} onChange={e => setPmtMethod(e.target.value)}>
+                              {["Cash","Zelle","Credit Card","Bank Transfer","Check","Other"].map(m => <option key={m}>{m}</option>)}
+                            </select>
+                          </div>
+                          <button
+                            type="button"
+                            style={{ ...S.btn("primary"), fontSize: 11, padding: "5px 12px", opacity: pmtAmt && Number(pmtAmt) > 0 ? 1 : 0.4, flexShrink: 0 }}
+                            onClick={() => {
+                              const amount = Number(pmtAmt);
+                              if (!amount || amount <= 0) return;
+                              setInvoices(prev => prev.map(inv => {
+                                if (inv.id !== linkedInv.id) return inv;
+                                const newPaid = Math.min(inv.paid + amount, inv.total);
+                                return {
+                                  ...inv,
+                                  paid: newPaid,
+                                  status: newPaid >= inv.total ? "Paid" : newPaid > 0 ? "Partial" : "Unpaid",
+                                  notes: inv.notes ? `${inv.notes} | ${pmtMethod} $${amount} recorded` : `${pmtMethod} $${amount} recorded`,
+                                };
+                              }));
+                              setPmtAmt("");
+                            }}
+                          >✓ Record</button>
+                          {bal > 0 && (
+                            <button
+                              type="button"
+                              title="Record full balance as paid"
+                              style={{ ...S.btn("ghost"), fontSize: 10, padding: "5px 8px", flexShrink: 0 }}
+                              onClick={() => {
+                                setInvoices(prev => prev.map(inv => {
+                                  if (inv.id !== linkedInv.id) return inv;
+                                  return { ...inv, paid: inv.total, status: "Paid", notes: inv.notes ? `${inv.notes} | Full payment ${pmtMethod} recorded` : `Full payment ${pmtMethod} recorded` };
+                                }));
+                                setPmtAmt("");
+                              }}
+                            >Pay in Full</button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               );
             })()}
@@ -13922,6 +14025,8 @@ export default function App() {
             setEvents={setEvents}
             proposals={proposals}
             setProposals={setProposals}
+            invoices={invoices}
+            setInvoices={setInvoices}
             inventory={inventory}
             logo={logo}
             biz={biz}
