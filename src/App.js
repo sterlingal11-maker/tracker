@@ -5277,6 +5277,9 @@ function ProposalsPage({
   const [doc, setDoc] = useState(null);
   const [showInvLink, setShowInvLink] = useState(null); // proposal index
   const [showTemplates, setShowTemplates] = useState(false);
+  const [addingCatalogItem, setAddingCatalogItem] = useState(false);
+  const [newCatItem, setNewCatItem] = useState({ name:"", catId: catalogCategories[0]?.id || 1, unitType:"Tray", price:"", costPerUnit:"", description:"", photo:null });
+  const newCatItemPhotoRef = useRef();
   const openDoc = (title, html) =>
     setDoc({ title, html, onPrint: () => printDoc(title, html) });
 
@@ -5609,9 +5612,122 @@ function ProposalsPage({
             </div>
           </div>
           <Divider />
-          <div style={{ fontSize: 11, fontWeight: 600, marginBottom: 7 }}>
-            Select items from catalog:
+          {/* ── Catalog item picker header ── */}
+          <div style={{ ...S.row, marginBottom: 7, alignItems: "center" }}>
+            <div style={{ fontSize: 11, fontWeight: 600 }}>Select items from catalog:</div>
+            <button
+              type="button"
+              style={{ ...S.btn("ghost"), fontSize: 10, padding: "2px 9px", color: T.success, border: `1px solid ${T.success}50` }}
+              onClick={() => { setAddingCatalogItem(!addingCatalogItem); setNewCatItem({ name:"", catId: catalogCategories[0]?.id || 1, unitType:"Tray", price:"", costPerUnit:"", description:"", photo:null }); }}
+            >
+              {addingCatalogItem ? "✕ Cancel" : "+ New Item"}
+            </button>
           </div>
+
+          {/* ── Inline add-catalog-item form ── */}
+          {addingCatalogItem && (
+            <div style={{ background: `${T.success}0D`, border: `1px solid ${T.success}30`, borderRadius: 9, padding: "12px 14px", marginBottom: 12 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: T.success, marginBottom: 10 }}>✚ Add New Catalog Item</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
+                <div style={{ gridColumn: "span 2" }}>
+                  <label style={S.label}>Item Name</label>
+                  <input style={S.input} placeholder="e.g. Jollof Rice and Fried Rice" value={newCatItem.name}
+                    onChange={e => setNewCatItem({ ...newCatItem, name: e.target.value })} />
+                </div>
+                <div>
+                  <label style={S.label}>Category</label>
+                  <select style={S.select} value={newCatItem.catId}
+                    onChange={e => setNewCatItem({ ...newCatItem, catId: Number(e.target.value) })}>
+                    {catalogCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={S.label}>Unit Type</label>
+                  <select style={S.select} value={newCatItem.unitType}
+                    onChange={e => setNewCatItem({ ...newCatItem, unitType: e.target.value })}>
+                    {["Tray","Per head","Per gallon","Per box","Per pack","Per hour","Per table","Flat","Per unit"].map(u => <option key={u}>{u}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={S.label}>Price (USD)</label>
+                  <input type="number" style={S.input} placeholder="0.00" value={newCatItem.price}
+                    onChange={e => setNewCatItem({ ...newCatItem, price: e.target.value })} />
+                </div>
+                <div>
+                  <label style={S.label}>Cost per Unit (USD)</label>
+                  <input type="number" style={S.input} placeholder="0.00" value={newCatItem.costPerUnit}
+                    onChange={e => setNewCatItem({ ...newCatItem, costPerUnit: e.target.value })} />
+                </div>
+                <div style={{ gridColumn: "span 2" }}>
+                  <label style={S.label}>Description <span style={{ color: T.textDim, fontWeight: 400 }}>(optional — appears on proposals)</span></label>
+                  <input style={S.input} placeholder="e.g. Full tray $140 · Half tray $70. Our signature dish." value={newCatItem.description}
+                    onChange={e => setNewCatItem({ ...newCatItem, description: e.target.value })} />
+                </div>
+              </div>
+
+              {/* Photo upload */}
+              <div style={{ marginBottom: 10 }}>
+                <label style={S.label}>Photo <span style={{ color: T.textDim, fontWeight: 400 }}>(appears on proposals automatically)</span></label>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  {newCatItem.photo ? (
+                    <img src={newCatItem.photo} alt="" style={{ width: 64, height: 64, objectFit: "cover", borderRadius: 7, border: `1px solid ${T.border}` }} />
+                  ) : (
+                    <div style={{ width: 64, height: 64, borderRadius: 7, background: T.surface, border: `1px dashed ${T.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, color: T.textDim }}>📷</div>
+                  )}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                    <button type="button" style={{ ...S.btn("ghost"), fontSize: 11, padding: "3px 10px" }}
+                      onClick={() => newCatItemPhotoRef.current.click()}>
+                      {newCatItem.photo ? "Change Photo" : "Upload Photo"}
+                    </button>
+                    {newCatItem.photo && (
+                      <button type="button" style={{ background: "none", border: "none", color: T.danger, cursor: "pointer", fontSize: 11 }}
+                        onClick={() => setNewCatItem({ ...newCatItem, photo: null })}>✕ Remove</button>
+                    )}
+                  </div>
+                  <input ref={newCatItemPhotoRef} type="file" accept="image/*" style={{ display: "none" }}
+                    onChange={e => {
+                      const f = e.target.files[0]; if (!f) return;
+                      const r = new FileReader();
+                      r.onload = ev => setNewCatItem(prev => ({ ...prev, photo: ev.target.result }));
+                      r.readAsDataURL(f);
+                    }} />
+                </div>
+              </div>
+
+              {/* Save button */}
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <button
+                  type="button"
+                  style={{ ...S.btn("primary"), fontSize: 12, padding: "5px 14px", opacity: newCatItem.name.trim() && newCatItem.price ? 1 : 0.45 }}
+                  onClick={() => {
+                    if (!newCatItem.name.trim() || !newCatItem.price) return;
+                    const saved = {
+                      id: Date.now(),
+                      name: newCatItem.name.trim(),
+                      catId: newCatItem.catId,
+                      unitType: newCatItem.unitType,
+                      price: Number(newCatItem.price),
+                      costPerUnit: Number(newCatItem.costPerUnit) || 0,
+                      description: newCatItem.description.trim(),
+                      photo: newCatItem.photo || null,
+                      tags: [],
+                    };
+                    setCatalogItems(prev => [...prev, saved]);
+                    // Auto-add to current proposal draft immediately
+                    setDraft(prev => ({ ...prev, lines: [...prev.lines, { name: saved.name, qty: 1, price: saved.price, unitType: saved.unitType }] }));
+                    setPickCat(saved.catId);
+                    setAddingCatalogItem(false);
+                    setNewCatItem({ name:"", catId: catalogCategories[0]?.id || 1, unitType:"Tray", price:"", costPerUnit:"", description:"", photo:null });
+                  }}
+                >
+                  ✓ Save & Add to Proposal
+                </button>
+                <span style={{ fontSize: 11, color: T.textDim }}>Item is saved to your catalog and added to this proposal.</span>
+              </div>
+            </div>
+          )}
+
+          {/* ── Category filter buttons ── */}
           <div
             style={{
               display: "flex",
