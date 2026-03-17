@@ -9,49 +9,38 @@ const supabase  = createClient(SUPA_URL, SUPA_ANON);
 // ─── Supabase Storage helpers ─────────────────────────────────────
 const STORAGE_BUCKET = "dm-media";
 
-// Upload a File object to Supabase Storage. Returns the public URL or null on failure.
-async function uploadToStorage(file, folder = "media") {
+async function uploadToStorage(file, folder) {
   try {
     const ext  = file.name.split(".").pop() || "bin";
     const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const { data, error } = await supabase.storage
+    let { data, error } = await supabase.storage
       .from(STORAGE_BUCKET)
       .upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type });
     if (error) {
-      // Bucket may not exist yet — try to create it then retry once
       if (error.message?.includes("not found") || error.statusCode === 404 || error.error === "Bucket not found") {
         await supabase.storage.createBucket(STORAGE_BUCKET, {
-          public: true,
-          fileSizeLimit: 104857600,
-          allowedMimeTypes: ["image/*", "video/*", "application/pdf"],
+          public: true, fileSizeLimit: 104857600,
+          allowedMimeTypes: ["image/*","video/*","application/pdf"],
         });
-        const retry = await supabase.storage.from(STORAGE_BUCKET).upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type });
-        if (retry.error) { console.warn("Storage upload failed after bucket creation:", retry.error); return null; }
-        const { data: urlData } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(retry.data.path);
-        return urlData?.publicUrl || null;
+        const retry = await supabase.storage.from(STORAGE_BUCKET).upload(path, file, { cacheControl:"3600", upsert:false, contentType:file.type });
+        if (retry.error) return null;
+        const { data: u } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(retry.data.path);
+        return u?.publicUrl || null;
       }
-      console.warn("Storage upload error:", error);
       return null;
     }
-    const { data: urlData } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(data.path);
-    return urlData?.publicUrl || null;
-  } catch (e) {
-    console.warn("Storage upload exception:", e);
-    return null;
-  }
+    const { data: u } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(data.path);
+    return u?.publicUrl || null;
+  } catch { return null; }
 }
 
-// Delete a file from Supabase Storage by its public URL
 async function deleteFromStorage(url) {
   try {
     if (!url || !url.includes(STORAGE_BUCKET)) return;
     const path = url.split(`/${STORAGE_BUCKET}/`)[1];
     if (path) await supabase.storage.from(STORAGE_BUCKET).remove([path]);
-  } catch (e) { console.warn("Storage delete failed:", e); }
+  } catch {}
 }
-
-// Check if a src is a Storage URL (not base64)
-const isStorageUrl = (src) => src && typeof src === "string" && src.startsWith("http");
 
 // ─── MOBILE DETECTION HOOK ────────────────────────────────────────
 function useIsMobile() {
@@ -1457,7 +1446,6 @@ function PhasedMediaGallery({ media, onAdd, onDelete, onUpdate, currentPhase }) 
   const [filterPhase, setFilterPhase] = useState("All");
   const [filterCat, setFilterCat] = useState("All");
   const [isDragging, setIsDragging] = useState(false);
-  const [uploadingCount, setUploadingCount] = useState(0);
 
   // Keep uploadPhase in sync when currentPhase changes
   useEffect(() => { if (currentPhase) setUploadPhase(currentPhase); }, [currentPhase]);
@@ -1465,48 +1453,36 @@ function PhasedMediaGallery({ media, onAdd, onDelete, onUpdate, currentPhase }) 
   const catInfo = (id) => MEDIA_CATEGORIES.find((c) => c.id === id) || MEDIA_CATEGORIES[7];
   const suggestedCats = PHASE_MEDIA_HINTS[uploadPhase] || ["photo", "other"];
 
+  const [uploadingCount, setUploadingCount] = useState(0);
+
   const processFiles = (files) => {
     Array.from(files).forEach(async (f) => {
       const isPdf   = f.type === "application/pdf";
       const isVideo = f.type.startsWith("video/");
-
       setUploadingCount(n => n + 1);
-      // Try Supabase Storage first (handles large files + videos)
       const storageUrl = await uploadToStorage(f, "events");
       setUploadingCount(n => Math.max(0, n - 1));
-
       if (storageUrl) {
         onAdd({
           id: Date.now() + Math.random(),
-          src: storageUrl,
-          storageUrl,
+          src: storageUrl, storageUrl,
           type: isPdf ? "pdf" : isVideo ? "video" : "image",
-          name: f.name,
-          size: f.size,
-          phase: uploadPhase,
-          category: uploadCat,
-          caption: uploadCaption,
+          name: f.name, size: f.size, phase: uploadPhase,
+          category: uploadCat, caption: uploadCaption,
           uploadedAt: new Date().toLocaleDateString("en-US", { day: "2-digit", month: "short", year: "numeric" }),
         });
       } else {
         if (isVideo) {
-          alert("⚠️ Video upload requires Cloud Storage to be enabled.\n\nGo to ⚙️ Settings → Cloud Storage to set it up (takes 2 minutes).");
+          alert("Video upload requires Cloud Storage.\n\nGo to Settings → Cloud Storage to set it up (2 minutes).");
           return;
         }
         const r = new FileReader();
-        r.onload = (ev) => {
-          onAdd({
-            id: Date.now() + Math.random(),
-            src: ev.target.result,
-            type: isPdf ? "pdf" : "image",
-            name: f.name,
-            size: f.size,
-            phase: uploadPhase,
-            category: uploadCat,
-            caption: uploadCaption,
-            uploadedAt: new Date().toLocaleDateString("en-US", { day: "2-digit", month: "short", year: "numeric" }),
-          });
-        };
+        r.onload = (ev) => onAdd({
+          id: Date.now() + Math.random(), src: ev.target.result,
+          type: isPdf ? "pdf" : "image", name: f.name, size: f.size,
+          phase: uploadPhase, category: uploadCat, caption: uploadCaption,
+          uploadedAt: new Date().toLocaleDateString("en-US", { day: "2-digit", month: "short", year: "numeric" }),
+        });
         r.readAsDataURL(f);
       }
       setUploadCaption("");
@@ -1659,12 +1635,12 @@ function PhasedMediaGallery({ media, onAdd, onDelete, onUpdate, currentPhase }) 
           {/* Drop zone */}
           <div
             style={{
-              border: `2px dashed ${isDragging ? T.accent : uploadingCount > 0 ? T.success : T.border}`,
+              border: `2px dashed ${uploadingCount > 0 ? T.success : isDragging ? T.accent : T.border}`,
               borderRadius: 8, padding: "20px 16px", textAlign: "center",
-              background: isDragging ? T.accentSoft : uploadingCount > 0 ? `${T.success}0A` : T.card,
-              cursor: "pointer", transition: "all 0.15s",
+              background: uploadingCount > 0 ? `${T.success}0A` : isDragging ? T.accentSoft : T.card,
+              cursor: uploadingCount > 0 ? "wait" : "pointer", transition: "all 0.15s",
             }}
-            onClick={() => uploadingCount === 0 && fileRef.current.click()}
+            onClick={() => { if (uploadingCount === 0) fileRef.current.click(); }}
             onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
             onDragLeave={() => setIsDragging(false)}
             onDrop={handleDrop}
@@ -1827,15 +1803,11 @@ function LogoArea({ logo, setLogo, biz, onSettings }) {
         onChange={async (e) => {
           const f = e.target.files[0];
           if (!f) return;
-          // Try Storage first, fall back to base64
           const storageUrl = await uploadToStorage(f, "logos");
-          if (storageUrl) {
-            setLogo({ src: storageUrl });
-          } else {
-            const r = new FileReader();
-            r.onload = (ev) => setLogo({ src: ev.target.result });
-            r.readAsDataURL(f);
-          }
+          if (storageUrl) { setLogo({ src: storageUrl }); return; }
+          const r = new FileReader();
+          r.onload = (ev) => setLogo({ src: ev.target.result });
+          r.readAsDataURL(f);
         }}
       />
       {onSettings && (
@@ -2728,22 +2700,21 @@ function DocModal({ doc, onClose }) {
 }
 
 // ─── SETTINGS ─────────────────────────────────────────────────────
-// ─── Cloud Storage Setup Section ─────────────────────────────────
 function StorageSetupSection() {
+  const [status, setStatus] = useState("idle");
   const [showSQL, setShowSQL] = useState(false);
-  const [status, setStatus] = useState("idle"); // idle | checking | ready | missing | error
 
-  const checkStorage = async () => {
+  const runCheck = async () => {
     setStatus("checking");
     try {
       const testBlob = new Blob(["ping"], { type: "text/plain" });
-      const testFile = new File([testBlob], "ping.txt", { type: "text/plain" });
-      const { error } = await supabase.storage
-        .from(STORAGE_BUCKET)
-        .upload(`_ping/${Date.now()}.txt`, testFile, { upsert: true });
+      const testFile = new File([testBlob], "_ping.txt", { type: "text/plain" });
+      const path = `_ping/${Date.now()}.txt`;
+      const { error } = await supabase.storage.from(STORAGE_BUCKET).upload(path, testFile, { upsert: true });
       if (!error) {
+        supabase.storage.from(STORAGE_BUCKET).remove([path]).catch(() => {});
         setStatus("ready");
-      } else if (error.message?.includes("not found") || error.error === "Bucket not found") {
+      } else if (error.message?.includes("not found") || error.error === "Bucket not found" || error.statusCode === 404) {
         setStatus("missing");
       } else {
         setStatus("missing");
@@ -2753,69 +2724,64 @@ function StorageSetupSection() {
 
   const SQL = `-- Paste into Supabase → SQL Editor → New query → Run
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('dm-media', 'dm-media', true, 104857600,
+values ('dm-media','dm-media',true,104857600,
   array['image/jpeg','image/png','image/webp','image/gif','video/mp4','video/quicktime','video/webm','application/pdf'])
 on conflict (id) do nothing;
 
-create policy "Public read" on storage.objects for select using (bucket_id = 'dm-media');
+create policy "Public read"   on storage.objects for select using (bucket_id = 'dm-media');
 create policy "Public upload" on storage.objects for insert with check (bucket_id = 'dm-media');
 create policy "Public delete" on storage.objects for delete using (bucket_id = 'dm-media');`;
 
-  const statusIcon = { idle:"☁️", checking:"⏳", ready:"✅", missing:"⚠️", error:"❓" }[status] || "☁️";
-  const statusLabel = {
-    idle:     "Cloud Storage — click to check status",
-    checking: "Checking…",
-    ready:    "Active — photos and videos upload to Supabase Storage",
-    missing:  "Not set up — photos use base64, videos blocked",
-    error:    "Could not reach storage",
-  }[status] || "";
-  const statusColor = { ready: T.success, missing: T.warning, error: T.textMuted, idle: T.textMuted, checking: T.textMuted }[status];
+  const cfg = {
+    idle:     { icon:"☁️",  color:T.textMuted, text:"Check if cloud storage is active" },
+    checking: { icon:"⏳",  color:T.textMuted, text:"Checking…" },
+    ready:    { icon:"✅",  color:T.success,   text:"Cloud storage active — photos & videos upload to Supabase Storage" },
+    missing:  { icon:"⚠️",  color:T.warning,   text:"Not set up — photos use base64, videos are blocked" },
+    error:    { icon:"❓",  color:T.textMuted, text:"Could not check status" },
+  }[status];
 
   return (
-    <div style={{ marginTop: 4 }}>
-      <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-        <button
-          style={{ background:"none", border:"none", padding:0, cursor:"pointer", fontSize:10, fontWeight:700,
-            color: T.textMuted, letterSpacing:0.8, textTransform:"uppercase", display:"flex", alignItems:"center", gap:5 }}
-          onClick={() => setShowSQL(s => !s)}
-        >
-          {showSQL ? "▾" : "▸"} {statusIcon} Cloud Storage
-        </button>
-        <span style={{ fontSize:10, color: statusColor }}>{statusLabel}</span>
+    <div style={{ borderTop:`1px solid ${T.border}`, paddingTop:14, marginTop:4 }}>
+      <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8 }}>
+        <span style={{ fontSize:13 }}>{cfg.icon}</span>
+        <span style={{ fontSize:11, color:cfg.color, fontWeight:status==="ready"?700:400, flex:1 }}>{cfg.text}</span>
         {status === "idle" && (
-          <button style={{ ...S.btn("ghost"), fontSize:10, padding:"1px 8px" }} onClick={checkStorage}>Check</button>
+          <button style={{ ...S.btn("ghost"), fontSize:10, padding:"2px 8px" }} onClick={runCheck}>Check Status</button>
+        )}
+        {status === "checking" && (
+          <span style={{ fontSize:10, color:T.textMuted }}>…</span>
         )}
         {(status === "missing" || status === "error") && (
-          <button style={{ ...S.btn("ghost"), fontSize:10, padding:"1px 8px" }} onClick={checkStorage}>Re-check</button>
+          <button style={{ ...S.btn("ghost"), fontSize:10, padding:"2px 8px" }} onClick={runCheck}>Re-check</button>
         )}
+        {status === "ready" && (
+          <button style={{ ...S.btn("ghost"), fontSize:10, padding:"2px 8px" }} onClick={runCheck}>Re-check</button>
+        )}
+        <button
+          style={{ ...S.btn("ghost"), fontSize:10, padding:"2px 8px" }}
+          onClick={() => setShowSQL(s => !s)}
+        >{showSQL ? "Hide SQL" : "Setup SQL"}</button>
       </div>
-
       {showSQL && (
-        <div style={{ marginTop: 10, background: T.surface, border:`1px solid ${T.border}`, borderRadius:8, padding:"12px 14px" }}>
-          <div style={{ fontSize:11, fontWeight:700, marginBottom:8 }}>One-time setup — 2 minutes</div>
-          <div style={{ fontSize:11, color: T.textMuted, lineHeight:1.7, marginBottom:10 }}>
-            1. Go to <strong>supabase.com</strong> → your project → <strong>SQL Editor</strong><br/>
-            2. Click <strong>New query</strong>, paste the SQL below, click <strong>Run</strong><br/>
-            3. Come back and click Re-check — status will show ✅
-          </div>
+        <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:8, padding:"10px 12px" }}>
+          <div style={{ fontSize:11, fontWeight:700, marginBottom:6 }}>Run this once in Supabase → SQL Editor</div>
           <div style={{ position:"relative" }}>
             <pre style={{ background:"#0e0e0e", color:"#e8c547", borderRadius:6, padding:"10px 12px",
-              fontSize:9, lineHeight:1.6, overflowX:"auto", margin:0, whiteSpace:"pre-wrap" }}>{SQL}</pre>
+              fontSize:10, lineHeight:1.6, margin:0, whiteSpace:"pre-wrap", overflowX:"auto" }}>{SQL}</pre>
             <button
               style={{ position:"absolute", top:6, right:6, ...S.btn("ghost"), fontSize:10, padding:"2px 8px" }}
-              onClick={() => { try { navigator.clipboard.writeText(SQL).then(() => alert("✅ SQL copied!")); } catch(e) { prompt("Copy this:", SQL); } }}
+              onClick={() => { navigator.clipboard.writeText(SQL).then(() => alert("✅ SQL copied!")); }}
             >Copy</button>
           </div>
-          <div style={{ marginTop:8, fontSize:10, color:T.textDim }}>
-            Enables: event videos (up to 100 MB each), catalog/meal photos stored as URLs not base64.
-            All existing base64 photos continue to work unchanged.
+          <div style={{ fontSize:10, color:T.textDim, marginTop:8, lineHeight:1.6 }}>
+            After running: click Re-check to confirm. Enables videos up to 100 MB and keeps your database lean.
+            All existing base64 photos continue to work without changes.
           </div>
         </div>
       )}
     </div>
   );
 }
-
 
 function BizField({ label, k, placeholder, area, draft, setDraft }) {
   return (
@@ -3165,12 +3131,9 @@ function SettingsModal({ biz, setBiz, logo, onClose }) {
               </div>
             )}
           </div>
-
-          {/* ── CLOUD STORAGE SETUP ── */}
-          <div style={{ marginTop: 18 }}>
+          <div style={{ padding:"0 18px 14px" }}>
             <StorageSetupSection />
           </div>
-
         </div>
         <div
           style={{
@@ -4267,59 +4230,41 @@ function EventCostLedger({ evt, inventory, onUpdate }) {
   );
 }
 
-// Proper sub-component so useState hooks are legal
 function EventPaymentRecorder({ linkedInv, bal, setInvoices }) {
   const [pmtAmt, setPmtAmt] = useState("");
   const [pmtMethod, setPmtMethod] = useState("Cash");
   return (
-    <div style={{ background: `${T.success}0A`, border: `1px solid ${T.success}30`, borderRadius: 7, padding: "9px 10px" }}>
-      <div style={{ fontSize: 10, fontWeight: 700, color: T.success, marginBottom: 7 }}>Record a Payment</div>
-      <div style={{ display: "flex", gap: 6, alignItems: "flex-end", flexWrap: "wrap" }}>
-        <div style={{ flex: 1, minWidth: 80 }}>
-          <label style={{ ...S.label, fontSize: 9 }}>Amount (USD)</label>
-          <input
-            type="number"
-            style={{ ...S.input, fontSize: 12 }}
-            placeholder={`e.g. ${fmt(bal)}`}
-            value={pmtAmt}
-            onChange={e => setPmtAmt(e.target.value)}
-          />
+    <div style={{ background:`${T.success}0A`, border:`1px solid ${T.success}30`, borderRadius:7, padding:"9px 10px" }}>
+      <div style={{ fontSize:10, fontWeight:700, color:T.success, marginBottom:7 }}>Record a Payment</div>
+      <div style={{ display:"flex", gap:6, alignItems:"flex-end", flexWrap:"wrap" }}>
+        <div style={{ flex:1, minWidth:80 }}>
+          <label style={{ ...S.label, fontSize:9 }}>Amount (USD)</label>
+          <input type="number" style={{ ...S.input, fontSize:12 }}
+            placeholder={`e.g. ${fmt(bal)}`} value={pmtAmt}
+            onChange={e => setPmtAmt(e.target.value)} />
         </div>
-        <div style={{ flex: 1, minWidth: 80 }}>
-          <label style={{ ...S.label, fontSize: 9 }}>Method</label>
-          <select style={{ ...S.select, fontSize: 12 }} value={pmtMethod} onChange={e => setPmtMethod(e.target.value)}>
+        <div style={{ flex:1, minWidth:80 }}>
+          <label style={{ ...S.label, fontSize:9 }}>Method</label>
+          <select style={{ ...S.select, fontSize:12 }} value={pmtMethod} onChange={e => setPmtMethod(e.target.value)}>
             {["Cash","Zelle","Credit Card","Bank Transfer","Check","Other"].map(m => <option key={m}>{m}</option>)}
           </select>
         </div>
-        <button
-          type="button"
-          style={{ ...S.btn("primary"), fontSize: 11, padding: "5px 12px", opacity: pmtAmt && Number(pmtAmt) > 0 ? 1 : 0.4, flexShrink: 0 }}
+        <button type="button"
+          style={{ ...S.btn("primary"), fontSize:11, padding:"5px 12px", opacity:pmtAmt && Number(pmtAmt)>0?1:0.4, flexShrink:0 }}
           onClick={() => {
-            const amount = Number(pmtAmt);
-            if (!amount || amount <= 0) return;
-            setInvoices(prev => prev.map(inv => {
-              if (inv.id !== linkedInv.id) return inv;
+            const amount = Number(pmtAmt); if (!amount || amount <= 0) return;
+            setInvoices(prev => prev.map(inv => { if (inv.id !== linkedInv.id) return inv;
               const newPaid = Math.min(inv.paid + amount, inv.total);
-              return {
-                ...inv,
-                paid: newPaid,
-                status: newPaid >= inv.total ? "Paid" : newPaid > 0 ? "Partial" : "Unpaid",
-                notes: inv.notes ? `${inv.notes} | ${pmtMethod} $${amount} recorded` : `${pmtMethod} $${amount} recorded`,
-              };
-            }));
+              return { ...inv, paid:newPaid, status: newPaid >= inv.total ? "Paid" : newPaid > 0 ? "Partial" : "Unpaid",
+                notes: inv.notes ? `${inv.notes} | ${pmtMethod} $${amount}` : `${pmtMethod} $${amount}` }; }));
             setPmtAmt("");
           }}
         >✓ Record</button>
         {bal > 0 && (
-          <button
-            type="button"
-            title="Record full balance as paid"
-            style={{ ...S.btn("ghost"), fontSize: 10, padding: "5px 8px", flexShrink: 0 }}
+          <button type="button" style={{ ...S.btn("ghost"), fontSize:10, padding:"5px 8px", flexShrink:0 }}
             onClick={() => {
-              setInvoices(prev => prev.map(inv => {
-                if (inv.id !== linkedInv.id) return inv;
-                return { ...inv, paid: inv.total, status: "Paid", notes: inv.notes ? `${inv.notes} | Full payment ${pmtMethod} recorded` : `Full payment ${pmtMethod} recorded` };
-              }));
+              setInvoices(prev => prev.map(inv => inv.id !== linkedInv.id ? inv :
+                { ...inv, paid:inv.total, status:"Paid", notes: inv.notes ? `${inv.notes} | Full payment ${pmtMethod}` : `Full payment ${pmtMethod}` }));
               setPmtAmt("");
             }}
           >Pay in Full</button>
@@ -4435,15 +4380,12 @@ function CateringPage({ events, setEvents, proposals, setProposals, invoices, se
       )
     );
   const deleteMedia = (id, mediaId) => {
-    // Clean up from Supabase Storage if the item was stored there
     setEvents((prev) => {
       const evt = prev.find(e => e.id === id);
       const item = evt?.media?.find(m => m.id === mediaId);
       if (item?.storageUrl) deleteFromStorage(item.storageUrl);
-      return prev.map((e) =>
-        e.id === id
-          ? { ...e, media: (e.media || []).filter((m) => m.id !== mediaId) }
-          : e
+      return prev.map(e =>
+        e.id === id ? { ...e, media: (e.media || []).filter(m => m.id !== mediaId) } : e
       );
     });
   };
@@ -5244,20 +5186,18 @@ function CatalogPage({ categories, setCategories, items, setItems, meals, logo, 
 
   const handlePhoto = async (e, forItem = null) => {
     const f = e.target.files[0]; if (!f) return;
-    // Try Storage first — keeps base64 out of the database for catalog photos
     const storageUrl = await uploadToStorage(f, "catalog");
     if (storageUrl) {
       if (forItem != null) setItems(prev => prev.map(it => it.id === forItem ? { ...it, photo: storageUrl } : it));
       else setNi(n => ({ ...n, photo: storageUrl }));
-    } else {
-      // Fallback to base64
-      const r = new FileReader();
-      r.onload = (ev) => {
-        if (forItem != null) setItems(prev => prev.map(it => it.id === forItem ? { ...it, photo: ev.target.result } : it));
-        else setNi(n => ({ ...n, photo: ev.target.result }));
-      };
-      r.readAsDataURL(f);
+      return;
     }
+    const r = new FileReader();
+    r.onload = (ev) => {
+      if (forItem != null) setItems(prev => prev.map(it => it.id === forItem ? { ...it, photo: ev.target.result } : it));
+      else setNi(n => ({ ...n, photo: ev.target.result }));
+    };
+    r.readAsDataURL(f);
   };
 
   const pullFromMeal = (mealId) => {
@@ -8586,16 +8526,12 @@ function RestaurantPage({
                       accept="image/*"
                       style={{ display: "none" }}
                       onChange={async (e) => {
-                        const f = e.target.files[0];
-                        if (!f) return;
+                        const f = e.target.files[0]; if (!f) return;
                         const storageUrl = await uploadToStorage(f, "meals");
-                        if (storageUrl) {
-                          setNm((n) => ({ ...n, photo: storageUrl }));
-                        } else {
-                          const r = new FileReader();
-                          r.onload = (ev) => setNm((n) => ({ ...n, photo: ev.target.result }));
-                          r.readAsDataURL(f);
-                        }
+                        if (storageUrl) { setNm(n => ({ ...n, photo: storageUrl })); return; }
+                        const r = new FileReader();
+                        r.onload = (ev) => setNm(n => ({ ...n, photo: ev.target.result }));
+                        r.readAsDataURL(f);
                       }}
                     />
                   </div>
