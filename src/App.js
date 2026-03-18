@@ -854,7 +854,7 @@ const eCOGS = (c, costLines) => {
 };
 const evtCOGS = (evt) => eCOGS(evt?.costs, evt?.costLines);
 const propTotal = (lines, disc = 0) =>
-  lines.reduce((s, l) => s + l.qty * l.price, 0) - disc;
+  (lines || []).reduce((s, l) => s + (l.qty || 0) * (l.price || 0), 0) - (disc || 0);
 const orderTotal = (s) => s.plates * s.pricePerPlate + (s.deliveryFee || 0);
 
 // Compute COGS for a restaurant sale using meal ingredient-level costing when available,
@@ -2432,7 +2432,8 @@ function buildReceiptHTML(inv, biz, logo) {
   }. Please retain for your records.</div>${footerHTML(biz)}`;
 }
 function buildProposalHTML(prop, biz, logo, catalogItems) {
-  const sub = prop.lines.reduce((s, l) => s + l.qty * l.price, 0);
+  const lines = prop.lines || [];
+  const sub = lines.reduce((s, l) => s + (l.qty||0) * (l.price||0), 0);
   const total = sub - (prop.discount || 0);
   const deposit = total * 0.5;
 
@@ -2442,7 +2443,7 @@ function buildProposalHTML(prop, biz, logo, catalogItems) {
     if (item.photo) photoMap[item.name.toLowerCase()] = item.photo;
   });
 
-  const rows = prop.lines
+  const rows = lines
     .map((l) => {
       const photo = photoMap[l.name.toLowerCase()];
       const nameCell = photo
@@ -5797,7 +5798,7 @@ function ProposalsPage({
                   <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
                     {templates.map(t => (
                       <button key={t.id} style={{ ...S.btn("primary"), fontSize: 11, padding: "5px 12px" }} onClick={() => loadTemplate(t.id)}>
-                        {t.num} · {t.eventType || "Template"} · {t.lines.length} items · {fmt(propTotal(t.lines, t.discount))}
+                        {t.num} · {t.eventType || "Template"} · {(t.lines||[]).length} items · {fmt(propTotal(t.lines, t.discount))}
                       </button>
                     ))}
                   </div>
@@ -5808,7 +5809,7 @@ function ProposalsPage({
                 <option value="">— Pick a proposal to copy its line items —</option>
                 {proposals.map(pr => (
                   <option key={pr.id} value={pr.id}>
-                    {pr.isTemplate ? "⭐ " : ""}{pr.num} · {pr.client || "No client"} · {pr.eventType || "—"} · {pr.lines.length} items · {fmt(propTotal(pr.lines, pr.discount))} · {pr.status}
+                    {pr.isTemplate ? "⭐ " : ""}{pr.num} · {pr.client || "No client"} · {pr.eventType || "—"} · {(pr.lines||[]).length} items · {fmt(propTotal(pr.lines, pr.discount))} · {pr.status}
                   </option>
                 ))}
               </select>
@@ -6349,7 +6350,7 @@ function ProposalsPage({
                   {fmt(total)}
                 </div>
                 <div style={{ fontSize: 10, color: T.textMuted }}>
-                  {p.lines.length} items
+                  {(p.lines || []).length} items
                 </div>
               </div>
             </div>
@@ -6379,7 +6380,7 @@ function ProposalsPage({
                     </tr>
                   </thead>
                   <tbody>
-                    {p.lines.map((l, j) => (
+                    {(p.lines || []).map((l, j) => (
                       <tr key={j}>
                         <td style={{ ...S.td, fontWeight: 600 }}>{l.name}</td>
                         <td style={S.td}>{l.unitType}</td>
