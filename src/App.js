@@ -5553,6 +5553,7 @@ function ProposalsPage({
     location: "",
     discount: 0,
     notes: "",
+    paymentTerms: "",
     lines: [],
     inventoryLinks: [],
     eventId: null,
@@ -5606,7 +5607,7 @@ function ProposalsPage({
     if (!src) return;
     setDraft(d => ({
       ...d,
-      lines: src.lines.map(l => ({ ...l })),
+      lines: (src.lines || []).map(l => ({ ...l })),
       discount: src.discount,
       notes: src.notes,
       inventoryLinks: src.inventoryLinks || [],
@@ -5695,7 +5696,7 @@ function ProposalsPage({
     setDraft({
       ...draft,
       inventoryLinks: has
-        ? draft.inventoryLinks.filter((id) => id !== invId)
+        ? (draft.inventoryLinks || []).filter((id) => id !== invId)
         : [...(draft.inventoryLinks || []), invId],
     });
   };
@@ -5813,9 +5814,9 @@ function ProposalsPage({
                   </option>
                 ))}
               </select>
-              {draft.lines.length > 0 && (
+              {(draft.lines || []).length > 0 && (
                 <div style={{ marginTop: 8, fontSize: 11, color: T.accent, fontWeight: 600 }}>
-                  ✓ {draft.lines.length} line items loaded — fill in client details below
+                  ✓ {(draft.lines || []).length} line items loaded — fill in client details below
                 </div>
               )}
             </div>
@@ -6118,7 +6119,7 @@ function ProposalsPage({
                 </div>
               ))}
           </div>
-          {draft.lines.length > 0 && (
+          {(draft.lines || []).length > 0 && (
             <>
               <Divider />
               <div className="tbl-wrap">
@@ -6140,7 +6141,7 @@ function ProposalsPage({
                     </tr>
                   </thead>
                   <tbody>
-                    {draft.lines.map((l, i) => (
+                    {(draft.lines || []).map((l, i) => (
                       <tr key={i}>
                         <td style={S.td}>{l.name}</td>
                         <td style={S.td}>{l.unitType}</td>
@@ -6198,7 +6199,7 @@ function ProposalsPage({
                             onClick={() =>
                               setDraft({
                                 ...draft,
-                                lines: draft.lines.filter((_, j) => j !== i),
+                                lines: (draft.lines || []).filter((_, j) => j !== i),
                               })
                             }
                           >
@@ -6274,7 +6275,7 @@ function ProposalsPage({
               <strong style={{ color: T.danger }}>
                 {fmt(
                   inventory
-                    .filter((i) => draft.inventoryLinks.includes(i.id))
+                    .filter((i) => (draft.inventoryLinks || []).includes(i.id))
                     .reduce(
                       (s, i) =>
                         s + i.costPerUnit * i.usedPerPlate * draft.guests,
@@ -14237,6 +14238,32 @@ const TABS = [
   { id: "studio", label: "🤖 AI Studio", ownerOnly: true },
 ];
 
+class ErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { error: null }; }
+  static getDerivedStateFromError(e) { return { error: e }; }
+  componentDidCatch(e, info) { console.error("ErrorBoundary caught:", e, info); }
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{ padding: 32, fontFamily: "monospace", background: "#1a0000", color: "#ff6b6b", minHeight: "100vh" }}>
+          <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 16 }}>⚠️ Page Crash — Error Details</div>
+          <div style={{ background: "#2a0000", borderRadius: 8, padding: 16, marginBottom: 16, fontSize: 13, lineHeight: 1.6 }}>
+            <strong>Error:</strong> {this.state.error.message}
+          </div>
+          <pre style={{ background: "#111", padding: 16, borderRadius: 8, fontSize: 11, overflowX: "auto", whiteSpace: "pre-wrap" }}>
+            {this.state.error.stack}
+          </pre>
+          <button
+            onClick={() => this.setState({ error: null })}
+            style={{ marginTop: 16, padding: "8px 20px", background: "#e8c547", color: "#000", border: "none", borderRadius: 6, cursor: "pointer", fontWeight: 700 }}
+          >Try Again</button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function App() {
   const [authed, setAuthed] = useState(() => !!loadSession());
   const [role, setRole] = useState(() => loadSession()?.role || "owner");
@@ -14731,6 +14758,7 @@ export default function App() {
             meals={meals}
           />
         )}
+        <ErrorBoundary key={tab}>
         {tab === "catering" && (
           <CateringPage
             events={events}
@@ -14820,6 +14848,7 @@ export default function App() {
             logo={logo}
           />
         )}
+        </ErrorBoundary>
       </div>
 
       {/* ── MOBILE BOTTOM NAV ── */}
