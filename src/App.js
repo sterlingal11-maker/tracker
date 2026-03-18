@@ -6891,7 +6891,7 @@ function BatchesTab({ batches, setBatches, meals, setMeals, inventory, setInvent
       if (nb.deductInventory && selectedMeal?.ingredientLinks?.length) {
         setInventory((prev) =>
           prev.map((item) => {
-            const link = selectedMeal.ingredientLinks.find((l) => l.inventoryId === item.id);
+            const link = (selectedMeal.ingredientLinks || []).find((l) => l.inventoryId === item.id);
             if (!link) return item;
             return { ...item, stock: Math.max(0, item.stock - link.qty * portions) };
           })
@@ -8672,7 +8672,7 @@ function RestaurantPage({
                             onChange={(e) =>
                               setNm({
                                 ...nm,
-                                ingredientLinks: nm.ingredientLinks.map((l) =>
+                                ingredientLinks: (nm.ingredientLinks || []).map((l) =>
                                   l.inventoryId === inv.id
                                     ? { ...l, qty: Number(e.target.value) }
                                     : l
@@ -8812,7 +8812,7 @@ function RestaurantPage({
                       onChange={(e) =>
                         setNm({
                           ...nm,
-                          otherCosts: nm.otherCosts.map((c, i) =>
+                          otherCosts: (nm.otherCosts || []).map((c, i) =>
                             i === idx ? { ...c, label: e.target.value } : c
                           ),
                         })
@@ -8845,7 +8845,7 @@ function RestaurantPage({
                       onClick={() =>
                         setNm({
                           ...nm,
-                          otherCosts: nm.otherCosts.filter((_, i) => i !== idx),
+                          otherCosts: (nm.otherCosts || []).filter((_, i) => i !== idx),
                         })
                       }
                     >
@@ -9358,7 +9358,7 @@ function RestaurantPage({
                             >
                               🧂 Ingredients
                             </div>
-                            {meal.ingredientLinks.map((l) => {
+                            {(meal.ingredientLinks || []).map((l) => {
                               const inv = inventory.find(
                                 (i) => i.id === l.inventoryId
                               );
