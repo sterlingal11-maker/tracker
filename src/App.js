@@ -4275,7 +4275,7 @@ function EventPaymentRecorder({ linkedInv, bal, setInvoices }) {
   );
 }
 
-function CateringPage({ events, setEvents, proposals, setProposals, invoices, setInvoices, inventory, logo, biz, customers, setCustomers, catalogItems, catalogCategories, proposalPrefillLines, clearProposalPrefill }) {
+function CateringPage({ events, setEvents, proposals, setProposals, invoices, setInvoices, inventory, logo, biz, customers, setCustomers, catalogItems, setCatalogItems, catalogCategories, proposalPrefillLines, clearProposalPrefill }) {
   const [cateringSubTab, setCateringSubTab] = useState("events");
   const [sel, setSel] = useState(null);
   const [filter, setFilter] = useState("All");
@@ -14776,6 +14776,7 @@ export default function App() {
             customers={customers}
             setCustomers={setCustomers}
             catalogItems={catalogItems}
+            setCatalogItems={setCatalogItems}
             catalogCategories={catalogCategories}
             proposalPrefillLines={proposalPrefillLines}
             clearProposalPrefill={() => setProposalPrefillLines(null)}
