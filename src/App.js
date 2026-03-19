@@ -14513,6 +14513,8 @@ export default function App() {
   // ── Pre-login: pull cb_auth_v2 from Supabase so any device can log in ──
   useEffect(() => {
     if (authed) return; // already logged in, no need
+    // Timeout fallback: if Supabase takes too long, proceed anyway
+    const timeout = setTimeout(() => setAuthSynced(true), 3000);
     async function syncAuth() {
       try {
         const { data } = await supabase
@@ -14527,6 +14529,7 @@ export default function App() {
           localStorage.setItem(AUTH_KEY, JSON.stringify(merged));
         }
       } catch { /* offline or no row yet — use localStorage as-is */ }
+      clearTimeout(timeout);
       setAuthSynced(true);
     }
     syncAuth();
