@@ -5239,7 +5239,7 @@ function CatalogPage({ categories, setCategories, items, setItems, meals, logo, 
   };
 
   const startEdit = (item) => {
-    setNi({ ...item, price: String(item.price), costPerUnit: String(item.costPerUnit || ""), tags: Array.isArray(item.tags) ? item.tags.join(", ") : item.tags });
+    setNi({ ...item, price: String(item.price), costPerUnit: String(item.costPerUnit || ""), tags: Array.isArray(item.tags) ? item.tags.join(", ") : (item.tags || "") });
     setEditId(item.id);
     setAdding(true);
     // Navigate into the item's category so the form is visible
@@ -5664,7 +5664,7 @@ function ProposalsPage({
     const u = [...proposals];
     u[pi] = {
       ...u[pi],
-      lines: u[pi].lines.map((l, i) =>
+      lines: (u[pi].lines || []).map((l, i) =>
         i === li ? { ...l, [field]: Number(value) } : l
       ),
     };
@@ -6029,7 +6029,7 @@ function ProposalsPage({
                     };
                     setCatalogItems(prev => [...prev, saved]);
                     // Auto-add to current proposal draft immediately
-                    setDraft(prev => ({ ...prev, lines: [...prev.lines, { name: saved.name, qty: 1, price: saved.price, unitType: saved.unitType }] }));
+                    setDraft(prev => ({ ...prev, lines: [...(prev.lines || []), { name: saved.name, qty: 1, price: saved.price, unitType: saved.unitType }] }));
                     setPickCat(saved.catId);
                     setAddingCatalogItem(false);
                     setNewCatItem({ name:"", catId: catalogCategories[0]?.id || 1, unitType:"Tray", price:"", costPerUnit:"", description:"", photo:null });
@@ -7358,7 +7358,7 @@ function RestaurantPage({
           const mealLower = ns.meal.toLowerCase();
           const linked =
             Array.isArray(item.linkedMeals) &&
-            item.linkedMeals.some(
+            (item.linkedMeals || []).some(
               (m) =>
                 mealLower.includes(m.toLowerCase().split(" ")[0]) ||
                 m.toLowerCase().includes(mealLower.split(" ")[0])
@@ -7451,7 +7451,7 @@ function RestaurantPage({
     setNi({
       ...item,
       linkedMeals: Array.isArray(item.linkedMeals)
-        ? item.linkedMeals.join(", ")
+        ? (item.linkedMeals || []).join(", ")
         : "",
     });
     setEditInvId(item.id);
@@ -7538,7 +7538,7 @@ function RestaurantPage({
         if (m.id !== mealId) return m;
         return {
           ...m,
-          ingredientLinks: m.ingredientLinks.map((l) =>
+          ingredientLinks: (m.ingredientLinks || []).map((l) =>
             l.inventoryId === invId ? { ...l, qty: Number(qty) } : l
           ),
         };
@@ -8827,7 +8827,7 @@ function RestaurantPage({
                       onChange={(e) =>
                         setNm({
                           ...nm,
-                          otherCosts: nm.otherCosts.map((c, i) =>
+                          otherCosts: (nm.otherCosts || []).map((c, i) =>
                             i === idx ? { ...c, amount: e.target.value } : c
                           ),
                         })
@@ -10595,7 +10595,7 @@ function VendorsPage({ overheads, setOverheads }) {
                 <div>
                   <div style={{ fontSize: 17, fontWeight: 800 }}>{sel.name}</div>
                   <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>
-                    {sel.categories.join(" · ")} · Last purchase {sel.lastDate}
+                    {(sel.categories || []).join(" · ")} · Last purchase {sel.lastDate}
                   </div>
                 </div>
                 <button style={{ ...S.btn("ghost"), fontSize: 12 }} onClick={() => setSelVendor(null)}>← Back</button>
@@ -10655,7 +10655,7 @@ function VendorsPage({ overheads, setOverheads }) {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 2 }}>{v.name}</div>
                       <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 5 }}>
-                        {v.categories.slice(0, 3).join(" · ")}{v.categories.length > 3 ? ` +${v.categories.length - 3}` : ""} · {v.entries.length} purchase{v.entries.length !== 1 ? "s" : ""} · Last {v.lastDate}
+                        {(v.categories || []).slice(0, 3).join(" · ")}{(v.categories || []).length > 3 ? ` +${(v.categories || []).length - 3} more` : ""} · {v.entries.length} purchase{v.entries.length !== 1 ? "s" : ""} · Last {v.lastDate}
                       </div>
                       {/* Spend bar */}
                       <div style={{ height: 4, borderRadius: 2, background: T.border, overflow: "hidden" }}>
