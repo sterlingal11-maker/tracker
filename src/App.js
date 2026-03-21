@@ -2462,13 +2462,17 @@ function buildInvoiceHTML(inv, evt, biz, logo) {
     inv.status
   }</strong><span>${stText}</span></div></div><div class="items-section"><div class="section-heading">Line Items</div><table><thead><tr><th>Description</th><th class="tc">Qty</th><th class="tr">Unit Amount</th><th class="tr">Total (USD)</th></tr></thead><tbody>${rows}</tbody></table></div><div class="totals-block"><div class="totals-inner"><div class="total-row"><span class="label">Invoice Total</span><span class="value">${fmt(
     inv.total
-  )}</span></div><div class="total-row highlight"><span class="label">Amount Paid</span><span class="value">${fmt(
+  )}</span></div>${
+    (inv.payments && inv.payments.length > 0)
+      ? inv.payments.map((p, i) => `<div class="total-row" style="font-size:11px;color:#555;border-top:1px dashed #eee;padding-top:3px"><span class="label" style="font-style:italic">Payment ${i+1}: ${p.method} · ${p.date}</span><span class="value" style="color:#16a34a;font-weight:700">+${fmt(p.amount)}</span></div>`).join("")
+      : ""
+  }<div class="total-row highlight"><span class="label">Amount Paid</span><span class="value">${fmt(
     inv.paid
   )}</span></div><div class="total-row ${
     bal > 0 ? "danger" : "highlight"
   } grand"><span class="label">Balance Due</span><span class="value">${fmt(
     bal
-  )}</span></div></div></div><div class="payment-box"><h4>Payment Information</h4><div class="payment-row"><span>Accepted methods:</span><strong>${
+  )}</span></div></div></div></div></div><div class="payment-box"><h4>Payment Information</h4><div class="payment-row"><span>Accepted methods:</span><strong>${
     biz.paymentTerms || "Cash · Credit Card · Zelle · Bank Transfer"
   }</strong></div><div class="payment-row"><span>Payment due:</span><strong>${
     inv.due
@@ -2662,17 +2666,24 @@ function buildOrderInvoiceHTML(sale, biz, logo) {
   if (isUnpaid) {
     statusBanner = `<div class="status-banner unpaid"><div class="status-icon">❌</div><div class="status-text"><strong>Unpaid</strong><span>No payment recorded yet</span></div></div>`;
   } else if (isPartial) {
-    statusBanner = `<div class="status-banner partial"><div class="status-icon">⏳</div><div class="status-text"><strong>Partially Paid</strong><span>Payment of ${fmt(paid)} received via ${sale.method} on ${sale.date} — Balance: ${fmt(balance)}</span></div></div>`;
+    const pmtLines = (sale.payments || []).length > 0
+      ? sale.payments.map(p => `${p.date} · ${p.method}: ${fmt(p.amount)}`).join(" | ")
+      : `${sale.method} on ${sale.date}`;
+    statusBanner = `<div class="status-banner partial"><div class="status-icon">⏳</div><div class="status-text"><strong>Partially Paid</strong><span>${pmtLines} — Balance: ${fmt(balance)}</span></div></div>`;
   } else {
     statusBanner = `<div class="status-banner paid"><div class="status-icon">✅</div><div class="status-text"><strong>Paid</strong><span>Payment received via ${sale.method} on ${sale.date}</span></div></div>`;
   }
+
+  const pmtHistoryRows = (sale.payments || []).length > 0
+    ? sale.payments.map((p, i) => `<div class="total-row" style="font-size:11px;color:#555;border-top:1px dashed #eee;padding-top:3px"><span class="label" style="font-style:italic">Payment ${i+1}: ${p.method} · ${p.date}</span><span class="value" style="color:#16a34a;font-weight:700">+${fmt(p.amount)}</span></div>`).join("")
+    : "";
 
   return `${headerHTML(biz, logo, "INVOICE", invNum, sale.date, sale.date)}${partiesHTML(
     "From",
     `<div class="party-name">${biz.name}</div><div class="party-detail">${[biz.address, biz.city, biz.phone, biz.email].filter(Boolean).join("<br/>")}</div>`,
     "Bill To",
     `<div class="party-name">${clientName}</div><div class="party-detail">${clientDetail}</div>`
-  )}${statusBanner}<div class="items-section"><div class="section-heading">Order Line Items</div><table><thead><tr><th>Description</th><th class="tc">Qty</th><th class="tr">Unit Price</th><th class="tr">Total (USD)</th></tr></thead><tbody>${rows}</tbody></table></div><div class="totals-block"><div class="totals-inner"><div class="total-row"><span class="label">Subtotal</span><span class="value">${fmt(sale.plates * sale.pricePerPlate)}</span></div>${sale.deliveryFee > 0 ? `<div class="total-row"><span class="label">Shipping Fee</span><span class="value">${fmt(sale.deliveryFee)}</span></div>` : ""}<div class="total-row grand"><span class="label">ORDER TOTAL</span><span class="value">${fmt(total)}</span></div><div class="total-row highlight"><span class="label">Amount Paid</span><span class="value">${fmt(paid)}</span></div><div class="total-row ${balance > 0 ? "highlight" : ""}" style="${balance > 0 ? "color:#e53e3e;font-weight:800" : ""}"><span class="label">Balance Due</span><span class="value">${fmt(balance)}</span></div></div></div><div class="payment-box"><h4>Payment Information</h4><div class="payment-row"><span>Method:</span><strong>${sale.method}</strong></div><div class="payment-row"><span>Date:</span><strong>${sale.date}</strong></div><div class="payment-row"><span>Order type:</span><strong>${sale.type}</strong></div>${sale.notes ? `<div class="payment-row"><span>Notes:</span><strong>${sale.notes}</strong></div>` : ""}</div><div class="terms-box"><p>${balance > 0 ? `A balance of <strong>${fmt(balance)}</strong> remains outstanding. Please settle at your earliest convenience.` : "This invoice confirms a completed and paid order. Please retain for your records."}</p></div>${footerHTML(biz)}`;
+  )}${statusBanner}<div class="items-section"><div class="section-heading">Order Line Items</div><table><thead><tr><th>Description</th><th class="tc">Qty</th><th class="tr">Unit Price</th><th class="tr">Total (USD)</th></tr></thead><tbody>${rows}</tbody></table></div><div class="totals-block"><div class="totals-inner"><div class="total-row"><span class="label">Subtotal</span><span class="value">${fmt(sale.plates * sale.pricePerPlate)}</span></div>${sale.deliveryFee > 0 ? `<div class="total-row"><span class="label">Shipping Fee</span><span class="value">${fmt(sale.deliveryFee)}</span></div>` : ""}<div class="total-row grand"><span class="label">ORDER TOTAL</span><span class="value">${fmt(total)}</span></div>${pmtHistoryRows}<div class="total-row highlight"><span class="label">Amount Paid</span><span class="value">${fmt(paid)}</span></div><div class="total-row ${balance > 0 ? "highlight" : ""}" style="${balance > 0 ? "color:#e53e3e;font-weight:800" : ""}"><span class="label">Balance Due</span><span class="value">${fmt(balance)}</span></div></div></div><div class="payment-box"><h4>Payment Information</h4><div class="payment-row"><span>Method:</span><strong>${sale.method}</strong></div><div class="payment-row"><span>Date:</span><strong>${sale.date}</strong></div><div class="payment-row"><span>Order type:</span><strong>${sale.type}</strong></div>${sale.notes ? `<div class="payment-row"><span>Notes:</span><strong>${sale.notes}</strong></div>` : ""}</div><div class="terms-box"><p>${balance > 0 ? `A balance of <strong>${fmt(balance)}</strong> remains outstanding. Please settle at your earliest convenience.` : "This invoice confirms a completed and paid order. Please retain for your records."}</p></div>${footerHTML(biz)}`;
 }
 function buildCatalogHTML(items, categories, biz, logo) {
   const catMap = {};
@@ -4344,43 +4355,74 @@ function EventCostLedger({ evt, inventory, onUpdate }) {
 function EventPaymentRecorder({ linkedInv, bal, setInvoices }) {
   const [pmtAmt, setPmtAmt] = useState("");
   const [pmtMethod, setPmtMethod] = useState("Cash");
+  const [pmtDate, setPmtDate] = useState(TODAY_ISO);
+  const addPayment = (amount, method, date) => {
+    setInvoices(prev => prev.map(inv => {
+      if (inv.id !== linkedInv.id) return inv;
+      const newPaid = Math.min((inv.paid || 0) + amount, inv.total);
+      const entry = { date: date || TODAY_ISO, amount, method };
+      const payments = [...(inv.payments || []), entry];
+      return { ...inv, paid: newPaid, payments,
+        status: newPaid >= inv.total ? "Paid" : newPaid > 0 ? "Partial" : "Unpaid",
+        notes: inv.notes ? `${inv.notes} | ${method} ${fmt(amount)} on ${date || TODAY_ISO}` : `${method} ${fmt(amount)} on ${date || TODAY_ISO}` };
+    }));
+  };
+  const payments = linkedInv?.payments || [];
   return (
-    <div style={{ background:`${T.success}0A`, border:`1px solid ${T.success}30`, borderRadius:7, padding:"9px 10px" }}>
-      <div style={{ fontSize:10, fontWeight:700, color:T.success, marginBottom:7 }}>Record a Payment</div>
-      <div style={{ display:"flex", gap:6, alignItems:"flex-end", flexWrap:"wrap" }}>
-        <div style={{ flex:1, minWidth:80 }}>
-          <label style={{ ...S.label, fontSize:9 }}>Amount (USD)</label>
-          <input type="number" style={{ ...S.input, fontSize:12 }}
-            placeholder={`e.g. ${fmt(bal)}`} value={pmtAmt}
-            onChange={e => setPmtAmt(e.target.value)} />
+    <div style={{ background:`${T.success}0A`, border:`1px solid ${T.success}30`, borderRadius:7, padding:"10px 12px" }}>
+      <div style={{ fontSize:10, fontWeight:700, color:T.success, marginBottom:8 }}>💳 Record a Payment</div>
+      {/* Payment history */}
+      {payments.length > 0 && (
+        <div style={{ marginBottom:10, background:T.surface, borderRadius:5, padding:"6px 8px" }}>
+          <div style={{ fontSize:9, color:T.textMuted, fontWeight:700, marginBottom:4, textTransform:"uppercase" }}>Payment History</div>
+          {payments.map((p, i) => (
+            <div key={i} style={{ display:"flex", justifyContent:"space-between", fontSize:11, padding:"2px 0", borderBottom: i < payments.length-1 ? `1px solid ${T.border}` : "none" }}>
+              <span style={{ color:T.textMuted }}>{p.date} · {p.method}</span>
+              <span style={{ color:T.success, fontWeight:700 }}>{fmt(p.amount)}</span>
+            </div>
+          ))}
+          <div style={{ display:"flex", justifyContent:"space-between", fontSize:11, fontWeight:700, marginTop:5, paddingTop:5, borderTop:`1px solid ${T.border}` }}>
+            <span>Total Paid</span><span style={{ color:T.success }}>{fmt(linkedInv.paid || 0)}</span>
+          </div>
+          {bal > 0 && <div style={{ display:"flex", justifyContent:"space-between", fontSize:11, fontWeight:700, color:T.danger }}>
+            <span>Balance Due</span><span>{fmt(bal)}</span>
+          </div>}
         </div>
-        <div style={{ flex:1, minWidth:80 }}>
-          <label style={{ ...S.label, fontSize:9 }}>Method</label>
-          <select style={{ ...S.select, fontSize:12 }} value={pmtMethod} onChange={e => setPmtMethod(e.target.value)}>
-            {["Cash","Zelle","Credit Card","Bank Transfer","Check","Other"].map(m => <option key={m}>{m}</option>)}
-          </select>
-        </div>
-        <button type="button"
-          style={{ ...S.btn("primary"), fontSize:11, padding:"5px 12px", opacity:pmtAmt && Number(pmtAmt)>0?1:0.4, flexShrink:0 }}
-          onClick={() => {
-            const amount = Number(pmtAmt); if (!amount || amount <= 0) return;
-            setInvoices(prev => prev.map(inv => { if (inv.id !== linkedInv.id) return inv;
-              const newPaid = Math.min(inv.paid + amount, inv.total);
-              return { ...inv, paid:newPaid, status: newPaid >= inv.total ? "Paid" : newPaid > 0 ? "Partial" : "Unpaid",
-                notes: inv.notes ? `${inv.notes} | ${pmtMethod} $${amount}` : `${pmtMethod} $${amount}` }; }));
-            setPmtAmt("");
-          }}
-        >✓ Record</button>
-        {bal > 0 && (
-          <button type="button" style={{ ...S.btn("ghost"), fontSize:10, padding:"5px 8px", flexShrink:0 }}
+      )}
+      {bal > 0 && (
+        <div style={{ display:"flex", gap:6, alignItems:"flex-end", flexWrap:"wrap" }}>
+          <div style={{ flex:1, minWidth:80 }}>
+            <label style={{ ...S.label, fontSize:9 }}>Amount (USD)</label>
+            <input type="number" style={{ ...S.input, fontSize:12 }}
+              placeholder={`e.g. ${fmt(bal)}`} value={pmtAmt}
+              onChange={e => setPmtAmt(e.target.value)} />
+          </div>
+          <div style={{ flex:1, minWidth:80 }}>
+            <label style={{ ...S.label, fontSize:9 }}>Method</label>
+            <select style={{ ...S.select, fontSize:12 }} value={pmtMethod} onChange={e => setPmtMethod(e.target.value)}>
+              {["Cash","Zelle","Credit Card","Bank Transfer","Check","Other"].map(m => <option key={m}>{m}</option>)}
+            </select>
+          </div>
+          <div style={{ flex:1, minWidth:80 }}>
+            <label style={{ ...S.label, fontSize:9 }}>Date</label>
+            <input type="date" style={{ ...S.input, fontSize:12 }} value={pmtDate} onChange={e => setPmtDate(e.target.value)} />
+          </div>
+          <button type="button"
+            style={{ ...S.btn("primary"), fontSize:11, padding:"5px 12px", opacity:pmtAmt && Number(pmtAmt)>0?1:0.4, flexShrink:0 }}
             onClick={() => {
-              setInvoices(prev => prev.map(inv => inv.id !== linkedInv.id ? inv :
-                { ...inv, paid:inv.total, status:"Paid", notes: inv.notes ? `${inv.notes} | Full payment ${pmtMethod}` : `Full payment ${pmtMethod}` }));
+              const amount = Number(pmtAmt); if (!amount || amount <= 0) return;
+              addPayment(amount, pmtMethod, pmtDate);
               setPmtAmt("");
             }}
+          >✓ Record</button>
+          <button type="button" style={{ ...S.btn("ghost"), fontSize:10, padding:"5px 8px", flexShrink:0 }}
+            onClick={() => { addPayment(bal, pmtMethod, pmtDate); setPmtAmt(""); }}
           >Pay in Full</button>
-        )}
-      </div>
+        </div>
+      )}
+      {bal <= 0 && payments.length === 0 && (
+        <div style={{ fontSize:11, color:T.success, textAlign:"center", padding:"4px 0" }}>✅ Fully paid</div>
+      )}
     </div>
   );
 }
@@ -8246,7 +8288,55 @@ function RestaurantPage({
                   {s.notes && (
                     <div style={{ fontSize: 10, color: T.textDim, marginTop: 2, fontStyle: "italic" }}>📝 {s.notes}</div>
                   )}
-                  {(() => { const tot = orderTotal(s); const paid = s.partialPaid !== "" && s.partialPaid != null ? Number(s.partialPaid) : tot; const bal = tot - paid; return bal > 0 ? <div style={{ fontSize: 11, color: T.danger, fontWeight: 700, marginTop: 3 }}>⚠️ Balance: {fmt(bal)}</div> : null; })()}
+                  {(() => {
+                    const tot = orderTotal(s);
+                    const paid = s.partialPaid !== "" && s.partialPaid != null ? Number(s.partialPaid) : tot;
+                    const bal = tot - paid;
+                    if (bal <= 0) return null;
+                    return (
+                      <div style={{ marginTop: 8, background: `${T.danger}0A`, border: `1px solid ${T.danger}30`, borderRadius: 6, padding: "8px 10px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                          <span style={{ fontSize: 11, color: T.danger, fontWeight: 700 }}>⚠️ Balance Outstanding</span>
+                          <span style={{ fontSize: 12, fontWeight: 800, color: T.danger }}>{fmt(bal)}</span>
+                        </div>
+                        {(s.payments || []).length > 0 && (
+                          <div style={{ marginBottom: 6, fontSize: 10, color: T.textMuted }}>
+                            {s.payments.map((p, i) => (
+                              <div key={i} style={{ display: "flex", justifyContent: "space-between" }}>
+                                <span>{p.date} · {p.method}</span>
+                                <span style={{ color: T.success, fontWeight: 700 }}>+{fmt(p.amount)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+                          <button
+                            style={{ ...S.btn("primary"), fontSize: 10, padding: "3px 10px" }}
+                            onClick={() => {
+                              const a = prompt(`Record payment for ${s.clientName || "order"}\nBalance: ${fmt(bal)}\n\nEnter amount (USD):`);
+                              if (!a || isNaN(Number(a)) || Number(a) <= 0) return;
+                              const method = prompt("Payment method? (Cash / Zelle / Credit Card / Bank Transfer / Check)") || "Cash";
+                              const amt = Math.min(Number(a), bal);
+                              const entry = { date: TODAY_ISO, amount: amt, method };
+                              setSales(prev => prev.map(sale => {
+                                if (sale.id !== s.id) return sale;
+                                const newPaid = (paid || 0) + amt;
+                                return { ...sale, partialPaid: newPaid >= tot ? "" : newPaid, payments: [...(sale.payments || []), entry] };
+                              }));
+                            }}
+                          >+ Record Payment</button>
+                          <button
+                            style={{ ...S.btn("ghost"), fontSize: 10, padding: "3px 10px", color: T.success, borderColor: T.success + "50" }}
+                            onClick={() => {
+                              const method = prompt("Payment method? (Cash / Zelle / Credit Card / Bank Transfer / Check)") || "Cash";
+                              const entry = { date: TODAY_ISO, amount: bal, method };
+                              setSales(prev => prev.map(sale => sale.id !== s.id ? sale : { ...sale, partialPaid: "", payments: [...(sale.payments || []), entry] }));
+                            }}
+                          >✓ Pay in Full</button>
+                        </div>
+                      </div>
+                    );
+                  })()}
                   <div style={{ marginTop: 6, display: "flex", gap: 6, justifyContent: "flex-end", flexWrap: "wrap" }}>
                     <button
                       style={{ ...S.btn("ghost"), fontSize: 10, padding: "2px 7px", color: T.accent, borderColor: T.accent + "50" }}
@@ -10078,16 +10168,14 @@ function InvoicesPage({ invoices, setInvoices, events, logo, biz }) {
     setDoc({ title, html, onPrint: () => printDoc(title, html) });
   const totalAR = invoices.reduce((s, i) => s + (i.total - i.paid), 0);
   const totalPaid = invoices.reduce((s, i) => s + i.paid, 0);
-  const recordPmt = (idx, amount) => {
+  const recordPmt = (idx, amount, method) => {
     const u = [...invoices];
     const inv = { ...u[idx] };
-    inv.paid = Math.min(inv.paid + Number(amount), inv.total);
-    inv.status =
-      inv.paid >= inv.total
-        ? "Paid"
-        : inv.paid > 0
-        ? "Partially Paid"
-        : "Unpaid";
+    const amt = Number(amount);
+    inv.paid = Math.min((inv.paid || 0) + amt, inv.total);
+    inv.status = inv.paid >= inv.total ? "Paid" : inv.paid > 0 ? "Partially Paid" : "Unpaid";
+    const entry = { date: TODAY_ISO, amount: amt, method: method || "Cash" };
+    inv.payments = [...(inv.payments || []), entry];
     u[idx] = inv;
     setInvoices(u);
   };
@@ -10244,7 +10332,8 @@ function InvoicesPage({ invoices, setInvoices, events, logo, biz }) {
                             style={{ ...S.btn("primary"), padding:"3px 8px", fontSize:10, whiteSpace:"nowrap" }}
                             onClick={() => {
                               const a = prompt(`Record payment – ${inv.num}\nBalance: ${fmt(bal)}\n\nEnter amount (USD):`);
-                              if (a && !isNaN(Number(a))) recordPmt(i, a);
+                              const method = a && !isNaN(Number(a)) ? (prompt("Payment method? (Cash / Zelle / Credit Card / Bank Transfer / Check)") || "Cash") : null;
+                              if (a && !isNaN(Number(a))) recordPmt(i, a, method);
                             }}
                           >+ Pmt</button>
                           <button
