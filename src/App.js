@@ -7320,6 +7320,8 @@ function RestaurantPage({
   setSales,
   inventory,
   setInventory,
+  overheads,
+  setOverheads,
   catalogItems,
   meals,
   setMeals,
@@ -7355,20 +7357,29 @@ function RestaurantPage({
   const [ns, setNs] = useState(EMPTY);
   const [addingInv, setAddingInv] = useState(false);
   const [editInvId, setEditInvId] = useState(null);
-  const [ni, setNi] = useState({
-    name: "",
-    category: "Ingredient",
-    unit: "kg",
-    stock: "",
-    reorderAt: "",
-    costPerUnit: "",
-    linkedMeals: "",
-  });
+  const EMPTY_NI = {
+    name: "", category: "Ingredient", unit: "kg",
+    stock: "", reorderAt: "", costPerUnit: "", linkedMeals: "",
+    vendor: "", purchaseDate: TODAY_ISO, receiptPhoto: null,
+  };
+  const [ni, setNi] = useState(EMPTY_NI);
   const [invCategories, setInvCategories] = useState([
     "Ingredient", "Packaging", "Fuel", "Beverage", "Cleaning", "Other",
   ]);
   const [showNewCatInput, setShowNewCatInput] = useState(false);
   const [newCatValue, setNewCatValue] = useState("");
+  const receiptPhotoRef = useRef();
+  const handleReceiptPhoto = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    // Try Supabase Storage first, fall back to base64
+    uploadToStorage(file, "receipts").then(url => {
+      if (url) { setNi(n => ({ ...n, receiptPhoto: url })); return; }
+      const reader = new FileReader();
+      reader.onload = ev => setNi(n => ({ ...n, receiptPhoto: ev.target.result }));
+      reader.readAsDataURL(file);
+    });
+  };
   // Meals state
   const [addingMeal, setAddingMeal] = useState(false);
   const [editMealId, setEditMealId] = useState(null);
@@ -7527,38 +7538,43 @@ function RestaurantPage({
       stock: Number(ni.stock),
       reorderAt: Number(ni.reorderAt),
       costPerUnit: Number(ni.costPerUnit),
-      linkedMeals: ni.linkedMeals
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean),
+      linkedMeals: ni.linkedMeals.split(",").map((s) => s.trim()).filter(Boolean),
     };
     if (editInvId != null) {
-      setInventory((prev) =>
-        prev.map((it) =>
-          it.id === editInvId ? { ...item, id: editInvId } : it
-        )
-      );
+      setInventory((prev) => prev.map((it) => it.id === editInvId ? { ...item, id: editInvId } : it));
       setEditInvId(null);
     } else {
-      setInventory((prev) => [...prev, { ...item, id: Date.now() }]);
+      const newId = Date.now();
+      setInventory((prev) => [...prev, { ...item, id: newId }]);
+      // Auto-create overhead entry so vendor appears in Vendor Directory
+      if (ni.vendor.trim() && ni.costPerUnit && ni.stock) {
+        const totalCost = Number(ni.costPerUnit) * Number(ni.stock);
+        const ohEntry = {
+          id: newId + 1,
+          date: ni.purchaseDate || TODAY_ISO,
+          category: "Supplies & Ingredients",
+          description: `${ni.name} — ${ni.stock} ${ni.unit}`,
+          amount: totalCost,
+          frequency: "One-time",
+          vendor: ni.vendor.trim(),
+          entryType: "opex",
+          paymentStatus: "paid",
+          assetName: "",
+          receiptPhoto: ni.receiptPhoto || null,
+        };
+        setOverheads(prev => [...(prev || []), ohEntry]);
+      }
     }
     setAddingInv(false);
-    setNi({
-      name: "",
-      category: "Ingredient",
-      unit: "kg",
-      stock: "",
-      reorderAt: "",
-      costPerUnit: "",
-      linkedMeals: "",
-    });
+    setNi(EMPTY_NI);
   };
   const startEditInv = (item) => {
     setNi({
       ...item,
-      linkedMeals: Array.isArray(item.linkedMeals)
-        ? (item.linkedMeals || []).join(", ")
-        : "",
+      linkedMeals: Array.isArray(item.linkedMeals) ? (item.linkedMeals || []).join(", ") : "",
+      vendor: item.vendor || "",
+      purchaseDate: item.purchaseDate || TODAY_ISO,
+      receiptPhoto: item.receiptPhoto || null,
     });
     setEditInvId(item.id);
     setAddingInv(true);
@@ -9801,6 +9817,31 @@ function RestaurantPage({
                 </div>
 
                 <div>
+                  <label style={S.label}>Vendor / Supplier</label>
+                  <input
+                    style={S.input}
+                    value={ni.vendor}
+                    placeholder="e.g. Restaurant Depot, Costco…"
+                    onChange={(e) => setNi({ ...ni, vendor: e.target.value })}
+                  />
+                  {ni.vendor.trim() && (
+                    <div style={{ fontSize: 10, color: T.success, marginTop: 3 }}>
+                      ✓ Will be added to Vendor Directory automatically
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label style={S.label}>Purchase Date</label>
+                  <input
+                    type="date"
+                    style={S.input}
+                    value={ni.purchaseDate || TODAY_ISO}
+                    onChange={(e) => setNi({ ...ni, purchaseDate: e.target.value })}
+                  />
+                </div>
+
+                <div>
                   <label style={S.label}>Linked Meals (comma-sep.)</label>
                   <input
                     style={S.input}
@@ -9810,6 +9851,27 @@ function RestaurantPage({
                       setNi({ ...ni, linkedMeals: e.target.value })
                     }
                   />
+                </div>
+
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <label style={S.label}>📷 Receipt Photo (optional)</label>
+                  <input type="file" accept="image/*" ref={receiptPhotoRef} style={{ display: "none" }} onChange={handleReceiptPhoto} />
+                  {ni.receiptPhoto ? (
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 4 }}>
+                      <img src={ni.receiptPhoto} alt="Receipt" style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 6, border: `1px solid ${T.border}` }} />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 11, color: T.success, marginBottom: 6 }}>✓ Receipt uploaded</div>
+                        <button style={{ ...S.btn("ghost"), fontSize: 11, padding: "3px 10px" }} onClick={() => setNi({ ...ni, receiptPhoto: null })}>✕ Remove</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      style={{ ...S.btn("ghost"), fontSize: 12, marginTop: 4, borderStyle: "dashed" }}
+                      onClick={() => receiptPhotoRef.current?.click()}
+                    >
+                      📎 Attach Receipt
+                    </button>
+                  )}
                 </div>
               </div>
               <div
@@ -9822,6 +9884,7 @@ function RestaurantPage({
                     setEditInvId(null);
                     setShowNewCatInput(false);
                     setNewCatValue("");
+                    setNi(EMPTY_NI);
                   }}
                 >
                   Cancel
@@ -9866,6 +9929,7 @@ function RestaurantPage({
                     "Reorder At",
                     "Cost/Unit",
                     "Stock Value",
+                    "Vendor",
                     "Linked Meals",
                     "Status",
                     "",
@@ -9899,6 +9963,16 @@ function RestaurantPage({
 
                       <td style={{ ...S.td, color: T.accent, fontWeight: 700 }}>
                         {fmt(item.stock * item.costPerUnit)}
+                      </td>
+                      <td style={{ ...S.td, fontSize: 11 }}>
+                        {item.vendor ? (
+                          <span style={{ color: T.text }}>{item.vendor}</span>
+                        ) : (
+                          <span style={{ color: T.textMuted }}>—</span>
+                        )}
+                        {item.receiptPhoto && (
+                          <a href={item.receiptPhoto} target="_blank" rel="noopener noreferrer" title="View receipt" style={{ marginLeft: 6, fontSize: 14 }}>🧾</a>
+                        )}
                       </td>
                       <td style={{ ...S.td, fontSize: 11, color: T.textMuted }}>
                         {(item.linkedMeals || []).join(", ") || "—"}
@@ -10726,7 +10800,7 @@ function VendorsPage({ overheads, setOverheads }) {
               <div className="tbl-wrap">
                 <table style={S.table}>
                   <thead>
-                    <tr>{["Date", "Category", "Description", "Type", "Amount"].map(h => <th key={h} style={S.th}>{h}</th>)}</tr>
+                    <tr>{["Date", "Category", "Description", "Type", "Amount", "Receipt"].map(h => <th key={h} style={S.th}>{h}</th>)}</tr>
                   </thead>
                   <tbody>
                     {[...sel.entries].sort((a, b) => b.date.localeCompare(a.date)).map((o, i) => (
@@ -10736,6 +10810,13 @@ function VendorsPage({ overheads, setOverheads }) {
                         <td style={{ ...S.td, fontWeight: 600 }}>{o.description}</td>
                         <td style={S.td}><span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 4, background: o.entryType === "capex" ? T.catering + "22" : T.info + "22", color: o.entryType === "capex" ? T.catering : T.info, fontWeight: 700 }}>{(o.entryType || "opex").toUpperCase()}</span></td>
                         <td style={{ ...S.td, fontWeight: 700, color: T.danger, textAlign: "right" }}>{fmt(o.amount)}</td>
+                        <td style={{ ...S.td, textAlign: "center" }}>
+                          {o.receiptPhoto ? (
+                            <a href={o.receiptPhoto} target="_blank" rel="noopener noreferrer" title="View receipt">
+                              <img src={o.receiptPhoto} alt="Receipt" style={{ width: 36, height: 36, objectFit: "cover", borderRadius: 4, border: `1px solid ${T.border}`, verticalAlign: "middle" }} />
+                            </a>
+                          ) : <span style={{ color: T.textMuted, fontSize: 11 }}>—</span>}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -14936,6 +15017,8 @@ export default function App() {
             setSales={setSales}
             inventory={inventory}
             setInventory={setInventory}
+            overheads={overheads}
+            setOverheads={setOverheads}
             catalogItems={catalogItems}
             meals={meals}
             setMeals={setMeals}
