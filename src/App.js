@@ -2694,7 +2694,7 @@ function buildCatalogHTML(items, categories, biz, logo) {
             <div class="cat-item-price">${fmt(i.price)}</div>
             <div class="cat-item-unit">USD / ${i.unitType}</div>
           </div>
-          ${i.tags && i.tags.length ? `<div class="cat-tags">${i.tags.map(t => `<span class="cat-tag">${t}</span>`).join("")}</div>` : ""}
+          ${(() => { const tags = Array.isArray(i.tags) ? i.tags : (i.tags ? String(i.tags).split(",").map(t=>t.trim()).filter(Boolean) : []); return tags.length ? `<div class="cat-tags">${tags.map(t => `<span class="cat-tag">${t}</span>`).join("")}</div>` : ""; })()}
         </div>
       </div>`).join("");
     return `<div class="cat-section"><div class="cat-heading">${catMap[catId] || "Other"}</div><div class="cat-grid">${cards}</div></div>`;
@@ -2722,12 +2722,16 @@ function buildCatalogHTML(items, categories, biz, logo) {
   return `${extraCSS}<div class="catalog-intro">${brandImg}<h2>Services Catalog</h2><p>${[biz.tagline,biz.city,biz.phone,biz.email].filter(Boolean).join(" · ")}<br>${items.length} items · Valid as of ${TODAY_LABEL}</p></div><p style="font-size:11px;color:#777;margin-bottom:24px;line-height:1.7">Prices subject to confirmation based on guest count, location and event specifics. Contact us for custom packages.</p>${sections}${footerHTML(biz)}`;
 }
 function printDoc(title, html) {
+  const fullHtml = `<!DOCTYPE html><html><head><title>${title}</title><style>${PRINT_CSS}</style></head><body>${html}<div class="no-print" style="position:fixed;bottom:20px;right:20px;display:flex;gap:8px"><button onclick="window.print()" style="background:#1a1a1a;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">🖨️ Print / Save PDF</button><button onclick="window.close()" style="background:#f0f0f0;color:#1a1a1a;border:none;padding:10px 20px;border-radius:8px;font-family:inherit;font-size:13px;cursor:pointer">✕</button></div></body></html>`;
+  try {
+    const blob = new Blob([fullHtml], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const w = window.open(url, "_blank", "width=860,height=940");
+    if (w) { w.focus(); setTimeout(() => URL.revokeObjectURL(url), 10000); return; }
+  } catch(e) {}
+  // Fallback: write directly
   const w = window.open("", "_blank", "width=860,height=940");
-  w.document.write(
-    `<!DOCTYPE html><html><head><title>${title}</title><style>${PRINT_CSS}</style></head><body>${html}<div class="no-print" style="position:fixed;bottom:20px;right:20px;display:flex;gap:8px"><button onclick="window.print()" style="background:#1a1a1a;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">🖨️ Print / Save PDF</button><button onclick="window.close()" style="background:#f0f0f0;color:#1a1a1a;border:none;padding:10px 20px;border-radius:8px;font-family:inherit;font-size:13px;cursor:pointer">✕</button></div></body></html>`
-  );
-  w.document.close();
-  w.focus();
+  if (w) { w.document.write(fullHtml); w.document.close(); w.focus(); }
 }
 function DocModal({ doc, onClose }) {
   if (!doc) return null;
@@ -5376,7 +5380,13 @@ function CatalogPage({ categories, setCategories, items, setItems, meals, logo, 
           <div style={S.pageTitle}>📦 Catering Catalog</div>
           <div style={S.subtitle}>{items.length} items across {categories.length} categories</div>
         </div>
-        <button style={S.btn("primary")} onClick={() => openDoc("Services Catalog", buildCatalogHTML(items, categories, biz, logo))}>
+        <button style={S.btn("primary")} onClick={() => {
+          try {
+            openDoc("Services Catalog", buildCatalogHTML(items, categories, biz, logo));
+          } catch(err) {
+            alert("Could not generate catalog: " + err.message);
+          }
+        }}>
           🖨️ Print Catalog
         </button>
       </div>
