@@ -14441,30 +14441,23 @@ export default function App() {
     }, 800);
   }
 
-  // ── Demo: seed localStorage on first visit (synchronous, before state init) ──
-  // ── Demo: seed localStorage on first visit, then reload so state picks it up ──
+  // ── Demo: write DEMO_DATA directly to state AND localStorage on mount ──────
+  // This runs before Supabase loads, giving instant data with no reload needed.
   useEffect(() => {
-    if (isDemo && localStorage.getItem("demo_version") !== DEMO_VERSION) {
-      // Clear ALL old demo keys first so stale data never lingers
-      ["cb_events","cb_sales","cb_invoices","cb_proposals","cb_catalog","cb_catalog_cats",
-       "cb_inventory","cb_meals","cb_batches","cb_overheads","cb_biz","cb_customers","cb_logo"]
-        .forEach(k => localStorage.removeItem("demo_" + k));
-      localStorage.setItem("demo_cb_events",       JSON.stringify(DEMO_DATA.events));
-      localStorage.setItem("demo_cb_sales",         JSON.stringify(DEMO_DATA.sales));
-      localStorage.setItem("demo_cb_invoices",      JSON.stringify(DEMO_DATA.invoices));
-      localStorage.setItem("demo_cb_proposals",     JSON.stringify(DEMO_DATA.proposals));
-      localStorage.setItem("demo_cb_catalog",       JSON.stringify(CAT_ITEMS));
-      localStorage.setItem("demo_cb_catalog_cats",  JSON.stringify(CAT_CATS));
-      localStorage.setItem("demo_cb_inventory",     JSON.stringify(DEMO_DATA.inv));
-      localStorage.setItem("demo_cb_meals",         JSON.stringify(DEMO_DATA.meals));
-      localStorage.setItem("demo_cb_batches",       JSON.stringify(DEMO_DATA.batches));
-      localStorage.setItem("demo_cb_overheads",     JSON.stringify(DEMO_DATA.overheads));
-      localStorage.setItem("demo_cb_biz",           JSON.stringify(DEMO_DATA.biz));
-      localStorage.setItem("demo_cb_customers",     JSON.stringify(DEMO_DATA.customers));
-      localStorage.setItem("demo_version",           DEMO_VERSION);
-      window.location.reload();
-    }
-  }, []); // run once on mount
+    if (!isDemo) return;
+    setEvents(DEMO_DATA.events);
+    setSales(DEMO_DATA.sales);
+    setInvoices(DEMO_DATA.invoices);
+    setProposals(DEMO_DATA.proposals);
+    setCatalogItems(CAT_ITEMS);
+    setCatalogCategories(CAT_CATS);
+    setInventory(DEMO_DATA.inv);
+    setMeals(DEMO_DATA.meals);
+    setBatches(DEMO_DATA.batches);
+    setOverheads(DEMO_DATA.overheads);
+    setBiz(DEMO_DATA.biz);
+    setCustomers(DEMO_DATA.customers);
+  }, []); // run once on mount — intentionally omits deps to seed only once
 
   // State — initialized from localStorage for instant render
   const [events, setEvents] = useState(() => ls_get("cb_events", INIT_EVENTS));
@@ -14489,6 +14482,23 @@ export default function App() {
   // ── On mount: fetch latest data from Supabase (source of truth) ───
   useEffect(() => {
     async function loadFromSupabase() {
+      // ── DEMO: always load from DEMO_DATA, never from Supabase ──────
+      if (isDemo) {
+        setEvents(DEMO_DATA.events);
+        setSales(DEMO_DATA.sales);
+        setInvoices(DEMO_DATA.invoices);
+        setProposals(DEMO_DATA.proposals);
+        setCatalogItems(CAT_ITEMS);
+        setCatalogCategories(CAT_CATS);
+        setInventory(DEMO_DATA.inv);
+        setMeals(DEMO_DATA.meals);
+        setBatches(DEMO_DATA.batches);
+        setOverheads(DEMO_DATA.overheads);
+        setBiz(DEMO_DATA.biz);
+        setCustomers(DEMO_DATA.customers);
+        setDbLoaded(true);
+        return;
+      }
       try {
         const { data, error } = await supabase
           .from("dm_store")
