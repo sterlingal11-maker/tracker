@@ -315,6 +315,7 @@ const INIT_OVERHEADS = [];
 
 // ─── DEMO DATA (used when logged in as demo@delightfulmeals.com) ──
 // Covers Dec 2025 – Feb 2026 with realistic Charlotte NC catering business data
+const DEMO_VERSION = "v6"; // bump this whenever DEMO_DATA changes to force re-seed
 const DEMO_DATA = (() => {
   // Inventory photo URLs (free Unsplash food images)
   const PHOTOS = {
@@ -14443,7 +14444,11 @@ export default function App() {
   // ── Demo: seed localStorage on first visit (synchronous, before state init) ──
   // ── Demo: seed localStorage on first visit, then reload so state picks it up ──
   useEffect(() => {
-    if (isDemo && !localStorage.getItem("demo_cb_sales")) {
+    if (isDemo && localStorage.getItem("demo_version") !== DEMO_VERSION) {
+      // Clear ALL old demo keys first so stale data never lingers
+      ["cb_events","cb_sales","cb_invoices","cb_proposals","cb_catalog","cb_catalog_cats",
+       "cb_inventory","cb_meals","cb_batches","cb_overheads","cb_biz","cb_customers","cb_logo"]
+        .forEach(k => localStorage.removeItem("demo_" + k));
       localStorage.setItem("demo_cb_events",       JSON.stringify(DEMO_DATA.events));
       localStorage.setItem("demo_cb_sales",         JSON.stringify(DEMO_DATA.sales));
       localStorage.setItem("demo_cb_invoices",      JSON.stringify(DEMO_DATA.invoices));
@@ -14456,6 +14461,7 @@ export default function App() {
       localStorage.setItem("demo_cb_overheads",     JSON.stringify(DEMO_DATA.overheads));
       localStorage.setItem("demo_cb_biz",           JSON.stringify(DEMO_DATA.biz));
       localStorage.setItem("demo_cb_customers",     JSON.stringify(DEMO_DATA.customers));
+      localStorage.setItem("demo_version",           DEMO_VERSION);
       window.location.reload();
     }
   }, []); // run once on mount
@@ -14495,8 +14501,15 @@ export default function App() {
           if (k) map[k] = row.data;
         });
 
-        // ── Demo seed: if demo login and no cloud data yet, seed from DEMO_DATA ──
-        if (isDemo && Object.keys(map).length === 0) {
+        // ── Demo seed: force re-seed whenever DEMO_VERSION changes ──
+        const cloudVersion = map["cb_demo_version"];
+        if (isDemo && (Object.keys(map).length === 0 || cloudVersion !== DEMO_VERSION)) {
+          // Wipe all old demo keys in Supabase then write fresh data
+          const demoKeys = ["demo_cb_events","demo_cb_sales","demo_cb_invoices","demo_cb_proposals",
+            "demo_cb_catalog","demo_cb_catalog_cats","demo_cb_inventory","demo_cb_meals",
+            "demo_cb_batches","demo_cb_overheads","demo_cb_biz","demo_cb_customers"];
+          // Delete stale keys (fire and forget)
+          supabase.from("dm_store").delete().in("key", demoKeys).then(() => {}).catch(() => {});
           setEvents(DEMO_DATA.events);         ls_set("cb_events",      DEMO_DATA.events);
           setSales(DEMO_DATA.sales);           ls_set("cb_sales",       DEMO_DATA.sales);
           setInvoices(DEMO_DATA.invoices);     ls_set("cb_invoices",    DEMO_DATA.invoices);
@@ -14509,6 +14522,10 @@ export default function App() {
           setOverheads(DEMO_DATA.overheads);   ls_set("cb_overheads",   DEMO_DATA.overheads);
           setBiz(DEMO_DATA.biz);               ls_set("cb_biz",         DEMO_DATA.biz);
           setCustomers(DEMO_DATA.customers);   ls_set("cb_customers",   DEMO_DATA.customers);
+          // Write version stamp to Supabase so we know this device is seeded
+          supabase.from("dm_store").upsert({ key:"demo_cb_demo_version", data:DEMO_VERSION, updated_at:new Date().toISOString() }, { onConflict:"key" }).catch(()=>{});
+          ls_set("cb_demo_version", DEMO_VERSION);
+          localStorage.setItem("demo_version", DEMO_VERSION);
           setDbLoaded(true);
           return;
         }
@@ -14757,6 +14774,7 @@ export default function App() {
                   if (!window.confirm("Reset all demo data to sample defaults? This cannot be undone.")) return;
                   const keys = ["cb_events","cb_sales","cb_invoices","cb_proposals","cb_catalog","cb_catalog_cats","cb_inventory","cb_meals","cb_batches","cb_overheads","cb_logo","cb_biz","cb_customers"];
                   keys.forEach(k => localStorage.removeItem("demo_" + k));
+                  localStorage.removeItem("demo_version");
                   window.location.reload();
                 }}
               >🔄 Reset</button>
