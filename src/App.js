@@ -513,6 +513,26 @@ const DEMO_DATA = (() => {
     mkSale(574,"2026-02-26","Shrimp Fried Rice",206,10,26,"Zelle","Delivery","Keisha Nwosu","+1(704)555-0223","",10),
     mkSale(575,"2026-02-27","Beef Stew",204,8,24,"Cash","Delivery","Jennifer Adams","+1(704)555-0215","",8),
     mkSale(576,"2026-02-28","Jollof Rice",201,12,18,"Credit Card","Delivery","Tony Okafor","+1(704)555-0209","Month-end family order",10),
+    // March 2026
+    mkSale(577,"2026-03-01","Jerk Chicken",202,10,22,"Zelle","Delivery","Marcus Thompson","+1(704)555-0201","",8),
+    mkSale(578,"2026-03-02","Beef Stew",204,8,24,"Cash","Delivery","Amara Diallo","+1(704)555-0227","",8),
+    mkSale(579,"2026-03-03","Shrimp Fried Rice",206,6,26,"Credit Card","Delivery","Lisa Carter","+1(704)555-0204","No peas",6),
+    mkSale(580,"2026-03-05","Garden Pasta Salad",209,10,11,"Zelle","Delivery","Office Lunch","+1(704)555-0229","Thursday recurring",8),
+    mkSale(581,"2026-03-06","Jollof Rice",201,15,18,"Cash","Delivery","Tony Okafor","+1(704)555-0209","Large family order",10),
+    mkSale(582,"2026-03-07","Baked Mac & Cheese",208,8,14,"Credit Card","Delivery","Patricia White","+1(704)555-0217","",8),
+    mkSale(583,"2026-03-08","Jerk Chicken",202,12,22,"Cash","Delivery","James Wilson","+1(704)555-0203","International Women's Day dinner",10),
+    mkSale(584,"2026-03-10","Fried Tilapia",205,6,20,"Zelle","Delivery","Sandra Lee","+1(704)555-0208","",6),
+    mkSale(585,"2026-03-11","Caribbean Chicken Soup",214,8,14,"Cash","Delivery","Priya Sharma","+1(704)555-0202","Cold weather order",8),
+    mkSale(586,"2026-03-12","Garden Pasta Salad",209,10,11,"Credit Card","Delivery","Office Lunch","+1(704)555-0229","Thursday recurring",8),
+    mkSale(587,"2026-03-13","Jollof Rice",201,10,18,"Zelle","Delivery","David Kim","+1(704)555-0205","",8),
+    mkSale(588,"2026-03-14","Shrimp Fried Rice",206,8,26,"Cash","Delivery","Keisha Nwosu","+1(704)555-0223","",8),
+    mkSale(589,"2026-03-15","Beef Stew",204,10,24,"Credit Card","Delivery","Angela Moore","+1(704)555-0212","",10),
+    mkSale(590,"2026-03-17","Jerk Chicken",202,14,22,"Zelle","Delivery","Robert Brown","+1(704)555-0207","St. Patrick's week special",10),
+    mkSale(591,"2026-03-18","Meat Pies (6-pack)",213,6,16,"Cash","Delivery","Chris Johnson","+1(704)555-0213","",6),
+    mkSale(592,"2026-03-19","Coconut Rice & Peas",203,10,12,"Credit Card","Delivery","Daniel Harris","+1(704)555-0218","",8),
+    mkSale(593,"2026-03-19","Garden Pasta Salad",209,10,11,"Zelle","Delivery","Office Lunch","+1(704)555-0229","Thursday recurring",8,0,0),
+    mkSale(594,"2026-03-20","Jollof Rice",201,20,18,"Cash","Delivery","Marcus Thompson","+1(704)555-0201","Weekend family gathering",12),
+    mkSale(595,"2026-03-21","Rum Cake",210,12,8,"Credit Card","Delivery","Jennifer Adams","+1(704)555-0215","Spring celebration",8,0,0),
   ];
 
   // ── Catering Events ───────────────────────────────────────────────
@@ -577,6 +597,13 @@ const DEMO_DATA = (() => {
     mkEvt(608,"Hendricks Baby Shower","Latoya Hendricks","+1(704)555-1008","2026-02-22","Park Road Shopping Center Events Room, Charlotte NC","Baby Shower","Buffet",45,48,200,0,"Confirmed","Client requested pastel color scheme, light menu. Deposit paid.",[]),
     mkEvt(609,"Spring Corporate Luncheon","Wells Fargo Charlotte Hub","+1(704)555-1009","2026-03-15","Wells Fargo Tower, 301 S College St, Charlotte NC","Corporate","Plated",100,42,500,0,"Confirmed","Recurring quarterly contract. Menu to be confirmed 2 weeks out.",[]),
     mkEvt(610,"Davis Quinceañera","Sofia Davis","+1(704)555-1010","2026-03-28","Belk Theater Ballroom, Charlotte NC","Quinceañera","Buffet",160,60,1200,300,"Lead / Inquiry","Initial call done. Awaiting signed proposal and deposit.",[]),
+    mkEvt(611,"Johnson Corporate Lunch — March","Carolinas Healthcare Group","+1(704)555-1002","2026-03-12","Bank of America HQ, 100 N Tryon St, Charlotte NC","Corporate","Plated",80,38,300,0,"Event Completed","Monthly recurring — third booking. Very smooth execution.",[
+      {id:6111,group:"Food & Beverage",item:"Box Lunches",qty:80,unit:"box",unitCost:8,total:640},
+      {id:6112,group:"Staffing",item:"Chef (4 hrs)",qty:4,unit:"hr",unitCost:45,total:180},
+      {id:6113,group:"Logistics",item:"Delivery Fee",qty:1,unit:"flat",unitCost:75,total:75},
+    ]),
+    mkEvt(612,"Hayes Graduation Party","Tamara Hayes","+1(704)555-1011","2026-04-18","Private Residence — 3820 Providence Rd, Charlotte NC","Graduation","Buffet",80,52,0,0,"Confirmed","Confirmed with 50% deposit. Final menu signed off. Family event.",[ ]),
+    mkEvt(613,"Sunrise Church Appreciation Banquet","Sunrise Baptist Church","+1(704)555-1012","2026-04-26","Church Fellowship Hall, Charlotte NC","Church Event","Buffet",120,40,0,0,"Lead / Inquiry","Spoke with pastor. Large annual banquet. Needs full proposal.",[]),
   ];
 
   // ── Proposals ─────────────────────────────────────────────────────
@@ -697,6 +724,54 @@ const DEMO_DATA = (() => {
         {name:"Puff Puff",qty:3,price:200,unitType:"Tray"},
       ],
     },
+    {
+      id:708, num:"PROP-2026-0005", status:"Declined",
+      client:"Charlotte Tech Summit", clientPhone:"+1(704)555-1013",
+      eventType:"Corporate", plannedDate:"2026-03-20", guests:250, location:"Charlotte Convention Center",
+      discount:0, notes:"Lost to competitor — client said pricing was higher than expected. Follow up for future events.",
+      paymentTerms:"Net 30 after event. Corporate PO required.",
+      inventoryLinks:[],
+      lines:[
+        {name:"Jollof Rice and Fried Rice",qty:10,price:140,unitType:"Tray"},
+        {name:"Grilled Chicken",qty:8,price:250,unitType:"Tray"},
+        {name:"Cajun Alfredo Pasta",qty:5,price:200,unitType:"Tray"},
+        {name:"Fried Plantains",qty:6,price:100,unitType:"Tray"},
+        {name:"Puff Puff",qty:4,price:200,unitType:"Tray"},
+      ],
+    },
+    {
+      id:709, num:"PROP-2026-0006", status:"Sent",
+      client:"Tamara Hayes", clientPhone:"+1(704)555-1011",
+      eventType:"Graduation", plannedDate:"2026-04-18", guests:80, location:"Private Residence — Providence Rd",
+      discount:0, notes:"Graduation party for daughter. Sent proposal April 2 — awaiting confirmation.",
+      paymentTerms:"50% deposit to confirm date. Balance due 3 days before event. Cash or Zelle.",
+      inventoryLinks:[102,101],
+      lines:[
+        {name:"Jollof Rice and Fried Rice",qty:3,price:140,unitType:"Tray"},
+        {name:"Grilled Chicken",qty:3,price:250,unitType:"Tray"},
+        {name:"Ndole",qty:2,price:300,unitType:"Tray"},
+        {name:"Fried Plantains",qty:3,price:100,unitType:"Tray"},
+        {name:"Sautéed Spinach and Kale",qty:2,price:150,unitType:"Tray"},
+        {name:"Puff Puff",qty:2,price:200,unitType:"Tray"},
+      ],
+    },
+    {
+      id:710, num:"PROP-2026-0007", status:"Draft",
+      client:"Sunrise Baptist Church", clientPhone:"+1(704)555-1012",
+      eventType:"Church Event", plannedDate:"2026-04-26", guests:120, location:"Church Fellowship Hall",
+      discount:200, notes:"Annual church appreciation banquet. Pastor requested Cameroonian specialties. Budget conscious.",
+      paymentTerms:"Full payment 7 days before event. Church cheque or Zelle accepted.",
+      inventoryLinks:[],
+      lines:[
+        {name:"Jollof Rice and Fried Rice",qty:5,price:140,unitType:"Tray"},
+        {name:"Kati Kati",qty:3,price:350,unitType:"Tray"},
+        {name:"Ndole",qty:3,price:300,unitType:"Tray"},
+        {name:"Eru",qty:2,price:300,unitType:"Tray"},
+        {name:"Sautéed Beans",qty:3,price:100,unitType:"Tray"},
+        {name:"Fried Plantains",qty:4,price:100,unitType:"Tray"},
+        {name:"Puff Puff",qty:3,price:200,unitType:"Tray"},
+      ],
+    },
   ];
 
   // ── Overheads / Expenses / Assets ────────────────────────────────
@@ -755,6 +830,22 @@ const DEMO_DATA = (() => {
     mkOH(843,"2026-02-24","Professional Fees","Website update & menu page redesign",400,"One-time","Web Dev Freelancer","opex","paid"),
     mkOH(844,"2026-02-25","Marketing","Google Ads trial campaign",120,"One-time","Google Ads","opex","paid"),
     mkOH(845,"2026-02-28","Other","Office supplies & admin",45,"One-time","Staples","opex","paid"),
+    // March 2026
+    mkOH(846,"2026-03-01","Rent & Premises","Commercial Kitchen Rental — March",850,"Monthly","Cooks Studio Charlotte","opex","paid"),
+    mkOH(847,"2026-03-01","Utilities","Electricity & Water — March",115,"Monthly","Duke Energy","opex","paid"),
+    mkOH(848,"2026-03-01","Personnel","Part-time Cook — March wages",1400,"Monthly","Internal","opex","paid"),
+    mkOH(849,"2026-03-03","Transportation","Fuel — delivery runs week of Mar 3",65,"One-time","Shell Charlotte","opex","paid"),
+    mkOH(850,"2026-03-05","Marketing","Instagram Ads — March",150,"Monthly","Meta Ads","opex","paid"),
+    mkOH(851,"2026-03-06","Subscriptions","Square POS Monthly Fee",60,"Monthly","Square Inc","opex","paid"),
+    mkOH(852,"2026-03-07","Subscriptions","Google Workspace",18,"Monthly","Google","opex","paid"),
+    mkOH(853,"2026-03-10","Transportation","Fuel — delivery runs week of Mar 10",70,"One-time","BP Charlotte","opex","paid"),
+    mkOH(854,"2026-03-12","Transportation","Fuel — Johnson Corporate event (March)",45,"One-time","Shell Charlotte","opex","paid"),
+    mkOH(855,"2026-03-13","Marketing","Print menus for spring season",110,"One-time","FedEx Office","opex","paid"),
+    mkOH(856,"2026-03-15","Professional Fees","Accountant — Q1 2026 bookkeeping",250,"Quarterly","Johnson CPA Services","opex","paid"),
+    mkOH(857,"2026-03-17","Equipment","Serving Spoons & Tongs Set",85,"One-time","Restaurant Depot","capex","paid","Serving Utensils Set"),
+    mkOH(858,"2026-03-19","Transportation","Fuel — delivery runs week of Mar 17",60,"One-time","BP Charlotte","opex","paid"),
+    mkOH(859,"2026-03-20","Insurance","General Liability Insurance — Q2 2026",380,"Quarterly","State Farm Business","opex","unpaid"),
+    mkOH(860,"2026-03-21","Maintenance","Oven & range deep cleaning",150,"One-time","CleanPro Services","opex","paid"),
   ];
 
   // ── Batches ────────────────────────────────────────────────────────
@@ -771,6 +862,12 @@ const DEMO_DATA = (() => {
     { id:910, date:"2026-02-13", mealId:206, mealName:"Shrimp Fried Rice",   portions:30, notes:"Valentine's pop-up dinner batch", ingredientUsage:[{invId:105,qty:10},{invId:102,qty:12},{invId:109,qty:3}] },
     { id:911, date:"2026-02-13", mealId:210, mealName:"Rum Cake",            portions:25, notes:"Valentine's dessert batch", ingredientUsage:[{invId:115,qty:8},{invId:116,qty:5},{invId:108,qty:4}] },
     { id:912, date:"2026-02-21", mealId:201, mealName:"Jollof Rice",         portions:50, notes:"Late Feb weekly order buffer", ingredientUsage:[{invId:102,qty:20},{invId:113,qty:10},{invId:109,qty:5}] },
+    { id:913, date:"2026-03-05", mealId:202, mealName:"Jerk Chicken",        portions:40, notes:"Early March weekly order batch", ingredientUsage:[{invId:101,qty:24},{invId:112,qty:2},{invId:109,qty:3}] },
+    { id:914, date:"2026-03-11", mealId:201, mealName:"Jollof Rice",         portions:55, notes:"Mid-March bulk prep — high demand week", ingredientUsage:[{invId:102,qty:22},{invId:113,qty:11},{invId:109,qty:5}] },
+    { id:915, date:"2026-03-11", mealId:203, mealName:"Coconut Rice & Peas", portions:30, notes:"Weekly side dish prep", ingredientUsage:[{invId:102,qty:12},{invId:114,qty:9}] },
+    { id:916, date:"2026-03-12", mealId:208, mealName:"Baked Mac & Cheese",  portions:35, notes:"Johnson Corporate March event + orders", ingredientUsage:[{invId:107,qty:14},{invId:108,qty:9}] },
+    { id:917, date:"2026-03-18", mealId:204, mealName:"Beef Stew",           portions:30, notes:"Late March weekly batch", ingredientUsage:[{invId:103,qty:15},{invId:113,qty:8},{invId:110,qty:6}] },
+    { id:918, date:"2026-03-18", mealId:206, mealName:"Shrimp Fried Rice",   portions:25, notes:"Weekend order surge prep", ingredientUsage:[{invId:105,qty:9},{invId:102,qty:10},{invId:109,qty:2}] },
   ];
 
   // ── Customers ─────────────────────────────────────────────────────
@@ -802,6 +899,13 @@ const DEMO_DATA = (() => {
     { id:1025, name:"Uptown Events LLC",        phone:"+1(704)555-1004", email:"bookings@uptown.com",    classification:"Corporate","notes":"Event agency. NYE Gala was huge. Potential annual partnership.", createdAt:"2025-12-31" },
     { id:1026, name:"Priya & Raj Patel",        phone:"+1(704)555-1006", email:"priya.s@email.com",      classification:"VIP",     notes:"Engagement client Jan 2026. Planning wedding late 2026.", createdAt:"2026-01-25" },
     { id:1027, name:"Latoya Hendricks",         phone:"+1(704)555-1008", email:"latoya.h@email.com",     classification:"Regular", notes:"Baby shower Feb 2026. Due in April.",    createdAt:"2026-02-01" },
+    { id:1028, name:"Wells Fargo Charlotte Hub",phone:"+1(704)555-1009", email:"events@wellsfargo.com",  classification:"Corporate","notes":"Quarterly lunch contract. 2nd booking in Q1 2026.", createdAt:"2026-02-10" },
+    { id:1029, name:"Sofia Davis",              phone:"+1(704)555-1010", email:"sofia.d@email.com",      classification:"Regular", notes:"Quinceañera March 2026. 30% deposit paid.",  createdAt:"2026-03-01" },
+    { id:1030, name:"Tamara Hayes",             phone:"+1(704)555-1011", email:"t.hayes@email.com",      classification:"Regular", notes:"Graduation party April 2026. Proposal sent.", createdAt:"2026-03-05" },
+    { id:1031, name:"Sunrise Baptist Church",   phone:"+1(704)555-1012", email:"office@sunrisebaptist.com",classification:"Corporate","notes":"Annual banquet — potential recurring client.", createdAt:"2026-03-10" },
+    { id:1032, name:"Valentine's Dinners",      phone:"+1(704)555-0233", email:"",                       classification:"Regular", notes:"Valentine's Day couples order — 10 couples.",  createdAt:"2026-02-14" },
+    { id:1033, name:"Denise Thompson",          phone:"+1(704)555-1003", email:"denise.t@email.com",     classification:"VIP",     notes:"50th birthday Dec 2025. Interested in annual event.", createdAt:"2025-12-20" },
+    { id:1034, name:"NoDa Community Foundation",phone:"+1(704)555-1005", email:"events@nodacf.org",      classification:"Corporate","notes":"MLK Day brunch. Non-profit — community partner.", createdAt:"2026-01-10" },
   ];
 
   const biz = {
@@ -838,6 +942,7 @@ const DEMO_DATA = (() => {
     { id:808, num:"INV-2026-0608", client:"Latoya Hendricks",           clientPhone:"+1(704)555-1008", issued:"2026-02-22", due:"2026-02-22", total:2300,  paid:1150,  status:"Partial",  eventId:608, notes:"Baby shower — 50% deposit received. Balance due day of event." },
     { id:809, num:"INV-2026-0609", client:"Wells Fargo Charlotte Hub",  clientPhone:"+1(704)555-1009", issued:"2026-03-15", due:"2026-03-30", total:4700,  paid:0,     status:"Unpaid",   eventId:609, notes:"Corporate Q1 luncheon — Net 15, invoice sent." },
     { id:810, num:"INV-2026-0610", client:"Sofia Davis",                clientPhone:"+1(704)555-1010", issued:"2026-03-13", due:"2026-03-28", total:14820, paid:4446,  status:"Partial",  eventId:610, notes:"Quinceañera — 30% deposit received. Balance due on event day." },
+    { id:811, num:"INV-2026-0611", client:"Carolinas Healthcare Group", clientPhone:"+1(704)555-1002", issued:"2026-03-12", due:"2026-03-27", total:3215,  paid:3215,  status:"Paid",    eventId:611, notes:"March corporate lunch — paid via bank transfer same day." },
   ];
 
   return { inv, meals, catalog, catalog_cats, sales, events, proposals, overheads, batches, customers, biz, invoices };
